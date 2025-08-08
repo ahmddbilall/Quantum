@@ -1,0 +1,7 @@
+ipykernel
+flask
+asyncpg 
+aiohttp 
+uvicorn 
+python-dateutil
+requests
