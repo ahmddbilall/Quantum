@@ -1,3 +1,12 @@
 env/
 env
 /env/
+
+
+data_scraping/.env
+data_scraping/news_scraper/.env
+data_scraping/news_scraper/__pycache__/
+
+.github/
+
+models/bge-base-en-v1.5/
