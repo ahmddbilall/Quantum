@@ -5,6 +5,7 @@ import asyncio
 import logging
 import sys
 import argparse
+import platform
 from typing import Dict, Any, Optional
 from datetime import datetime
 
@@ -313,4 +314,8 @@ async def main():
         sys.exit(1)
 
 if __name__ == '__main__':
+    # Fix for Windows: aiodns requires SelectorEventLoop
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    
     asyncio.run(main())

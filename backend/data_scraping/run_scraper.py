@@ -18,6 +18,7 @@ import sys
 import os
 import asyncio
 import logging
+import platform
 
 # Add the current directory to the path so we can import news_scraper
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +38,10 @@ if __name__ == '__main__':
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
+    
+    # Fix for Windows: aiodns requires SelectorEventLoop
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     
     try:
         asyncio.run(main())

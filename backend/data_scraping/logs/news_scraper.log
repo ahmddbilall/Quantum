@@ -1,0 +1,159 @@
+2025-08-29 21:13:09,564 - root - INFO - Logging system initialized
+2025-08-29 21:13:09,573 - news_scraper.manager - INFO - Initializing News Scraper System
+2025-08-29 21:13:09,574 - news_scraper.scheduler - INFO - Initializing news scraping scheduler
+2025-08-29 21:13:10,807 - news_scraper.database - INFO - Database tables created successfully
+2025-08-29 21:13:10,808 - news_scraper.database - INFO - Database initialized successfully
+2025-08-29 21:13:10,809 - news_scraper.embeddings - INFO - Initializing BGE model on device: cpu
+2025-08-29 21:13:10,810 - news_scraper.embeddings - INFO - Using CPU for embeddings
+2025-08-29 21:13:10,814 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: D:\Quantum\backend\models\bge-base-en-v1.5
+2025-08-29 21:13:11,680 - news_scraper.embeddings - INFO - BGE model D:\Quantum\backend\models\bge-base-en-v1.5 loaded successfully
+2025-08-29 21:13:11,681 - news_scraper.scheduler - INFO - Scheduler initialized successfully
+2025-08-29 21:13:11,682 - performance - INFO - Performance: {'operation': 'system_initialization', 'duration_seconds': 2.108, 'timestamp': '2025-08-29T21:13:11.682665'}
+2025-08-29 21:13:11,683 - news_scraper.manager - INFO - News Scraper System initialized successfully in 2.11 seconds
+2025-08-29 21:13:11,684 - news_scraper.manager - INFO - Running one-time scraping and processing
+2025-08-29 21:13:11,684 - news_scraper.scheduler - INFO - Running one-time scraping and processing
+2025-08-29 21:13:11,685 - news_scraper.scheduler - INFO - Starting scraping cycle for all sources
+2025-08-29 21:13:11,687 - news_scraper.scheduler - INFO - Scraping aljazeera
+2025-08-29 21:13:11,690 - news_scraper.scheduler - ERROR - Error scraping aljazeera: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,691 - news_scraper.scheduler - INFO - Scraping bbc
+2025-08-29 21:13:11,696 - news_scraper.scheduler - ERROR - Error scraping bbc: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,698 - news_scraper.scheduler - INFO - Scraping guardian
+2025-08-29 21:13:11,702 - news_scraper.scheduler - ERROR - Error scraping guardian: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,703 - news_scraper.scheduler - INFO - Scraping newsbtc
+2025-08-29 21:13:11,707 - news_scraper.scheduler - ERROR - Error scraping newsbtc: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,710 - news_scraper.scheduler - INFO - Scraping cryptoslate
+2025-08-29 21:13:11,717 - news_scraper.scheduler - ERROR - Error scraping cryptoslate: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,720 - news_scraper.scheduler - INFO - Scraping ambcrypto
+2025-08-29 21:13:11,727 - news_scraper.scheduler - ERROR - Error scraping ambcrypto: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,729 - news_scraper.scheduler - INFO - Scraping blockonomi
+2025-08-29 21:13:11,734 - news_scraper.scheduler - ERROR - Error scraping blockonomi: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,735 - news_scraper.scheduler - INFO - Scraping decrypt
+2025-08-29 21:13:11,740 - news_scraper.scheduler - ERROR - Error scraping decrypt: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,744 - news_scraper.scheduler - INFO - Scraping cnbc_crypto
+2025-08-29 21:13:11,750 - news_scraper.scheduler - ERROR - Error scraping cnbc_crypto: aiodns needs a SelectorEventLoop on Windows. See more: https://github.com/saghul/aiodns/issues/86
+2025-08-29 21:13:11,752 - news_scraper.scheduler - INFO - Scraping cycle completed: 0 total articles scraped, 0 total failed
+2025-08-29 21:13:21,756 - news_scraper.scheduler - INFO - Starting embedding processing cycle
+2025-08-29 21:13:21,758 - news_scraper.embeddings - INFO - Starting BGE embedding processing for unprocessed articles
+2025-08-29 21:13:21,776 - news_scraper.embeddings - INFO - No unprocessed articles found
+2025-08-29 21:13:21,777 - news_scraper.scheduler - INFO - Embedding processing completed: 0 processed, 0 failed
+2025-08-29 21:13:21,779 - news_scraper.scheduler - INFO - One-time processing completed
+2025-08-29 21:13:21,780 - performance - INFO - Performance: {'operation': 'run_once', 'duration_seconds': 10.095, 'timestamp': '2025-08-29T21:13:21.780099', 'articles_scraped': 0, 'embeddings_processed': 0}
+2025-08-29 21:13:21,781 - news_scraper.manager - INFO - One-time run completed in 10.10 seconds
+2025-08-29 21:13:21,782 - news_scraper.manager - INFO - Cleaning up News Scraper System
+2025-08-29 21:13:21,783 - news_scraper.scheduler - INFO - Cleaning up scheduler
+2025-08-29 21:13:21,784 - news_scraper.embeddings - INFO - BGE embedding processor cleaned up
+2025-08-29 21:13:21,810 - news_scraper.database - INFO - Database connection pool closed
+2025-08-29 21:13:21,811 - news_scraper.scheduler - INFO - Scheduler cleanup completed
+2025-08-29 21:13:21,813 - news_scraper.manager - INFO - News Scraper System cleaned up successfully
+2025-08-29 21:19:12,944 - root - INFO - Logging system initialized
+2025-08-29 21:19:12,954 - news_scraper.manager - INFO - Initializing News Scraper System
+2025-08-29 21:19:12,955 - news_scraper.scheduler - INFO - Initializing news scraping scheduler
+2025-08-29 21:19:14,194 - news_scraper.database - INFO - Database tables created successfully
+2025-08-29 21:19:14,195 - news_scraper.database - INFO - Database initialized successfully
+2025-08-29 21:19:14,195 - news_scraper.embeddings - INFO - Initializing BGE model on device: cpu
+2025-08-29 21:19:14,196 - news_scraper.embeddings - INFO - Using CPU for embeddings
+2025-08-29 21:19:14,200 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: D:\Quantum\backend\models\bge-base-en-v1.5
+2025-08-29 21:19:14,917 - news_scraper.embeddings - INFO - BGE model D:\Quantum\backend\models\bge-base-en-v1.5 loaded successfully
+2025-08-29 21:19:14,918 - news_scraper.scheduler - INFO - Scheduler initialized successfully
+2025-08-29 21:19:14,919 - performance - INFO - Performance: {'operation': 'system_initialization', 'duration_seconds': 1.964, 'timestamp': '2025-08-29T21:19:14.919009'}
+2025-08-29 21:19:14,919 - news_scraper.manager - INFO - News Scraper System initialized successfully in 1.96 seconds
+2025-08-29 21:19:14,920 - news_scraper.manager - INFO - Running one-time scraping and processing
+2025-08-29 21:19:14,921 - news_scraper.scheduler - INFO - Running one-time scraping and processing
+2025-08-29 21:19:14,922 - news_scraper.scheduler - INFO - Starting scraping cycle for all sources
+2025-08-29 21:19:14,923 - news_scraper.scheduler - INFO - Scraping aljazeera
+2025-08-29 21:19:15,039 - news_scraper.base_scraper - INFO - Initialized aljazeera scraper with 24 existing URLs
+2025-08-29 21:19:15,040 - news_scraper.base_scraper - INFO - Starting scraping for aljazeera
+2025-08-29 21:19:27,069 - news_scraper.base_scraper - INFO - Found 28 article links for aljazeera
+2025-08-29 21:19:27,070 - news_scraper.base_scraper - INFO - Found 22 new articles to scrape
+2025-08-29 21:19:31,929 - news_scraper.base_scraper - INFO - Saved article: US ends tariff exemption for delivery packages valued at $800 or less
+2025-08-29 21:19:31,933 - news_scraper.base_scraper - INFO - Saved article: How triggering snapback sanctions may deepen Iran nuclear crisis
+2025-08-29 21:19:31,934 - news_scraper.base_scraper - INFO - Saved article: Venezuela’s Maduro says ‘no way’ US can invade as Trump deploys naval force
+2025-08-29 21:19:31,939 - news_scraper.base_scraper - INFO - Saved article: How many school shootings have there been in the US in 2025?
+2025-08-29 21:19:31,960 - news_scraper.base_scraper - INFO - Saved article: What is GBS, the rare paralytic disease in Gaza amid Israeli blockade?
+2025-08-29 21:19:33,144 - news_scraper.base_scraper - INFO - Saved article: Microsoft fires four workers over protests against firm’s ties to Israel
+2025-08-29 21:19:33,723 - news_scraper.base_scraper - INFO - Saved article: How Trump’s newfound love for Chinese students is drawing MAGA backlash
+2025-08-29 21:19:33,735 - news_scraper.base_scraper - INFO - Saved article: Why has South Africa’s Malema been found guilty of hate speech again?
+2025-08-29 21:19:34,243 - news_scraper.base_scraper - INFO - Saved article: US warships head to Venezuela: Fight against cartels or imperial ambition?
+2025-08-29 21:19:34,983 - news_scraper.base_scraper - INFO - Saved article: Taiwan has right to ‘preserve self-determination’, US senator says
+2025-08-29 21:19:34,992 - news_scraper.base_scraper - INFO - Saved article: Is Trump trying to engineer Greenland’s secession from Denmark?
+2025-08-29 21:19:35,637 - news_scraper.base_scraper - INFO - Saved article: Fact check: Have mass shootings decreased in the US since 2022 law?
+2025-08-29 21:19:35,648 - news_scraper.base_scraper - INFO - Saved article: Screwworm? What’s the flesh-eating parasite found in a human in the US?
+2025-08-29 21:19:36,020 - news_scraper.base_scraper - INFO - Saved article: When and why has the National Guard been deployed in the US before?
+2025-08-29 21:19:38,139 - news_scraper.base_scraper - INFO - Saved article: US police say Minneapolis church shooter ‘idolised’ mass murderers
+2025-08-29 21:19:38,140 - news_scraper.base_scraper - INFO - Saved article: Trump revokes Secret Service detail for political opponent Kamala Harris
+2025-08-29 21:19:38,142 - news_scraper.base_scraper - INFO - Saved article: Did Israel know over 80 percent of those it killed in Gaza were civilians?
+2025-08-29 21:19:38,143 - news_scraper.base_scraper - INFO - Saved article: White House picks Robert Kennedy Jr’s deputy to replace ousted CDC director
+2025-08-29 21:19:38,174 - news_scraper.base_scraper - INFO - Saved article: Firefighters tackling wildfire in US arrested by immigration agents
+2025-08-29 21:19:38,948 - news_scraper.base_scraper - INFO - Saved article: US denies visas for Palestinian officials before UN assembly
+2025-08-29 21:19:39,195 - news_scraper.base_scraper - INFO - Saved article: ‘Total implosion’: How Trump firing of CDC chief Monarez sparked an exodus
+2025-08-29 21:19:39,751 - news_scraper.base_scraper - INFO - Scraping completed for aljazeera: 21 scraped, 0 failed
+2025-08-29 21:19:39,752 - news_scraper.scheduler - INFO - Completed aljazeera: 21 articles scraped, 0 failed
+2025-08-29 21:19:44,762 - news_scraper.scheduler - INFO - Scraping bbc
+2025-08-29 21:19:44,804 - news_scraper.base_scraper - INFO - Initialized bbc scraper with 40 existing URLs
+2025-08-29 21:19:44,805 - news_scraper.base_scraper - INFO - Starting scraping for bbc
+2025-08-29 21:19:51,465 - news_scraper.base_scraper - INFO - Found 38 article links for bbc
+2025-08-29 21:19:51,466 - news_scraper.base_scraper - INFO - Found 38 new articles to scrape
+2025-08-29 21:19:58,047 - news_scraper.base_scraper - INFO - Saved article: Olivia Colman and Benedict Cumberbatch's secrets to successful marriages
+2025-08-29 21:19:58,048 - news_scraper.base_scraper - INFO - Saved article: New footage shows Israel struck Gaza's Nasser Hospital four times
+2025-08-29 21:19:58,059 - news_scraper.base_scraper - INFO - Saved article: Japanese town proposes two-hour daily limit on smartphones
+2025-08-29 21:20:01,937 - news_scraper.base_scraper - INFO - Saved article: Thirsty data centres boom in drought-hit Mexico
+2025-08-29 21:20:01,948 - news_scraper.base_scraper - INFO - Saved article: How US shoppers will be hit as tariff exemption ends
+2025-08-29 21:20:02,953 - news_scraper.base_scraper - INFO - Saved article: White House names RFK Jr deputy as replacement CDC director
+2025-08-29 21:20:05,011 - news_scraper.base_scraper - INFO - Saved article: AI firm says its technology weaponised by hackers
+2025-08-29 21:20:05,593 - news_scraper.base_scraper - INFO - Saved article: Thai court removes PM over leaked phone call with Cambodian leader
+2025-08-29 21:20:06,730 - news_scraper.base_scraper - INFO - Saved article: Football Manager 25 would have damaged us forever, says maker
+2025-08-29 21:20:07,290 - news_scraper.base_scraper - INFO - Saved article: Court documents shed new light on UK-Apple row over user data
+2025-08-29 21:20:07,299 - news_scraper.base_scraper - INFO - Saved article: New video appears to show New Zealand fugitive dad with his child
+2025-08-29 21:20:09,134 - news_scraper.base_scraper - INFO - Saved article: From boom to ban: The rise and fall of India's betting apps
+2025-08-29 21:20:09,143 - news_scraper.base_scraper - INFO - Saved article: 4chan launches legal action against Ofcom in US
+2025-08-29 21:20:10,331 - news_scraper.base_scraper - INFO - Saved article: Famous croc wrangler found guilty in evidence tampering trial
+2025-08-29 21:20:10,647 - news_scraper.base_scraper - INFO - Saved article: Kyiv in mourning after strikes as allies discuss military support
+2025-08-29 21:20:11,103 - news_scraper.base_scraper - INFO - Saved article: Parents of teenager who took his own life sue OpenAI
+2025-08-29 21:20:11,569 - news_scraper.base_scraper - INFO - Saved article: HSBC resolves app and online banking  outage
+2025-08-29 21:20:12,073 - news_scraper.base_scraper - INFO - Saved article: Protesters and police clash after death of taxi driver in Indonesia
+2025-08-29 21:20:13,155 - news_scraper.base_scraper - INFO - Saved article: How a leaked phone call derailed the Thai PM's career - and the Shinawatra dynasty
+2025-08-29 21:20:15,539 - news_scraper.base_scraper - INFO - Saved article: Weekly quiz: What food did Meghan reveal Harry doesn't like?
+2025-08-29 21:20:15,857 - news_scraper.base_scraper - INFO - Saved article: AI supercomputer to help cancer vaccine research
+2025-08-29 21:20:15,858 - news_scraper.base_scraper - INFO - Saved article: India's International Booker winner at the centre of a political row
+2025-08-29 21:20:15,860 - news_scraper.base_scraper - INFO - Saved article: 'The details were almost perfect': Kpop Demon Hunters sparks pride in Korea
+2025-08-29 21:20:15,861 - news_scraper.base_scraper - INFO - Saved article: Survivors of South Africa's horrific building fire now live in fear of guns
+2025-08-29 21:20:15,866 - news_scraper.base_scraper - INFO - Saved article: Boat heading to Canary Islands capsizes, killing at least 69 passengers
+2025-08-29 21:20:16,429 - news_scraper.base_scraper - INFO - Saved article: A 'joyful' girl and a boy who loved sports - Victims in Minneapolis shooting identified
+2025-08-29 21:20:16,984 - news_scraper.base_scraper - INFO - Saved article: Trump ends Secret Service protection for Harris
+2025-08-29 21:20:17,922 - news_scraper.base_scraper - INFO - Saved article: AI boom boosts Nvidia despite 'geopolitical issues'
+2025-08-29 21:20:18,568 - news_scraper.base_scraper - INFO - Saved article: Emma Stone dazzles Venice with alien kidnap drama
+2025-08-29 21:20:18,576 - news_scraper.base_scraper - INFO - Saved article: 'Punk rock' dinosaur with metre-long spikes discovered
+2025-08-29 21:20:19,235 - news_scraper.base_scraper - INFO - Saved article: SpaceX pulls off Starship rocket launch in much-needed comeback
+2025-08-29 21:20:19,237 - news_scraper.base_scraper - INFO - Saved article: Minneapolis school attacker 'obsessed with idea of killing children', officials say
+2025-08-29 21:20:20,234 - news_scraper.base_scraper - INFO - Saved article: Taco Bell rethinks AI drive-through after man orders 18,000 waters
+2025-08-29 21:20:21,046 - news_scraper.base_scraper - INFO - Saved article: Asylum hotel ruling won't feel like much of a victory at Home Office
+2025-08-29 21:20:23,654 - news_scraper.base_scraper - INFO - Saved article: UK blocks Israeli government delegation from arms trade fair
+2025-08-29 21:20:23,656 - news_scraper.base_scraper - INFO - Saved article: 'India put us on the boat like captives - then threw us in the sea'
+2025-08-29 21:20:23,657 - news_scraper.base_scraper - INFO - Saved article: BBC reveals web of spammers profiting from AI Holocaust images
+2025-08-29 21:20:23,665 - news_scraper.base_scraper - INFO - Saved article: Musk files to dismiss lawsuit over his purchase of Twitter shares
+2025-08-29 21:20:23,670 - news_scraper.base_scraper - INFO - Scraping completed for bbc: 38 scraped, 0 failed
+2025-08-29 21:20:23,671 - news_scraper.scheduler - INFO - Completed bbc: 38 articles scraped, 0 failed
+2025-08-29 21:20:28,677 - news_scraper.scheduler - INFO - Scraping guardian
+2025-08-29 21:20:28,702 - news_scraper.base_scraper - INFO - Initialized guardian scraper with 3 existing URLs
+2025-08-29 21:20:28,703 - news_scraper.base_scraper - INFO - Starting scraping for guardian
+2025-08-29 21:20:37,528 - news_scraper.base_scraper - INFO - Found 1 article links for guardian
+2025-08-29 21:20:37,529 - news_scraper.base_scraper - INFO - Found 1 new articles to scrape
+2025-08-29 21:20:41,345 - news_scraper.base_scraper - INFO - Scraping completed for guardian: 0 scraped, 0 failed
+2025-08-29 21:20:41,346 - news_scraper.scheduler - INFO - Completed guardian: 0 articles scraped, 0 failed
+2025-08-29 21:20:46,361 - news_scraper.scheduler - INFO - Scraping newsbtc
+2025-08-29 21:20:46,384 - news_scraper.base_scraper - INFO - Initialized newsbtc scraper with 11 existing URLs
+2025-08-29 21:20:46,391 - news_scraper.scrapers - INFO - Loaded 6 RSS feeds for crypto scraping
+2025-08-29 21:20:46,392 - news_scraper.base_scraper - INFO - Starting scraping for newsbtc
+2025-08-29 21:20:46,412 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.newsbtc.com/feed/
+2025-08-29 21:20:47,521 - news_scraper.scrapers - INFO - Processing feed: NewsBTC (10 entries)
+2025-08-29 21:20:47,524 - news_scraper.scrapers - INFO - Added 10 new articles from NewsBTC
+2025-08-29 21:20:47,525 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://cryptoslate.com/feed/
+2025-08-29 21:20:49,934 - news_scraper.scrapers - INFO - Processing feed: CryptoSlate (10 entries)
+2025-08-29 21:20:49,937 - news_scraper.scrapers - INFO - Added 10 new articles from CryptoSlate
+2025-08-29 21:20:49,937 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://ambcrypto.com/feed/
+2025-08-29 21:20:52,662 - news_scraper.scrapers - INFO - Processing feed: AMBCrypto (16 entries)
+2025-08-29 21:20:52,664 - news_scraper.scrapers - INFO - Added 10 new articles from AMBCrypto
+2025-08-29 21:20:52,665 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://blockonomi.com/feed/
+2025-08-29 21:20:55,133 - news_scraper.scrapers - INFO - Processing feed: Blockonomi (10 entries)
+2025-08-29 21:20:55,135 - news_scraper.scrapers - INFO - Added 10 new articles from Blockonomi
+2025-08-29 21:20:55,136 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://decrypt.co/feed

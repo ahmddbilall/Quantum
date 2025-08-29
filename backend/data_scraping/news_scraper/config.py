@@ -22,7 +22,7 @@ DATABASE_CONFIG = {
 # Embedding Configuration - Using open-source BAAI/bge-base-en-v1.5
 
 # Resolve backend dir (one level up), then models
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..','..'))
 DEFAULT_MODEL_PATH = os.path.join(ROOT_DIR, 'models', 'bge-base-en-v1.5')
 MODEL_PATH = os.getenv('EMBEDDING_MODEL_PATH', DEFAULT_MODEL_PATH)
 
