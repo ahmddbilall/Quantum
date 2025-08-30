@@ -6,7 +6,7 @@ import NewsCatalogue from "@/components/Home/NewsCatalogue";
 import WhyChooseUs from "@/components/Home/WhyChooseUs";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-
+ 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#121212] text-white">
