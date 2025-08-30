@@ -1,9 +1,9 @@
 name: Discord Push Notifier
 
 on:
-  push: # Trigger on any branch push
+  push:
     branches:
-      - "*" # all branches
+      - "*" # monitor all branches
 
 jobs:
   notify:
@@ -15,11 +15,16 @@ jobs:
           commit_msg="${{ github.event.head_commit.message }}"
           author="${{ github.event.head_commit.author.name }}"
           url="${{ github.event.head_commit.url }}"
-          pusher="${{ github.event.pusher.name }}"
 
-          payload=$(jq -n \
-            --arg content "📢 Push detected!\n\n**Branch:** $branch\n**Pusher:** $pusher\n**Author:** $author\n**Message:** $commit_msg\n[View Commit]($url)" \
-            '{content: $content}')
+          # Build message with real newlines
+          message="📢 Push detected!
+
+          **Branch:** $branch
+          **Author:** $author
+          **Message:** $commit_msg
+          [View Commit]($url)"
+
+          payload=$(jq -n --arg content "$message" '{content: $content}')
 
           curl -H "Content-Type: application/json" \
                -d "$payload" \
