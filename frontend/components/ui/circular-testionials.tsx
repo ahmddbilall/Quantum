@@ -22,6 +22,7 @@ interface Colors {
   arrowBackground?: string;
   arrowForeground?: string;
   arrowHoverBackground?: string;
+  arrowHoverForeground?: string;
 }
 interface FontSizes {
   name?: string;
@@ -59,6 +60,7 @@ export const CircularTestimonials = ({
   const colorArrowBg = colors.arrowBackground ?? "#141414";
   const colorArrowFg = colors.arrowForeground ?? "#f1f1f7";
   const colorArrowHoverBg = colors.arrowHoverBackground ?? "#00a6fb";
+  const colorArrowHoverFg = colors.arrowHoverForeground ?? "#000000";
   const fontSizeName = fontSizes.name ?? "1.5rem";
   const fontSizeDesignation = fontSizes.designation ?? "0.925rem";
   const fontSizeQuote = fontSizes.quote ?? "1.125rem";
@@ -250,24 +252,26 @@ export const CircularTestimonials = ({
               onClick={handlePrev}
               style={{
                 backgroundColor: hoverPrev ? colorArrowHoverBg : colorArrowBg,
+                color: hoverPrev ? colorArrowHoverFg : colorArrowFg,
               }}
               onMouseEnter={() => setHoverPrev(true)}
               onMouseLeave={() => setHoverPrev(false)}
               aria-label="Previous testimonial"
             >
-              <FaArrowLeft size={28} color={colorArrowFg} />
+              <FaArrowLeft size={28} color={hoverPrev ? colorArrowHoverFg : colorArrowFg} />
             </button>
             <button
               className="arrow-button next-button"
               onClick={handleNext}
               style={{
                 backgroundColor: hoverNext ? colorArrowHoverBg : colorArrowBg,
+                color: hoverNext ? colorArrowHoverFg : colorArrowFg,
               }}
               onMouseEnter={() => setHoverNext(true)}
               onMouseLeave={() => setHoverNext(false)}
               aria-label="Next testimonial"
             >
-              <FaArrowRight size={28} color={colorArrowFg} />
+              <FaArrowRight size={28} color={hoverNext ? colorArrowHoverFg : colorArrowFg} />
             </button>
           </div>
         </div>
