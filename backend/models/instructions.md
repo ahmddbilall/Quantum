@@ -1,7 +1,7 @@
 Run the following code on colab and then from Google Drive download the zip file. then unzip the downloaded model file in models/
 
 
-
+   
 ```python
 # Step 1: Install dependencies
 !pip install -q huggingface_hub
