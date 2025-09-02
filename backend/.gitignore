@@ -2,6 +2,8 @@ env/
 env
 /env/
 
+data_scraping/.env/
+*.env
 
 data_scraping/.env
 data_scraping/news_scraper/.env

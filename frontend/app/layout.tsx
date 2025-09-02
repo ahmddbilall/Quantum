@@ -1,25 +1,35 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import type React from "react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 // import "./globals.css"
-import "@/styles/globals.css"
+import "@/styles/globals.css";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
-  title: "NewsAI - Your AI-Powered Gateway to News",
-  description: "Stay informed, explore perspectives, and understand the context — instantly.",
-    generator: 'v0.dev'
-}
+  title: "Quantum - Your AI-Powered Gateway to News",
+  description:
+    "Stay informed, explore perspectives, and understand the context — instantly.",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className={inter.variable}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-sans antialiased">{children}</body>
     </html>
-  )
+  );
 }

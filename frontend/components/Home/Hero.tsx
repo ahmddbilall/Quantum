@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { InfiniteSlider } from "../ui/infinite-slider";
 import { ProgressiveBlur } from "../ui/progressive-blur";
 import { ShootingStars } from "../ui/shooting-stars";
+import StarryBackground from "@/components/ui/starry-background";
 import { useEffect, useRef, useState } from "react";
 
 const sliderItems = [
@@ -41,24 +42,7 @@ const Hero = () => {
 
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMouseInside, setIsMouseInside] = useState(false);
-  const [starPositions, setStarPositions] = useState<Array<{
-    left: number;
-    top: number;
-    animationDelay: number;
-    animationDuration: number;
-  }>>([]);
   const heroRef = useRef<HTMLElement>(null);
-  
-  useEffect(() => {
-    // Generate star positions only on client side
-    const positions = Array.from({ length: 20 }, () => ({
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      animationDelay: Math.random() * 3,
-      animationDuration: 2 + Math.random() * 2,
-    }));
-    setStarPositions(positions);
-  }, []);
   
   useEffect(() => {
     const heroElement = heroRef.current;
@@ -97,7 +81,7 @@ const Hero = () => {
       <div className="absolute inset-0">
         {/* <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(0,0,0,0)_80%)]" /> */}
         {
-          !isMouseInside && <div className="stars absolute inset-0" />
+          !isMouseInside && <StarryBackground opacity={0.6} includeCSSStars={true} />
         }
          {isMouseInside && (
             <>
@@ -134,23 +118,6 @@ const Hero = () => {
             </>
           )}
       </div>
-
-
-
-        <div className="absolute inset-0 pointer-events-none">
-          {starPositions.map((star, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full opacity-30 animate-pulse"
-              style={{
-                left: `${star.left}%`,
-                top: `${star.top}%`,
-                animationDelay: `${star.animationDelay}s`,
-                animationDuration: `${star.animationDuration}s`,
-              }}
-            />
-          ))}
-        </div>
 
 
       {/* Hero Content */}
@@ -250,37 +217,6 @@ const Hero = () => {
         minDelay={1500}
         maxDelay={3500}
       />
-
-      <style jsx>{`
-        .stars {
-          background-image: radial-gradient(
-              2px 2px at 20px 30px,
-              #eee,
-              rgba(0, 0, 0, 0)
-            ),
-            radial-gradient(2px 2px at 40px 70px, #fff, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 90px 40px, #fff, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 130px 80px, #fff, rgba(0, 0, 0, 0)),
-            radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0, 0, 0, 0));
-          background-repeat: repeat;
-          background-size: 200px 200px;
-          animation: twinkle 5s ease-in-out infinite;
-          opacity: 0.5;
-        }
-
-        @keyframes twinkle {
-          0% {
-            opacity: 0.5;
-          }
-          50% {
-            opacity: 0.8;
-          }
-          100% {
-            opacity: 0.5;
-          }
-        }
-      `}</style>
     </section>
   );
 };

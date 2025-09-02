@@ -1,23 +1,24 @@
 "use client";
 import { useScroll, motion, useTransform } from "framer-motion";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import StarryBackground from "@/components/ui/starry-background";
 
 const bgImageSrc =
-  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920&auto=format&fit=crop";
+  "/landing_page_res/newspaper.jpg";
 
 const mediaContent = {
-  src: "https://images.unsplash.com/photo-1682687982501-1e58ab814714?q=80&w=1280&auto=format&fit=crop",
+  src: "/landing_page_res/typewritter.jpg", 
   background:
-    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1920&auto=format&fit=crop",
-  title: "Dynamic Image Showcase",
-  date: "Underwater Adventure",
-  scrollToExpand: "Scroll to Expand Demo",
+    "/landing_page_res/newspaper.jpg",
+  title: "Breaking News Today",
+  date: "Latest Updates",
+  scrollToExpand: "Scroll for Latest Stories",
   about: {
     overview:
-      "This is a demonstration of the ScrollExpandMedia component with an image. The same smooth expansion effect works beautifully with static images, allowing you to create engaging visual experiences without video content.",
+      "Stay informed with the latest breaking news, in-depth analysis, and comprehensive coverage from around the world. Our AI-powered platform delivers personalized news content tailored to your interests.",
     conclusion:
-      "The ScrollExpandMedia component works equally well with images and videos. This flexibility allows you to choose the media type that best suits your content while maintaining the same engaging user experience.",
+      "Experience news like never before with our intelligent content curation and real-time updates that keep you ahead of the curve.",
   },
 };
 
@@ -65,8 +66,11 @@ const LatestNewsSection = () => {
   return (
     <div
       ref={sectionRef}
-      className="relative w-full bg-white text-black h-[300vh]"
+      className="relative w-full bg-black text-white h-[300vh]"
     >
+      {/* Starry background - always visible as fallback */}
+      <StarryBackground starCount={200} opacity={0.5} />
+
       <div className="sticky inset-0 z-0 flex items-center justify-center h-screen overflow-hidden">
         {/* background Image */}
         <motion.div
@@ -88,7 +92,7 @@ const LatestNewsSection = () => {
             }}
             priority
           />
-          <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute inset-0 bg-black/50" />
         </motion.div>
 
         <div className="flex flex-col items-center justify-center w-full h-[100dvh] relative">
@@ -105,35 +109,37 @@ const LatestNewsSection = () => {
             <div className="relative w-full h-full">
               <Image
                 src={
-                  "https://images.unsplash.com/photo-1682687982501-1e58ab814714?q=80&w=1280&auto=format&fit=crop"
-                } // change
-                alt={"Dynamic Image Showcase"} // change
+                  "https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?q=80&w=1280&auto=format&fit=crop"
+                } // Latest news/newspaper image
+                alt={"Breaking News Today"} // News-related alt text
                 width={1280}
                 height={720}
                 className="w-full h-full object-cover rounded-xl"
               />
-
-              {/* <motion.div
-                                className='absolute inset-0 bg-black/50 rounded-xl'
-                                initial={{ opacity: 0.7 }}
-                                animate={{ opacity: 0.7 - scrollYProgress * 0.3 }}
-                                transition={{ duration: 0.2 }}
-                              /> */}
+              
+              {/* Dark overlay for better text readability */}
+              <div className="absolute inset-0 bg-black/40 rounded-xl" />
             </div>
 
             <div className="flex flex-col items-center text-center relative z-10 mt-4 transition-none">
               {date && (
                 <motion.p
-                  className="text-2xl text-blue-200"
-                  style={{ x: textTranslateXvwNeg }}
+                  className="text-2xl text-white font-semibold drop-shadow-lg"
+                  style={{ 
+                    x: textTranslateXvwNeg,
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                  }}
                 >
                   {date}
                 </motion.p>
               )}
               {scrollToExpand && (
                 <motion.p
-                  className="text-blue-200 font-medium text-center"
-                  style={{ x: textTranslateXvw }}
+                  className="text-white font-medium text-center drop-shadow-lg"
+                  style={{ 
+                    x: textTranslateXvw,
+                    textShadow: '1px 1px 3px rgba(0,0,0,0.8)'
+                  }}
                 >
                   {scrollToExpand}
                 </motion.p>
@@ -147,14 +153,20 @@ const LatestNewsSection = () => {
             }`}
           >
             <motion.h2
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-blue-200 transition-none"
-              style={{ x: textTranslateXvwNeg }}
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-white transition-none drop-shadow-2xl"
+              style={{ 
+                x: textTranslateXvwNeg,
+                textShadow: '3px 3px 6px rgba(0,0,0,0.9)'
+              }}
             >
               {firstWord}
             </motion.h2>
             <motion.h2
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-blue-200 transition-none"
-              style={{ x: textTranslateXvw }}
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-white transition-none drop-shadow-2xl"
+              style={{ 
+                x: textTranslateXvw,
+                textShadow: '3px 3px 6px rgba(0,0,0,0.9)'
+              }}
             >
               {restOfTitle}
             </motion.h2>
