@@ -22,10 +22,21 @@ const NewsCatalogue = () => {
   });
 
   return (
-    <section ref={container} className="relative h-[200vh] bg-black">
-      <Section1 scrollYProgress={scrollYProgress} />
-      <Section2 scrollYProgress={scrollYProgress} />
-    </section>
+    <>
+      {/* Desktop Version - Full experience with animations */}
+      <section
+        ref={container}
+        className="relative h-[200vh] bg-black hidden lg:block"
+      >
+        <Section1 scrollYProgress={scrollYProgress} />
+        <Section2 scrollYProgress={scrollYProgress} />
+      </section>
+
+      {/* Mobile/Tablet Version - Simple latest news only */}
+      <section className="lg:hidden bg-black py-16">
+        <MobileLatestNewsSection />
+      </section>
+    </>
   );
 };
 
@@ -116,53 +127,86 @@ const LatestNewsSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Responsive Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {latestNews.map((news, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.4 }}
-              viewport={{ once: true }}
-              className="flex"
-            >
-              <Card
-                className="flex flex-col h-full bg-zinc-900 border border-white/10 border-gray-700 pt-0 py-0 pb-4 hover:bg-gray-700/50 
-              transition-all duration-500 cursor-pointer hover:border-white/50 group backdrop-blur-sm overflow-hidden rounded-2xl"
-              >
-                <CardContent className="p-0">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={news.image || "/placeholder.svg"}
-                      alt={news.headline}
-                      className="w-full h-64 object-cover group-hover:scale-110 
-                      transition-transform duration-700 "
-                    />
-                    <div className="absolute top-4 left-4 flex gap-2">
-                      <span className="bg-black/50 text-white px-3 py-1 rounded-full text-xs  flex items-center gap-1">
-                        {/* <Star className="h-3 w-3" /> */}
-                        LATEST
-                      </span>
-                      <span className="bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
-                        {news.category}
-                      </span>
+            <div key={index} className="flex">
+              {/* Mobile: No animation */}
+              <div className="md:hidden w-full">
+                <Card
+                  className="flex flex-col h-full bg-zinc-900 border border-white/10 border-gray-700 pt-0 py-0 pb-4 hover:bg-gray-700/50 
+                transition-all duration-500 cursor-pointer hover:border-white/50 group backdrop-blur-sm overflow-hidden rounded-2xl"
+                >
+                  <CardContent className="p-0">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={news.image || "/placeholder.svg"}
+                        alt={news.headline}
+                        className="w-full h-48 md:h-56 lg:h-64 object-cover group-hover:scale-110 
+                        transition-transform duration-700 "
+                      />
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <span className="bg-black/50 text-white px-3 py-1 rounded-full text-xs  flex items-center gap-1">
+                          LATEST
+                        </span>
+                        <span className="bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
+                          {news.category}
+                        </span>
+                      </div>
                     </div>
-                    {/* <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {news.readTime}
-                    </div> */}
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-indigo-200 transition-colors duration-300">
-                      {news.headline}
-                    </h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      {news.snippet}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                    <div className="p-4 md:p-5 lg:p-6">
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-3 group-hover:text-indigo-200 transition-colors duration-300">
+                        {news.headline}
+                      </h3>
+                      <p className="text-gray-400 text-sm leading-relaxed line-clamp-3">
+                        {news.snippet}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Tablet and Desktop: With animation */}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                viewport={{ once: true }}
+                className="hidden md:flex w-full"
+              >
+                <Card
+                  className="flex flex-col h-full bg-zinc-900 border border-white/10 border-gray-700 pt-0 py-0 pb-4 hover:bg-gray-700/50 
+                transition-all duration-500 cursor-pointer hover:border-white/50 group backdrop-blur-sm overflow-hidden rounded-2xl"
+                >
+                  <CardContent className="p-0">
+                    <div className="relative overflow-hidden">
+                      <img
+                        src={news.image || "/placeholder.svg"}
+                        alt={news.headline}
+                        className="w-full h-48 md:h-56 lg:h-64 object-cover group-hover:scale-110 
+                        transition-transform duration-700 "
+                      />
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <span className="bg-black/50 text-white px-3 py-1 rounded-full text-xs  flex items-center gap-1">
+                          LATEST
+                        </span>
+                        <span className="bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
+                          {news.category}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 md:p-5 lg:p-6">
+                      <h3 className="text-lg md:text-xl font-bold text-white mb-3 group-hover:text-indigo-200 transition-colors duration-300">
+                        {news.headline}
+                      </h3>
+                      <p className="text-gray-400 text-sm leading-relaxed line-clamp-3">
+                        {news.snippet}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           ))}
         </div>
 
@@ -314,6 +358,98 @@ const FinanceNewsSection = () => {
               </Card>
             </motion.div>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const MobileLatestNewsSection = () => {
+  const latestNews = [
+    {
+      image: "/technology-innovation.png",
+      headline: "AI Revolution: How Machine Learning is Reshaping Industries",
+      snippet:
+        "From healthcare to finance, artificial intelligence is transforming...",
+      category: "Technology",
+      trending: true,
+    },
+    {
+      image: "/business-finance.png",
+      headline: "Global Markets React to Economic Policy Changes",
+      snippet:
+        "Major indices show significant movement following central bank announcements...",
+      category: "Finance",
+      trending: true,
+    },
+    {
+      image: "/health-medical-research.png",
+      headline: "Breakthrough in Cancer Research Offers New Hope",
+      snippet:
+        "Revolutionary treatment shows promising results in clinical trials...",
+      category: "Health",
+      trending: true,
+    },
+  ];
+
+  return (
+    <section className="px-4 sm:px-6 w-full ">
+        <StarryBackground starCount={80} opacity={0.3} />
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">
+              📰 Latest News
+            </h2>
+          </div>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Stay updated with the most recent stories shaping our world today
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {latestNews.map((news, index) => (
+            <div key={index} className="flex">
+              <Card className="flex flex-col h-full bg-zinc-900 border border-white/10 cursor-pointer overflow-hidden rounded-xl">
+                <CardContent className="p-0">
+                  <div className="relative overflow-hidden">
+                    <img
+                      src={news.image || "/placeholder.svg"}
+                      alt={news.headline}
+                      className="w-full h-48 sm:h-52 object-cover"
+                    />
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      <span className="bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+                        LATEST
+                      </span>
+                      <span className="bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+                        {news.category}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-bold text-white mb-3 line-clamp-2">
+                      {news.headline}
+                    </h3>
+                    <p className="text-gray-400 text-sm leading-relaxed line-clamp-3">
+                      {news.snippet}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center mt-10">
+          <Button
+            variant="outline"
+            size="lg"
+            className="border-white text-white hover:bg-white hover:text-black transition-all duration-300 bg-transparent"
+          >
+            Explore All Latest Stories
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </div>
     </section>
