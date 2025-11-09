@@ -119,7 +119,7 @@ const LatestNewsSection = () => {
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-2 mb-4">
             <h2 className="text-4xl md:text-5xl font-bold text-white">
-              📰 Latest News
+              Latest News
             </h2>
           </div>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
@@ -279,7 +279,6 @@ const FinanceNewsSection = () => {
         <div className="flex items-center justify-between mb-12">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <DollarSign className="h-8 w-8 text-white" />
               <h2 className="text-4xl md:text-5xl font-bold text-white">
                 Finance News
               </h2>
@@ -394,12 +393,12 @@ const MobileLatestNewsSection = () => {
 
   return (
     <section className="px-4 sm:px-6 w-full ">
-        <StarryBackground starCount={80} opacity={0.3} />
+      <StarryBackground starCount={80} opacity={0.3} />
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <h2 className="text-3xl sm:text-4xl font-bold text-white">
-              📰 Latest News
+              Latest News
             </h2>
           </div>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">

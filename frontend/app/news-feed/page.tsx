@@ -512,7 +512,7 @@ export default function NewsFeedPage() {
                 <Button
                   onClick={clearFilters}
                   variant="outline"
-                  className="border-gray-600 text-gray-300 hover:bg-zinc-800"
+                  className="border-gray-600 text-black hover:bg-zinc-800 hover:text-white"
                 >
                   Clear all filters
                 </Button>
@@ -522,14 +522,16 @@ export default function NewsFeedPage() {
         </div>
 
         {/* Load More Button */}
-        <div className="text-center">
-          <Button
-            variant="outline"
-            className="border-white text-white hover:bg-white hover:text-black transition-all duration-300 bg-transparent group"
-          >
-            Load More Articles
-          </Button>
-        </div>
+        {sortedArticles.length > 0 && (
+          <div className="text-center mb-8">
+            <Button
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-black transition-all duration-300 bg-transparent group"
+            >
+              Load More Articles
+            </Button>
+          </div>
+        )}
       </div>
 
       <Footer />

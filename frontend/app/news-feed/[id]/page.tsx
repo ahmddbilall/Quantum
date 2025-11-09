@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Calendar,
@@ -10,26 +9,23 @@ import {
   Eye,
   Share2,
   BookmarkPlus,
-  MessageCircle,
-  Send,
-  X,
-  Bot,
+  Bookmark,
   TrendingUp,
-  Heart,
-  ThumbsUp,
-  ThumbsDown,
-  Clock,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArticleChatButton } from "@/components/aichat";
+import { ResponseStream } from "@/components/ui/response-stream";
+import { GeneratingText } from "@/components/ui/generating-text";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock news data - in real app, this would come from an API
 const mockNewsData = {
@@ -120,7 +116,7 @@ const mockNewsData = {
     id: 3,
     title: "Space Exploration Makes New Discovery",
     summary:
-      "NASA's latest mission has revealed surprising findings about distant galaxies.",
+      "NASA's latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies. latest mission has revealed surprising findings about distant galaxies.",
     fullContent: `
       <h2>Revolutionary Space Discovery</h2>
       <p>NASA's latest deep space mission has yielded extraordinary findings that are reshaping our understanding of the universe. The James Webb Space Telescope has captured unprecedented images of distant galaxies, revealing structures and phenomena that challenge current astronomical theories.</p>
@@ -145,7 +141,7 @@ const mockNewsData = {
     trending: false,
     readTime: "5 min read",
     aiSummary:
-      "NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation.",
+      "NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation. NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation NASA's James Webb Space Telescope has discovered unexpectedly massive and complex ancient galaxies that challenge current theories about cosmic evolution and early universe formation",
     sentiment: {
       overall: "Positive",
       confidence: 85,
@@ -155,73 +151,59 @@ const mockNewsData = {
   // Add more articles as needed
 };
 
-interface ChatMessage {
-  id: string;
-  type: "user" | "ai";
-  content: string;
-  timestamp: Date;
-}
-
 export default function NewsDetailPage() {
   const params = useParams();
   const articleId = params.id as string;
+  const { toast } = useToast();
   const [article, setArticle] = useState<any>(null);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      type: "ai",
-      content:
-        "Hello! I'm your AI assistant. I can help you understand this news article better, answer questions about it, or discuss its implications. What would you like to know?",
-      timestamp: new Date(),
-    },
-  ]);
-  const [currentMessage, setCurrentMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [showSummary, setShowSummary] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
     // In a real app, fetch article from API
     const articleData =
       mockNewsData[parseInt(articleId) as keyof typeof mockNewsData];
     setArticle(articleData);
+
+    // Simulate AI generation delay
+    const generatingTimer = setTimeout(() => {
+      setIsGenerating(false);
+      setShowSummary(true);
+    }, 2000); // Show "generating" for 2 seconds
+
+    return () => clearTimeout(generatingTimer);
   }, [articleId]);
 
-  const handleSendMessage = async () => {
-    if (!currentMessage.trim()) return;
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: "user",
-      content: currentMessage,
-      timestamp: new Date(),
-    };
-
-    setChatMessages((prev) => [...prev, userMessage]);
-    setCurrentMessage("");
-    setIsTyping(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: generateAIResponse(currentMessage, article),
-        timestamp: new Date(),
-      };
-      setChatMessages((prev) => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 1500);
+  const handleShare = async () => {
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied!",
+        description: "Article link has been copied to clipboard",
+        duration: 2000,
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try again",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
   };
 
-  const generateAIResponse = (message: string, article: any): string => {
-    // Mock AI responses - in real app, this would call an AI API
-    const responses = [
-      `Based on the article about ${article?.title}, I can tell you that this breakthrough represents a significant advancement in AI reasoning capabilities. The key innovation is moving beyond pattern matching to genuine logical deduction.`,
-      `This news about ReasonAI has several important implications. For healthcare, it could revolutionize diagnostic processes. For finance, it offers new approaches to risk assessment. What specific aspect interests you most?`,
-      `The ethical considerations mentioned in the article are crucial. The researchers are taking a responsible approach by implementing safety measures and working with ethicists. This shows the importance of developing AI with human values in mind.`,
-      `The sentiment of this article is quite positive, reflecting excitement about technological progress while maintaining awareness of responsible development. Would you like me to explain any specific technical aspects?`,
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+  const handleBookmark = () => {
+    setIsBookmarked(!isBookmarked);
+    toast({
+      title: isBookmarked ? "Bookmark removed" : "Bookmarked!",
+      description: isBookmarked
+        ? "Article removed from bookmarks"
+        : "Article saved to bookmarks",
+      duration: 2000,
+    });
   };
 
   if (!article) {
@@ -237,7 +219,7 @@ export default function NewsDetailPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar showSearch={true} />
+      <Navbar showSearch={false} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
@@ -245,7 +227,7 @@ export default function NewsDetailPage() {
           <Button
             variant="ghost"
             onClick={() => window.history.back()}
-            className="text-gray-400 hover:text-white hover:bg-zinc-800 p-2"
+            className="text-gray-400  hover:text-white hover:bg-zinc-800 p-2"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to News Feed
@@ -255,18 +237,18 @@ export default function NewsDetailPage() {
         {/* Article Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <Badge className="bg-indigo-600 text-white">
+            <Badge className="border-gray-600 text-gray-300">
               {article.category}
             </Badge>
-            {article.trending && (
+            {/* {article.trending && (
               <Badge className="bg-red-600 text-white">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 Trending
               </Badge>
-            )}
-            <Badge variant="outline" className="border-gray-600 text-gray-300">
+            )} */}
+            {/* <Badge variant="outline" className="border-gray-600 text-gray-300">
               {article.readTime}
-            </Badge>
+            </Badge> */}
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
@@ -283,122 +265,117 @@ export default function NewsDetailPage() {
                 <Calendar className="h-4 w-4" />
                 {format(article.publishedDate, "MMMM dd, yyyy 'at' HH:mm")}
               </span>
-              <span className="flex items-center gap-2">
+              {/* <span className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
                 {article.views.toLocaleString()} views
-              </span>
+              </span> */}
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-400 hover:text-white"
-              >
+              <Button variant="ghost" size="sm" onClick={handleShare}>
                 <Share2 className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-gray-400 hover:text-white"
-              >
-                <BookmarkPlus className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={handleBookmark}>
+                {isBookmarked ? (
+                  <Bookmark className="h-4 w-4 fill-current" />
+                ) : (
+                  <BookmarkPlus className="h-4 w-4" />
+                )}
               </Button>
             </div>
-          </div>
-
-          {/* Article Image */}
-          <div className="aspect-video rounded-2xl overflow-hidden mb-8">
-            <img
-              src={article.image}
-              alt={article.title}
-              className="w-full h-full object-cover"
-            />
           </div>
         </div>
 
         {/* AI Features Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* AI Summary */}
-          <Card className="bg-zinc-900 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Bot className="h-5 w-5 text-indigo-400" />
-                AI Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                {article.aiSummary}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Sentiment Analysis */}
-          <Card className="bg-zinc-900 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Heart className="h-5 w-5 text-pink-400" />
-                Sentiment
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">Overall:</span>
-                <Badge
-                  className={`${
-                    article.sentiment.overall === "Positive"
-                      ? "bg-green-600"
-                      : article.sentiment.overall === "Negative"
-                      ? "bg-red-600"
-                      : "bg-yellow-600"
-                  } text-white`}
-                >
-                  {article.sentiment.overall}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">Confidence:</span>
-                <span className="text-white font-medium">
-                  {article.sentiment.confidence}%
-                </span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-gray-300 text-sm">Emotions:</span>
-                <div className="flex flex-wrap gap-1">
-                  {article.sentiment.emotions.map((emotion: string) => (
-                    <Badge
-                      key={emotion}
-                      variant="outline"
-                      className="text-xs border-gray-600 text-gray-300"
-                    >
-                      {emotion}
-                    </Badge>
-                  ))}
+        <div className="relative mb-8 p-[2px] rounded-xl bg-gradient-to-r from-purple-800 via-purple-800 to-white animate-gradient ">
+          <Card className="bg-black border-0 rounded-xl overflow-hidden">
+            <CardContent className="px-6 py-0 bg-gradient-to-br from-black via-zinc-950 to-purple-950/10">
+              {/* Header with Sentiment */}
+              <div className="flex items-center justify-between py-4 border-b border-purple-500/20">
+                <div className="flex items-center gap-3">
+                  {/* <div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                    <Sparkles className="h-5 w-5 text-purple-400" />
+                  </div> */}
+                  <div>
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      AI Summary
+                    </h3>
+                    <p className="text-xs text-gray-400">
+                      Powered by <span className="font-oxanium">Quantum</span>{" "}
+                      AI
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-400">Sentiment:</span>
+                  <span
+                    className={`text-sm font-semibold ${
+                      article.sentiment.overall === "Positive"
+                        ? "text-green-400"
+                        : article.sentiment.overall === "Negative"
+                        ? "text-red-400"
+                        : "text-yellow-400"
+                    }`}
+                  >
+                    {article.sentiment.overall} ({article.sentiment.confidence}
+                    %)
+                  </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Quick Stats */}
-          <Card className="bg-zinc-900 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-400" />
-                Quick Stats
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">Reading Time:</span>
-                <span className="text-white font-medium">
-                  {article.readTime}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-300 text-sm">Published:</span>
-                <span className="text-white font-medium">
-                  {article.publishedAt}
-                </span>
+              {/* Summary Content */}
+              <div className="py-4">
+                {isGenerating && (
+                  <div className="flex items-center gap-3 py-4">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                      <div
+                        className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                    </div>
+                    <GeneratingText text="Quantum is generating summary..." />
+                  </div>
+                )}
+
+                {showSummary && (
+                  <div className="relative">
+                    <div
+                      className={`text-gray-200 leading-relaxed text-[15px] ${
+                        !isExpanded ? "line-clamp-4" : ""
+                      }`}
+                    >
+                      <ResponseStream
+                        textStream={article.aiSummary}
+                        mode="typewriter"
+                        speed={50}
+                        className="inline"
+                      />
+                    </div>
+
+                    {article.aiSummary.length > 180 && (
+                      <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="mt-4 flex items-center gap-2 text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
+                      >
+                        {isExpanded ? (
+                          <>
+                            <span>Show Less</span>
+                            <ChevronUp className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
+                          </>
+                        ) : (
+                          <>
+                            <span>Read More</span>
+                            <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -431,124 +408,8 @@ export default function NewsDetailPage() {
         </div>
       </div>
 
-      {/* Floating Chat Button */}
-      <Button
-        onClick={() => setIsChatOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-white hover:bg-indigo-700 shadow-lg z-50"
-        size="lg"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
-
-      {/* Chat Modal */}
-      <AnimatePresence>
-        {isChatOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-zinc-900 rounded-2xl border border-gray-700 w-full max-w-2xl h-[600px] flex flex-col"
-            >
-              {/* Chat Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center">
-                    <Bot className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      AI Assistant
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      Discuss this article
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsChatOpen(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Chat Messages */}
-              <ScrollArea className="flex-1 p-6">
-                <div className="space-y-4">
-                  {chatMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.type === "user"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                          message.type === "user"
-                            ? "bg-indigo-600 text-white"
-                            : "bg-zinc-800 text-gray-200"
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs opacity-70 mt-1">
-                          {format(message.timestamp, "HH:mm")}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  {isTyping && (
-                    <div className="flex justify-start">
-                      <div className="bg-zinc-800 rounded-2xl px-4 py-2">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.1s" }}
-                          ></div>
-                          <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                            style={{ animationDelay: "0.2s" }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-
-              {/* Chat Input */}
-              <div className="p-6 border-t border-gray-700">
-                <div className="flex gap-2">
-                  <Input
-                    value={currentMessage}
-                    onChange={(e) => setCurrentMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    placeholder="Ask about this article..."
-                    className="flex-1 bg-zinc-800 border-gray-600 text-white placeholder-gray-400"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!currentMessage.trim() || isTyping}
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* AI Chat Component */}
+      <ArticleChatButton articleId={articleId} articleTitle={article.title} />
 
       <Footer />
     </div>
