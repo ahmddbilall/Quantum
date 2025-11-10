@@ -155,27 +155,18 @@ export function useCryptoData(): MarketDataHookReturn {
       };
 
       ws.onerror = (error) => {
-        console.error("Binance WebSocket error details:", {
-          error,
+        // Silent error logging - don't expose to users
+        console.log("WebSocket connection issue detected", {
           readyState: ws.readyState,
-          url: ws.url,
-          protocol: ws.protocol,
         });
         setIsConnected(false);
 
-        // More specific error messages
-        if (ws.readyState === WebSocket.CONNECTING) {
-          setError(
-            "Failed to connect to Binance. Check your internet connection."
-          );
-        } else {
-          setError("WebSocket connection failed. Please try again.");
-        }
+        // Don't set user-facing error messages
+        // The UI will gracefully handle the disconnected state
       };
     } catch (error) {
-      console.error("Failed to create Binance WebSocket:", {
-        error,
-        message: error instanceof Error ? error.message : "Unknown error",
+      // Silent error logging
+      console.log("WebSocket initialization issue:", {
         stack: error instanceof Error ? error.stack : undefined,
       });
       setError(

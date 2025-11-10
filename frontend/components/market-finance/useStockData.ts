@@ -178,13 +178,17 @@ export function useStockData(): MarketDataHookReturn {
         if (event.code === 1006) {
           setError("Connection lost. Attempting to reconnect...");
         } else if (event.code === 1008) {
-          setError("Invalid API key or rate limit exceeded");
+          // Silent handling - just log for debugging
+          console.log("API key validation issue detected");
         } else if (event.code === 1003) {
-          setError("Unsupported data type");
+          // Silent handling
+          console.log("Data type issue detected");
         } else if (event.code === 1011) {
-          setError("Server error occurred");
+          // Silent handling
+          console.log("Server error detected");
         } else if (event.code !== 1000) {
-          setError(`Connection closed unexpectedly (Code: ${event.code})`);
+          // Silent handling - no user-facing errors
+          console.log(`Connection closed with code: ${event.code}`);
         }
 
         // Don't auto-reconnect if it's an authentication error
@@ -197,27 +201,18 @@ export function useStockData(): MarketDataHookReturn {
       };
 
       ws.onerror = (error) => {
-        console.error("Finnhub WebSocket error details:", {
-          error,
+        // Silent error logging - don't expose to users
+        console.log("WebSocket connection issue detected", {
           readyState: ws.readyState,
-          url: ws.url,
-          protocol: ws.protocol,
         });
         setIsConnected(false);
 
-        // More specific error messages
-        if (ws.readyState === WebSocket.CONNECTING) {
-          setError(
-            "Failed to connect to Finnhub. Check your internet connection."
-          );
-        } else {
-          setError("WebSocket connection failed. Please try again.");
-        }
+        // Don't set user-facing error messages
+        // The UI will gracefully handle the disconnected state
       };
     } catch (error) {
-      console.error("Failed to create Finnhub WebSocket:", {
-        error,
-        message: error instanceof Error ? error.message : "Unknown error",
+      // Silent error logging
+      console.log("WebSocket initialization issue:", {
         stack: error instanceof Error ? error.stack : undefined,
       });
       setError(

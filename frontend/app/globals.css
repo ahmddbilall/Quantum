@@ -166,6 +166,16 @@
   display: none; /* Chrome, Safari and Opera */
 }
 
+/* Custom scrollbar styles - hidden but functional */
+.scrollbar-thin {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 /* Smooth animations */
 * {
   transition-property: color, background-color, border-color,

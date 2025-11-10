@@ -19,7 +19,7 @@ export default function MarketFinancePage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            📈 Market & Finance
+            Market & Finance
           </h1>
           <p className="text-gray-300 text-xl">
             Track markets, cryptocurrencies, and financial news in real-time
