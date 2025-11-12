@@ -27,6 +27,7 @@ export interface NewsArticle {
   views: number;
   image: string;
   tags: string[];
+  sentiment?: "positive" | "negative" | "neutral";
 }
 
 export interface SearchHookReturn {
