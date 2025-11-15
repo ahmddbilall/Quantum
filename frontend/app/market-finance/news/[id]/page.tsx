@@ -2,30 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  Clock,
-  Share2,
-  Bookmark,
-  TrendingUp,
-  Calendar,
-  User,
-  BookmarkPlus,
-  ChevronDown,
-  ChevronUp,
-  BarChart3,
-  Activity,
-} from "lucide-react";
+import { Clock, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
-import { ResponseStream } from "@/components/ui/response-stream";
-import { GeneratingText } from "@/components/ui/generating-text";
 import { ArticleChatButton } from "@/components/aichat";
+import {
+  ArticleHeader,
+  AIAnalysisCard,
+  ArticleContent,
+  ArticleTags,
+  BackButton,
+} from "@/components/article";
 
 // Mock data - will be replaced with actual data fetching later
 const mockFinanceNews = {
@@ -158,7 +149,6 @@ export default function FinanceNewsDetailPage() {
 
   const [article, setArticle] = useState<any>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(true);
   const [showSummary, setShowSummary] = useState(false);
 
@@ -251,81 +241,52 @@ export default function FinanceNewsDetailPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
-        <Button
-          variant="ghost"
+        <BackButton
           onClick={() => router.back()}
-          className="mb-6 text-gray-400 hover:text-white hover:bg-zinc-800"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Market Finance
-        </Button>
+          label="Back to Market Finance"
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Side - Article Content (2/3 width) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Article Header */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Badge className="bg-white/10 text-white border border-white/20">
-                  <TrendingUp className="h-3 w-3 mr-1" />
-                  {article.category}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="border-zinc-700 text-zinc-400"
-                >
-                  <Clock className="h-3 w-3 mr-1" />
-                  {article.publishedAt}
-                </Badge>
-                {/* Sentiment Badge */}
-                <div
-                  className={`px-3 py-1 rounded-full ${
-                    getSentimentStyle(article.sentiment).bgColor
-                  } border ${
-                    getSentimentStyle(article.sentiment).borderColor
-                  } ${
-                    getSentimentStyle(article.sentiment).textColor
-                  } text-xs font-medium flex items-center gap-1`}
-                >
-                  <span className="text-sm">
-                    {getSentimentStyle(article.sentiment).icon}
-                  </span>
-                  <span className="capitalize">{article.sentiment}</span>
-                </div>
-              </div>
+            <ArticleHeader
+              title={article.title}
+              author={article.author}
+              source={article.source}
+              publishedDate={article.publishedDate}
+              category={article.category}
+              isBookmarked={isBookmarked}
+              onShare={handleShare}
+              onBookmark={handleBookmark}
+              additionalBadges={
+                <>
+                  <Badge
+                    variant="outline"
+                    className="border-zinc-700 text-zinc-400"
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    {article.publishedAt}
+                  </Badge>
+                  <div
+                    className={`px-3 py-1 rounded-full ${
+                      getSentimentStyle(article.sentiment).bgColor
+                    } border ${
+                      getSentimentStyle(article.sentiment).borderColor
+                    } ${
+                      getSentimentStyle(article.sentiment).textColor
+                    } text-xs font-medium flex items-center gap-1`}
+                  >
+                    <span className="text-sm">
+                      {getSentimentStyle(article.sentiment).icon}
+                    </span>
+                    <span className="capitalize">{article.sentiment}</span>
+                  </div>
+                </>
+              }
+            />
 
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
-                {article.title}
-              </h1>
-
-              <p className="text-lg text-gray-400 mb-6">{article.summary}</p>
-
-              <div className="flex items-center justify-between pb-6 border-b border-zinc-800">
-                <div className="flex items-center gap-6 text-sm text-gray-400">
-                  <span className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {article.author} • {article.source}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {format(article.publishedDate, "MMM dd, yyyy 'at' HH:mm")}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={handleShare}>
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleBookmark}>
-                    {isBookmarked ? (
-                      <Bookmark className="h-4 w-4 fill-current" />
-                    ) : (
-                      <BookmarkPlus className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <div className="text-lg text-gray-400 mb-6">{article.summary}</div>
 
             {/* Beautiful Chart Card with Gradient Border */}
             <div className="relative p-[2px] pb-1 rounded-xl bg-gradient-to-r from-purple-500 via-gray-400 to-white animate-gradient">
@@ -359,136 +320,20 @@ export default function FinanceNewsDetailPage() {
             </div>
 
             {/* Article Content */}
-            <Card className="bg-zinc-900 border-zinc-800">
-              <CardContent className="p-6 md:p-8">
-                <div
-                  className="prose prose-invert prose-lg max-w-none text-white"
-                  dangerouslySetInnerHTML={{ __html: article.fullContent }}
-                />
-              </CardContent>
-            </Card>
+            <ArticleContent content={article.fullContent} />
 
             {/* Tags */}
-            <div className="pt-6 border-t border-zinc-800">
-              <h3 className="text-sm font-semibold mb-3 text-gray-400">
-                Related Topics
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {article.tags.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-300 border border-zinc-800 hover:border-white/30 transition-colors cursor-pointer"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <ArticleTags tags={article.tags} />
           </div>
 
           {/* Right Side - AI Summary (1/3 width) - Fixed Position */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              {/* AI Summary Section */}
-              <div className="relative p-[2px] rounded-xl bg-gradient-to-r from-purple-500 via-gray-400 to-white animate-gradient">
-                <Card className="bg-black border-0 rounded-xl overflow-hidden">
-                  <CardContent className="px-6 py-0 bg-gradient-to-br from-black via-zinc-950 to-purple-950/10">
-                    {/* Header */}
-                    <div className="flex items-center justify-between py-4 border-b border-purple-500/20">
-                      <div className="flex items-center gap-3">
-                        <div>
-                          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                            AI Analysis
-                          </h3>
-                          <p className="text-xs text-gray-400">
-                            Powered by{" "}
-                            <span className="font-oxanium">Quantum</span> AI
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Sentiment Display */}
-                    <div className="py-3 border-b border-purple-500/20">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-400">
-                          Sentiment:
-                        </span>
-                        <span
-                          className={`text-sm font-semibold ${
-                            article.sentiment_analysis.overall === "Positive"
-                              ? "text-green-400"
-                              : article.sentiment_analysis.overall ===
-                                "Negative"
-                              ? "text-red-400"
-                              : "text-yellow-400"
-                          }`}
-                        >
-                          {article.sentiment_analysis.overall} (
-                          {article.sentiment_analysis.confidence}%)
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Summary Content */}
-                    <div className="py-4">
-                      {isGenerating && (
-                        <div className="flex items-center gap-3 py-4">
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                            <div
-                              className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.1s" }}
-                            ></div>
-                            <div
-                              className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"
-                              style={{ animationDelay: "0.2s" }}
-                            ></div>
-                          </div>
-                          <GeneratingText text="Quantum is analyzing..." />
-                        </div>
-                      )}
-
-                      {showSummary && (
-                        <div className="relative">
-                          <div
-                            className={`text-gray-200 leading-relaxed text-[15px] ${
-                              !isExpanded ? "line-clamp-6" : ""
-                            }`}
-                          >
-                            <ResponseStream
-                              textStream={article.aiSummary}
-                              mode="typewriter"
-                              speed={50}
-                              className="inline"
-                            />
-                          </div>
-
-                          {article.aiSummary.length > 180 && (
-                            <button
-                              onClick={() => setIsExpanded(!isExpanded)}
-                              className="mt-4 flex items-center gap-2 text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors duration-200 group"
-                            >
-                              {isExpanded ? (
-                                <>
-                                  <span>Show Less</span>
-                                  <ChevronUp className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
-                                </>
-                              ) : (
-                                <>
-                                  <span>Read More</span>
-                                  <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+            <AIAnalysisCard
+              aiSummary={article.aiSummary}
+              sentimentAnalysis={article.sentiment_analysis}
+              isGenerating={isGenerating}
+              showSummary={showSummary}
+            />
           </div>
         </div>
       </div>
