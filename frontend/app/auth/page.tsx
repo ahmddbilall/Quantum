@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import {
   Eye,
   EyeOff,
@@ -42,6 +45,10 @@ export default function AuthPage() {
     agreeToTerms: false,
   });
 
+  const { login } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({
       ...prev,
@@ -53,8 +60,41 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    if (isLogin) {
+      // Handle login
+      const success = await login(formData.email, formData.password);
+
+      if (success) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
+        router.push("/");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid email or password",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Handle signup - for now just show a message
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast({
+        title: "Account Created",
+        description: "Please use the login form to sign in",
+      });
+      setIsLogin(true);
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        rememberMe: false,
+        agreeToTerms: false,
+      });
+    }
+
     setIsLoading(false);
   };
 
@@ -272,7 +312,7 @@ export default function AuthPage() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                        className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300 cursor-pointer"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -319,7 +359,7 @@ export default function AuthPage() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300"
+                            className="absolute right-0 top-0 h-full px-3 text-gray-500 hover:text-gray-300 cursor-pointer"
                             onClick={() =>
                               setShowConfirmPassword(!showConfirmPassword)
                             }
@@ -402,7 +442,7 @@ export default function AuthPage() {
                   {/* Submit Button */}
                   <Button
                     type="submit"
-                    className="w-full h-12 border-1 border-white text-black hover:bg-white hover:text-black bg-white font-medium"
+                    className="w-full h-12 border-1 border-white text-black hover:bg-white hover:text-black bg-white font-medium cursor-pointer"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -436,7 +476,7 @@ export default function AuthPage() {
                     <Button
                       key={provider.name}
                       variant="outline"
-                      className="w-full h-12 border-gray-500 bg-transparent hover:bg-zinc-800 text-gray-300 hover:text-white"
+                      className="w-full h-12 border-gray-500 bg-transparent hover:bg-zinc-800 text-gray-300 hover:text-white cursor-pointer"
                     >
                       <provider.icon className="h-5 w-5 mr-3" />
                       {provider.name}
@@ -452,7 +492,7 @@ export default function AuthPage() {
                       : "Already have an account?"}{" "}
                     <button
                       onClick={toggleMode}
-                      className="text-white hover:underline font-medium"
+                      className="text-white hover:underline font-medium cursor-pointer"
                     >
                       {isLogin ? "Sign up" : "Sign in"}
                     </button>

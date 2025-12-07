@@ -1,9 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   showSearch?: boolean;
@@ -12,6 +13,7 @@ interface NavbarProps {
 const Navbar = ({ showSearch = false }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   return (
     <nav className="bg-[#121212] border-b border-gray-800">
@@ -70,7 +72,7 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
                     <input
                       type="text"
                       placeholder="Search..."
-                      className="bg-gray-800 text-white px-3 py-1 rounded-md border border-gray-600 focus:outline-none focus:border-white transition-colors duration-200"
+                      className="bg-transparent text-white px-3 py-1 rounded-md border border-gray-600 focus:outline-none focus:border-white transition-colors duration-200"
                       autoFocus
                       onBlur={() => setIsSearchOpen(false)}
                       onKeyDown={(e) => {
@@ -88,12 +90,34 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
               </>
             )}
 
-            <Button
-              variant="outline"
-              className="border-white text-white cursor-pointer hover:bg-white hover:text-black transition-all duration-200 bg-transparent"
-            >
-              <Link href="/auth">Login</Link>
-            </Button>
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <Link href="/profile">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="hover:bg-zinc-800 transition-all duration-200 cursor-pointer"
+                  >
+                    <User className="h-5 w-5 text-white" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  className="hover:bg-zinc-800 transition-all duration-200 cursor-pointer"
+                >
+                  <LogOut className="h-5 w-5 text-white" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="border-white text-white cursor-pointer hover:bg-white hover:text-black transition-all duration-200 bg-transparent"
+              >
+                <Link href="/auth">Login</Link>
+              </Button>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -141,13 +165,37 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
               About
             </Link>
             <div className="flex space-x-2 px-3 py-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-white text-white bg-transparent"
-              >
-                <Link href="/auth">Login</Link>
-              </Button>
+              {user ? (
+                <>
+                  <Link href="/profile">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-white text-white bg-transparent cursor-pointer"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={logout}
+                    className="border-white text-white bg-transparent cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white text-white bg-transparent cursor-pointer"
+                >
+                  <Link href="/auth">Login</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>

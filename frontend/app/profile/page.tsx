@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
@@ -14,6 +14,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -106,13 +108,39 @@ interface BookmarkedArticle {
 }
 
 export default function ProfilePage() {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [activeTab, setActiveTab] = useState("preferences");
   const [searchWatchlist, setSearchWatchlist] = useState("");
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/auth");
+    }
+  }, [user, isLoading, router]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if no user
+  if (!user) {
+    return null;
+  }
+
   const [userProfile, setUserProfile] = useState<UserProfile>({
-    name: "John Doe",
-    email: "john.doe@example.com",
+    name: user.name,
+    email: user.email,
     phone: "+1 (555) 123-4567",
     location: "New York, NY",
     bio: "Passionate news reader and financial market enthusiast. Love staying updated with the latest global events and market trends.",
@@ -371,7 +399,7 @@ export default function ProfilePage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 bg-black border-gray-600 text-gray-300 hover:bg-zinc-800"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 bg-black border-gray-600 text-gray-300 hover:bg-zinc-800 cursor-pointer"
                       onClick={() => setIsEditingProfile(true)}
                     >
                       <Edit2 className="h-3 w-3" />
@@ -534,7 +562,7 @@ export default function ProfilePage() {
                               }
                               size="sm"
                               onClick={() => handleCategoryToggle(category)}
-                              className={`justify-start ${
+                              className={`justify-start cursor-pointer ${
                                 contentPreferences.categories.includes(category)
                                   ? "bg-white text-black hover:bg-white/80"
                                   : "bg-transparent border-white text-white hover:bg-white hover:text-black"
@@ -570,7 +598,7 @@ export default function ProfilePage() {
                               }
                               size="sm"
                               onClick={() => handleSourceToggle(source)}
-                              className={`justify-start ${
+                              className={`justify-start cursor-pointer ${
                                 contentPreferences.sources.includes(source)
                                   ? "bg-white text-black hover:bg-white/80"
                                   : "bg-transparent border-white text-white hover:bg-white hover:text-black"
