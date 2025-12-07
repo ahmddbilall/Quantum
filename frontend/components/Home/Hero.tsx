@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InfiniteSlider } from "../ui/infinite-slider";
@@ -6,6 +6,7 @@ import { ProgressiveBlur } from "../ui/progressive-blur";
 import { ShootingStars } from "../ui/shooting-stars";
 import StarryBackground from "@/components/ui/starry-background";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const sliderItems = [
   {
@@ -39,11 +40,24 @@ const sliderItems = [
 ];
 
 const Hero = () => {
-
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMouseInside, setIsMouseInside] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const heroRef = useRef<HTMLElement>(null);
-  
+  const router = useRouter();
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   useEffect(() => {
     const heroElement = heroRef.current;
     if (!heroElement) return;
@@ -52,7 +66,7 @@ const Hero = () => {
       const rect = heroElement.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
+
       setMousePosition({ x, y });
     };
 
@@ -64,61 +78,69 @@ const Hero = () => {
       setIsMouseInside(false);
     };
 
-    heroElement.addEventListener('mousemove', handleMouseMove);
-    heroElement.addEventListener('mouseenter', handleMouseEnter);
-    heroElement.addEventListener('mouseleave', handleMouseLeave);
+    heroElement.addEventListener("mousemove", handleMouseMove);
+    heroElement.addEventListener("mouseenter", handleMouseEnter);
+    heroElement.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
-      heroElement.removeEventListener('mousemove', handleMouseMove);
-      heroElement.removeEventListener('mouseenter', handleMouseEnter);
-      heroElement.removeEventListener('mouseleave', handleMouseLeave);
+      heroElement.removeEventListener("mousemove", handleMouseMove);
+      heroElement.removeEventListener("mouseenter", handleMouseEnter);
+      heroElement.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
-
 
   return (
     <section ref={heroRef} className="relative min-h-screen overflow-hidden">
       <div className="absolute inset-0">
         {/* <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(0,0,0,0)_80%)]" /> */}
-        {
-          !isMouseInside && <StarryBackground opacity={0.6} includeCSSStars={true} />
-        }
-         {isMouseInside && (
-            <>
-              <div
-                className="absolute w-96 h-96 rounded-full bg-gradient-to-r from-blue-400/10 to-cyan-300/10 blur-3xl transition-all duration-300 ease-out"
-                style={{
-                  transform: `translate(${mousePosition.x - 192}px, ${mousePosition.y - 192}px)`,
-                }}
-              />
-              <div
-                className="absolute w-64 h-64 rounded-full bg-gradient-to-r from-purple-400/15 to-indigo-300/15 blur-2xl transition-all duration-500 ease-out"
-                style={{
-                  transform: `translate(${mousePosition.x * 0.7 - 128}px, ${mousePosition.y * 0.7 - 128}px)`,
-                }}
-              />
-              <div
-                className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-emerald-300/20 to-teal-200/20 blur-xl transition-all duration-700 ease-out"
-                style={{
-                  transform: `translate(${mousePosition.x * 0.5 - 64}px, ${mousePosition.y * 0.5 - 64}px)`,
-                }}
-              />
-              <div
-                className="absolute w-48 h-48 rounded-full bg-gradient-to-r from-pink-300/5 to-rose-200/5 blur-xl transition-all duration-400 ease-out"
-                style={{
-                  transform: `translate(${mousePosition.x * 0.3 - 96}px, ${mousePosition.y * 0.3 - 96}px)`,
-                }}
-              />
-              <div
-                className="absolute w-20 h-20 rounded-full bg-gradient-to-r from-yellow-200/30 to-amber-100/30 blur-lg transition-all duration-600 ease-out"
-                style={{
-                  transform: `translate(${mousePosition.x * 0.8 - 40}px, ${mousePosition.y * 0.8 - 40}px)`,
-                }}
-              />
-            </>
-          )}
+        {!isMouseInside && (
+          <StarryBackground opacity={0.6} includeCSSStars={true} />
+        )}
+        {isMouseInside && (
+          <>
+            <div
+              className="absolute w-96 h-96 rounded-full bg-gradient-to-r from-blue-400/10 to-cyan-300/10 blur-3xl transition-all duration-300 ease-out"
+              style={{
+                transform: `translate(${mousePosition.x - 192}px, ${
+                  mousePosition.y - 192
+                }px)`,
+              }}
+            />
+            <div
+              className="absolute w-64 h-64 rounded-full bg-gradient-to-r from-purple-400/15 to-indigo-300/15 blur-2xl transition-all duration-500 ease-out"
+              style={{
+                transform: `translate(${mousePosition.x * 0.7 - 128}px, ${
+                  mousePosition.y * 0.7 - 128
+                }px)`,
+              }}
+            />
+            <div
+              className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-emerald-300/20 to-teal-200/20 blur-xl transition-all duration-700 ease-out"
+              style={{
+                transform: `translate(${mousePosition.x * 0.5 - 64}px, ${
+                  mousePosition.y * 0.5 - 64
+                }px)`,
+              }}
+            />
+            <div
+              className="absolute w-48 h-48 rounded-full bg-gradient-to-r from-pink-300/5 to-rose-200/5 blur-xl transition-all duration-400 ease-out"
+              style={{
+                transform: `translate(${mousePosition.x * 0.3 - 96}px, ${
+                  mousePosition.y * 0.3 - 96
+                }px)`,
+              }}
+            />
+            <div
+              className="absolute w-20 h-20 rounded-full bg-gradient-to-r from-yellow-200/30 to-amber-100/30 blur-lg transition-all duration-600 ease-out"
+              style={{
+                transform: `translate(${mousePosition.x * 0.8 - 40}px, ${
+                  mousePosition.y * 0.8 - 40
+                }px)`,
+              }}
+            />
+          </>
+        )}
       </div>
-
 
       {/* Hero Content */}
       <div className="relative z-10 flex items-center justify-center h-screen">
@@ -134,11 +156,17 @@ const Hero = () => {
             <div className="flex items-center bg-white bg-opacity-10 backdrop-blur-sm rounded-full p-2">
               <Input
                 placeholder="Ask the AI anything about current events..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="flex-1 bg-transparent text-black placeholder-gray-300 
                 !border-0 !outline-none focus:!outline-none focus:!ring-0 
                 focus:!border-0 focus:!shadow-none !shadow-none"
               />
-              <Button className="bg-white text-black hover:bg-gray-200 rounded-full px-6">
+              <Button
+                onClick={handleSearch}
+                className="bg-white text-black hover:bg-gray-200 rounded-full px-6 cursor-pointer"
+              >
                 Ask AI
               </Button>
             </div>
@@ -155,20 +183,23 @@ const Hero = () => {
             <div className="relative py-6 md:w-[calc(100%-11rem)]">
               <InfiniteSlider gap={112}>
                 {sliderItems.map((item, index) => (
-                  <div key={index} className="flex items-center justify-center h-8">
+                  <div
+                    key={index}
+                    className="flex items-center justify-center h-8"
+                  >
                     <img
                       className={`mx-auto brightness-0 invert ${
-                        item.alt.includes('Al Jazeera') || 
-                        item.alt.includes('NewsBTC') || 
-                        item.alt.includes('CryptoSlate') 
-                          ? 'h-20 min-w-[80px]' 
-                          : 'h-8'
+                        item.alt.includes("Al Jazeera") ||
+                        item.alt.includes("NewsBTC") ||
+                        item.alt.includes("CryptoSlate")
+                          ? "h-20 min-w-[80px]"
+                          : "h-8"
                       }`}
                       src={item.src}
                       alt={item.alt}
                       style={{
-                        minHeight: '32px',
-                        objectFit: 'contain'
+                        minHeight: "32px",
+                        objectFit: "contain",
                       }}
                     />
                   </div>

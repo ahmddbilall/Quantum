@@ -212,7 +212,7 @@ export default function NewsDetailPage() {
         {/* Back Button */}
         <BackButton
           onClick={() => window.history.back()}
-          label="Back to News Feed"
+          label="Back"
         />
 
         {/* Article Header */}

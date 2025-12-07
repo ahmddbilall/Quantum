@@ -48,12 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    // Clear state and storage first
     setUser(null);
     localStorage.removeItem("quantum_user");
-    // Use window.location instead of router to avoid hook issues
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
-    }
+
+    // Use setTimeout to ensure state cleanup completes before navigation
+    setTimeout(() => {
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    }, 0);
   };
 
   return (

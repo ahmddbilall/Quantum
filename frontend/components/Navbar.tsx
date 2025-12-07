@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, Search, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
@@ -13,7 +14,17 @@ interface NavbarProps {
 const Navbar = ({ showSearch = false }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
 
   return (
     <nav className="bg-[#121212] border-b border-gray-800">
@@ -72,18 +83,28 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
                     <input
                       type="text"
                       placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       className="bg-transparent text-white px-3 py-1 rounded-md border border-gray-600 focus:outline-none focus:border-white transition-colors duration-200"
                       autoFocus
-                      onBlur={() => setIsSearchOpen(false)}
+                      onBlur={() => {
+                        setTimeout(() => setIsSearchOpen(false), 200);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Escape") {
                           setIsSearchOpen(false);
+                          setSearchQuery("");
+                        } else {
+                          handleSearch(e);
                         }
                       }}
                     />
                     <X
                       className="h-4 w-4 text-gray-400 hover:text-white cursor-pointer transition-colors duration-200"
-                      onClick={() => setIsSearchOpen(false)}
+                      onClick={() => {
+                        setIsSearchOpen(false);
+                        setSearchQuery("");
+                      }}
                     />
                   </div>
                 )}
