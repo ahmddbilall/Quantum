@@ -7,7 +7,7 @@ import { Sparkles, Brain, MessageSquare } from "lucide-react";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="min-h-screen bg-black text-white">
       <Navbar />
 
       <div className="relative">

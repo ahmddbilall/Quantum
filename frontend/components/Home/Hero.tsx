@@ -90,7 +90,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section ref={heroRef} className="relative min-h-screen overflow-hidden">
+    <section ref={heroRef} className="relative min-h-screen overflow-hidden bg-black">
       <div className="absolute inset-0">
         {/* <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(0,0,0,0)_80%)]" /> */}
         {!isMouseInside && (
@@ -101,41 +101,36 @@ const Hero = () => {
             <div
               className="absolute w-96 h-96 rounded-full bg-gradient-to-r from-blue-400/10 to-cyan-300/10 blur-3xl transition-all duration-300 ease-out"
               style={{
-                transform: `translate(${mousePosition.x - 192}px, ${
-                  mousePosition.y - 192
-                }px)`,
+                transform: `translate(${mousePosition.x - 192}px, ${mousePosition.y - 192
+                  }px)`,
               }}
             />
             <div
               className="absolute w-64 h-64 rounded-full bg-gradient-to-r from-purple-400/15 to-indigo-300/15 blur-2xl transition-all duration-500 ease-out"
               style={{
-                transform: `translate(${mousePosition.x * 0.7 - 128}px, ${
-                  mousePosition.y * 0.7 - 128
-                }px)`,
+                transform: `translate(${mousePosition.x * 0.7 - 128}px, ${mousePosition.y * 0.7 - 128
+                  }px)`,
               }}
             />
             <div
               className="absolute w-32 h-32 rounded-full bg-gradient-to-r from-emerald-300/20 to-teal-200/20 blur-xl transition-all duration-700 ease-out"
               style={{
-                transform: `translate(${mousePosition.x * 0.5 - 64}px, ${
-                  mousePosition.y * 0.5 - 64
-                }px)`,
+                transform: `translate(${mousePosition.x * 0.5 - 64}px, ${mousePosition.y * 0.5 - 64
+                  }px)`,
               }}
             />
             <div
               className="absolute w-48 h-48 rounded-full bg-gradient-to-r from-pink-300/5 to-rose-200/5 blur-xl transition-all duration-400 ease-out"
               style={{
-                transform: `translate(${mousePosition.x * 0.3 - 96}px, ${
-                  mousePosition.y * 0.3 - 96
-                }px)`,
+                transform: `translate(${mousePosition.x * 0.3 - 96}px, ${mousePosition.y * 0.3 - 96
+                  }px)`,
               }}
             />
             <div
               className="absolute w-20 h-20 rounded-full bg-gradient-to-r from-yellow-200/30 to-amber-100/30 blur-lg transition-all duration-600 ease-out"
               style={{
-                transform: `translate(${mousePosition.x * 0.8 - 40}px, ${
-                  mousePosition.y * 0.8 - 40
-                }px)`,
+                transform: `translate(${mousePosition.x * 0.8 - 40}px, ${mousePosition.y * 0.8 - 40
+                  }px)`,
               }}
             />
           </>
@@ -188,13 +183,12 @@ const Hero = () => {
                     className="flex items-center justify-center h-8"
                   >
                     <img
-                      className={`mx-auto brightness-0 invert ${
-                        item.alt.includes("Al Jazeera") ||
-                        item.alt.includes("NewsBTC") ||
-                        item.alt.includes("CryptoSlate")
+                      className={`mx-auto brightness-0 invert ${item.alt.includes("Al Jazeera") ||
+                          item.alt.includes("NewsBTC") ||
+                          item.alt.includes("CryptoSlate")
                           ? "h-20 min-w-[80px]"
                           : "h-8"
-                      }`}
+                        }`}
                       src={item.src}
                       alt={item.alt}
                       style={{

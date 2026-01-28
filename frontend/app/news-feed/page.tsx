@@ -298,7 +298,7 @@ export default function NewsFeedPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-zinc-900 p-6 rounded-lg border border-gray-700"
+              className="bg-black p-6 rounded-lg border border-gray-500"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Source Filter */}
@@ -425,11 +425,10 @@ export default function NewsFeedPage() {
                 variant={
                   selectedCategory === category ? "default" : "secondary"
                 }
-                className={`cursor-pointer transition-all duration-300 px-4 py-1 ${
-                  selectedCategory === category
-                    ? "bg-white text-black hover:bg-white/50"
-                    : "bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
-                }`}
+                className={`cursor-pointer transition-all duration-300 px-4 py-1 ${selectedCategory === category
+                  ? "bg-white text-black hover:bg-white/50"
+                  : "bg-zinc-800 text-gray-300 hover:bg-zinc-700 hover:text-white"
+                  }`}
                 onClick={() => setSelectedCategory(category)}
               >
                 {category === "all" ? "All Categories" : category}
@@ -445,7 +444,7 @@ export default function NewsFeedPage() {
               <Card
                 key={article.id}
                 onClick={() => handleArticleClick(article.id)}
-                className="bg-zinc-900 border py-0 pb-4 border-gray-700 hover:border-white/50 transition-all duration-500 cursor-pointer group backdrop-blur-sm overflow-hidden rounded-2xl hover:bg-gray-700/50"
+                className="bg-black border py-0 pb-4 border-gray-600 hover:border-white/50 transition-all duration-500 cursor-pointer group backdrop-blur-sm overflow-hidden rounded-2xl hover:bg-gray-700/50"
               >
                 <div className="aspect-video bg-gray-700 rounded-t-2xl relative overflow-hidden">
                   <img
@@ -477,7 +476,7 @@ export default function NewsFeedPage() {
                       <Badge
                         key={tag}
                         variant="outline"
-                        className="text-xs bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 transition-colors duration-200"
+                        className="text-xs bg-black/80 text-gray-300 border-gray-600 hover:bg-gray-600 transition-colors duration-200"
                       >
                         {tag}
                       </Badge>

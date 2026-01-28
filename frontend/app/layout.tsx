@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "Quantum - Your AI-Powered Gateway to News",
   description:
     "Stay informed, explore perspectives, and understand the context — instantly.",
+  icons: {
+    icon: "/quantum-logo.svg",
+  },
 };
 
 export default function RootLayout({
