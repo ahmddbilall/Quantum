@@ -25,13 +25,13 @@ export const createFakeChats = () => [
     title: "Bitcoin Price Analysis",
     messages: [
       {
-        id: 1,
+        id: "1",
         text: "What's the current Bitcoin price trend?",
         isBot: false,
         timestamp: "2:30 PM",
       },
       {
-        id: 2,
+        id: "2",
         text: "Based on the latest data, Bitcoin is showing strong support at $37,000 with resistance near $40,000. The market sentiment is cautiously optimistic, with several key indicators suggesting potential upward momentum in the coming weeks.",
         isBot: true,
         timestamp: "2:30 PM",
@@ -45,13 +45,13 @@ export const createFakeChats = () => [
     title: "Tech Industry Updates",
     messages: [
       {
-        id: 1,
+        id: "1",
         text: "Give me a summary of today's top headlines",
         isBot: false,
         timestamp: "10:15 AM",
       },
       {
-        id: 2,
+        id: "2",
         text: "Today's major headlines include: AI breakthrough in medical diagnostics, major tech companies reporting Q4 earnings, and regulatory discussions around cryptocurrency adoption. The tech sector is experiencing significant volatility as investors react to these developments.",
         isBot: true,
         timestamp: "10:15 AM",
@@ -65,13 +65,13 @@ export const createFakeChats = () => [
     title: "Global Market Overview",
     messages: [
       {
-        id: 1,
+        id: "1",
         text: "What are the major developments in USA today?",
         isBot: false,
         timestamp: "3:45 PM",
       },
       {
-        id: 2,
+        id: "2",
         text: "Key developments in the USA today include: Federal Reserve's latest policy announcement, significant movements in the stock market with tech stocks leading gains, and major policy discussions in Washington. Economic indicators suggest continued growth with moderate inflation concerns.",
         isBot: true,
         timestamp: "3:45 PM",
