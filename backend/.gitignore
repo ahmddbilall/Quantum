@@ -11,4 +11,4 @@ data_scraping/news_scraper/__pycache__/
 
 .github/
 
-models/bge-base-en-v1.5/
+bge_model/bge-base-en-v1.5/
