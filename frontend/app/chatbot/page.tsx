@@ -71,7 +71,7 @@ export default function ChatbotPage() {
 
   const createNewChat = () => {
     const newChat: Chat = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       title: "New Chat",
       messages: [],
       createdAt: new Date().toISOString(),

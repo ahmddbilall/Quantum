@@ -18,7 +18,7 @@ import { NewsArticle } from "./types";
 // Mock finance news data
 const financeNews: NewsArticle[] = [
   {
-    id: 1,
+    id: "1",
     title: "Federal Reserve Announces Interest Rate Decision",
     summary:
       "The Fed has decided to maintain current interest rates amid economic uncertainty.",
@@ -31,7 +31,7 @@ const financeNews: NewsArticle[] = [
     sentiment: "neutral", // "positive", "negative", or "neutral"
   },
   {
-    id: 2,
+    id: "2",
     title: "Bitcoin Surges Past $68,000 on Institutional Adoption",
     summary:
       "Major corporations continue to add Bitcoin to their treasury reserves.",
@@ -44,7 +44,7 @@ const financeNews: NewsArticle[] = [
     sentiment: "positive",
   },
   {
-    id: 3,
+    id: "3",
     title: "Tech Stocks Rally on Strong Earnings Reports",
     summary: "Major technology companies exceed earnings expectations for Q4.",
     category: "Stocks",
@@ -147,13 +147,10 @@ export function NewsTab() {
                   {/* Sentiment Indicator */}
                   <div className="flex-shrink-0">
                     <div
-                      className={`px-3 py-1 rounded-full ${
-                        getSentimentStyle(article.sentiment).bgColor
-                      } border ${
-                        getSentimentStyle(article.sentiment).borderColor
-                      } ${
-                        getSentimentStyle(article.sentiment).textColor
-                      } text-xs font-medium flex items-center gap-1`}
+                      className={`px-3 py-1 rounded-full ${getSentimentStyle(article.sentiment).bgColor
+                        } border ${getSentimentStyle(article.sentiment).borderColor
+                        } ${getSentimentStyle(article.sentiment).textColor
+                        } text-xs font-medium flex items-center gap-1`}
                       title={`Sentiment: ${article.sentiment}`}
                     >
                       <span className="text-sm">

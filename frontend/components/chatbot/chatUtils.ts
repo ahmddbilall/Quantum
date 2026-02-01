@@ -25,7 +25,7 @@ export const simulateBotResponse = async (
   ].replace("{query}", userMessage);
 
   const botMessage: Message = {
-    id: Date.now(),
+    id: crypto.randomUUID(),
     text: randomResponse,
     isBot: true,
     timestamp: new Date().toLocaleTimeString([], {
@@ -78,7 +78,7 @@ export const handleSendMessage = async (
   }
 
   const userMessage: Message = {
-    id: Date.now(),
+    id: crypto.randomUUID(),
     text: textToSend,
     isBot: false,
     timestamp: new Date().toLocaleTimeString([], {

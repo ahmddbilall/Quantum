@@ -18,7 +18,7 @@ export interface MarketWidgetProps {
 }
 
 export interface NewsArticle {
-  id: number;
+  id: string;
   title: string;
   summary: string;
   category: string;

@@ -1,5 +1,5 @@
 export interface Message {
-  id: number;
+  id: string;
   text: string;
   isBot: boolean;
   timestamp: string;
