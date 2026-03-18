@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/services/authService";
+import {
+  getCachedMarketWatchlist,
+  setCachedMarketWatchlist,
+} from "@/lib/auth-storage";
 
 export interface WishlistItem {
   symbol: string;
   name: string;
   type: "stock" | "crypto";
 }
-
-const STORAGE_KEY_STOCKS = "market-finance-watchlist-stocks";
-const STORAGE_KEY_CRYPTO = "market-finance-watchlist-crypto";
 
 // Default lists - these are constant and never change
 const DEFAULT_CRYPTO_LIST: WishlistItem[] = [
@@ -31,7 +34,7 @@ const DEFAULT_STOCK_LIST: WishlistItem[] = [
 ];
 
 export function useWishlist(type: "stock" | "crypto") {
-  const storageKey = type === "stock" ? STORAGE_KEY_STOCKS : STORAGE_KEY_CRYPTO;
+  const { user, isAuthenticated, syncUserProfile } = useAuth();
 
   // Get the default list for this type
   const getDefaultList = (): WishlistItem[] => {
@@ -42,78 +45,246 @@ export function useWishlist(type: "stock" | "crypto") {
 
   // Start with empty watchlist to avoid hydration mismatch
   const [watchlist, setWatchlist] = useState<WishlistItem[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const [isUserWatchlist, setIsUserWatchlist] = useState(false);
 
-  // Load from localStorage only after component mounts (client-side only)
-  useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
+  const normalizeSymbol = (symbol: string, itemType: "stock" | "crypto") => {
+    const normalized = symbol.trim().toUpperCase();
 
-        // Migrate old format to new format for crypto
-        if (type === "crypto") {
-          const migrated = parsed.map((item: WishlistItem) => {
-            // Convert old USD format to USDT format
-            if (item.symbol.endsWith("USD") && !item.symbol.endsWith("USDT")) {
-              return { ...item, symbol: item.symbol.replace("USD", "USDT") };
-            }
-            return item;
-          });
-          setWatchlist(migrated);
-          localStorage.setItem(storageKey, JSON.stringify(migrated));
-        } else {
-          setWatchlist(parsed);
-        }
-      } catch {
-        // Initialize with default list on error
-        const defaultList = getDefaultList();
-        setWatchlist(defaultList);
-        localStorage.setItem(storageKey, JSON.stringify(defaultList));
-      }
-    } else {
-      // First time - initialize with default list
-      const defaultList = getDefaultList();
-      setWatchlist(defaultList);
-      localStorage.setItem(storageKey, JSON.stringify(defaultList));
+    if (itemType !== "crypto") {
+      return normalized;
     }
-  }, [storageKey]);
 
-  // Save to localStorage whenever watchlist changes (but only after mount)
-  useEffect(() => {
-    if (mounted && watchlist.length > 0) {
-      localStorage.setItem(storageKey, JSON.stringify(watchlist));
+    if (normalized.endsWith("USDT")) {
+      return normalized;
     }
-  }, [watchlist, storageKey, mounted]);
 
-  const addToWatchlist = (symbol: string, name: string) => {
-    setWatchlist((prev) => {
-      // Check if already exists
-      if (prev.some((item) => item.symbol === symbol)) {
-        return prev;
-      }
-      return [...prev, { symbol, name, type }];
-    });
+    if (normalized.endsWith("USD")) {
+      return `${normalized.slice(0, -3)}USDT`;
+    }
+
+    return `${normalized}USDT`;
   };
 
-  const removeFromWatchlist = (symbol: string) => {
-    setWatchlist((prev) => prev.filter((item) => item.symbol !== symbol));
+  const normalizeWatchlistItem = (value: unknown): WishlistItem | null => {
+    if (!value || typeof value !== "object") {
+      return null;
+    }
+
+    const raw = value as Record<string, unknown>;
+    const rawSymbol = String(raw.symbol || "").trim();
+    const inferredType =
+      raw.type === "crypto" || raw.type === "stock"
+        ? raw.type
+        : rawSymbol.toUpperCase().endsWith("USDT")
+          ? "crypto"
+          : "stock";
+    const symbol = normalizeSymbol(rawSymbol, inferredType);
+
+    if (!symbol) {
+      return null;
+    }
+
+    return {
+      symbol,
+      name: String(raw.name || symbol).trim() || symbol,
+      type: inferredType,
+    };
+  };
+
+  const normalizeWatchlistFromPreferences = (
+    preferences: Record<string, unknown> | null | undefined,
+  ): WishlistItem[] => {
+    const rawWatchlist = preferences?.watchlist;
+
+    if (!Array.isArray(rawWatchlist)) {
+      return [];
+    }
+
+    return rawWatchlist
+      .map((item) => normalizeWatchlistItem(item))
+      .filter((item): item is WishlistItem => item !== null);
+  };
+
+  const getUserWatchlist = (): WishlistItem[] => {
+    return normalizeWatchlistFromPreferences(
+      (user?.preferences || {}) as Record<string, unknown>,
+    );
+  };
+
+  const getWatchlistByType = (items: WishlistItem[]) =>
+    items.filter((item) => item.type === type);
+
+  const getMergedWatchlist = (nextTypeItems: WishlistItem[]) => {
+    const existing = getUserWatchlist().filter((item) => item.type !== type);
+    return [...existing, ...nextTypeItems];
+  };
+
+  // Load watchlist based on authentication status
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const fullWatchlist = getUserWatchlist();
+      const typeItems = getWatchlistByType(fullWatchlist);
+      const effective = typeItems.length > 0 ? typeItems : getDefaultList();
+
+      setWatchlist(effective);
+      setIsUserWatchlist(typeItems.length > 0);
+      setCachedMarketWatchlist(type, effective);
+    } else {
+      // User is not logged in - use cached guest watchlist or defaults
+      const cached = getCachedMarketWatchlist(type);
+      const normalizedCached = (cached || [])
+        .map((item) => normalizeWatchlistItem(item))
+        .filter((item): item is WishlistItem => item !== null)
+        .filter((item) => item.type === type);
+
+      if (cached === null) {
+        // No saved guest watchlist yet: show defaults without persisting.
+        setWatchlist(getDefaultList());
+      } else {
+        // Guest explicitly saved watchlist (can be empty after removals).
+        setWatchlist(normalizedCached);
+      }
+
+      setIsUserWatchlist(false);
+    }
+  }, [isAuthenticated, user, type]);
+
+  const addToWatchlist = async (symbol: string, name: string) => {
+    const normalizedSymbol = normalizeSymbol(symbol, type);
+    const nextTypeItems = watchlist.some(
+      (item) => item.symbol === normalizedSymbol,
+    )
+      ? watchlist
+      : [...watchlist, { symbol: normalizedSymbol, name, type }];
+
+    if (!isAuthenticated || !user) {
+      setWatchlist(nextTypeItems);
+      setCachedMarketWatchlist(type, nextTypeItems);
+      setIsUserWatchlist(false);
+      return;
+    }
+
+    try {
+      const nextMerged = getMergedWatchlist(nextTypeItems);
+      const nextPreferences = {
+        ...((user.preferences || {}) as Record<string, unknown>),
+        watchlist: nextMerged,
+      };
+
+      const updatedProfile = await authService.updateProfile({
+        preferences: nextPreferences,
+      });
+
+      syncUserProfile(updatedProfile);
+
+      const updatedTypeItems = getWatchlistByType(
+        normalizeWatchlistFromPreferences(
+          (updatedProfile.preferences || {}) as Record<string, unknown>,
+        ),
+      );
+
+      const effective =
+        updatedTypeItems.length > 0 ? updatedTypeItems : getDefaultList();
+      setWatchlist(effective);
+      setCachedMarketWatchlist(type, effective);
+      setIsUserWatchlist(updatedTypeItems.length > 0);
+    } catch (error) {
+      console.error("Failed to sync watchlist to backend:", error);
+    }
+  };
+
+  const removeFromWatchlist = async (symbol: string) => {
+    const normalizedSymbol = normalizeSymbol(symbol, type);
+    const nextTypeItems = watchlist.filter(
+      (item) => item.symbol !== normalizedSymbol,
+    );
+
+    if (!isAuthenticated || !user) {
+      setWatchlist(nextTypeItems);
+      setCachedMarketWatchlist(type, nextTypeItems);
+      setIsUserWatchlist(false);
+      return;
+    }
+
+    try {
+      const nextMerged = getMergedWatchlist(nextTypeItems);
+      const nextPreferences = {
+        ...((user.preferences || {}) as Record<string, unknown>),
+        watchlist: nextMerged,
+      };
+
+      const updatedProfile = await authService.updateProfile({
+        preferences: nextPreferences,
+      });
+
+      syncUserProfile(updatedProfile);
+
+      const updatedTypeItems = getWatchlistByType(
+        normalizeWatchlistFromPreferences(
+          (updatedProfile.preferences || {}) as Record<string, unknown>,
+        ),
+      );
+
+      const effective =
+        updatedTypeItems.length > 0 ? updatedTypeItems : getDefaultList();
+      setWatchlist(effective);
+      setCachedMarketWatchlist(type, effective);
+      setIsUserWatchlist(updatedTypeItems.length > 0);
+    } catch (error) {
+      console.error("Failed to sync watchlist to backend:", error);
+    }
   };
 
   const isInWatchlist = (symbol: string) => {
-    return watchlist.some((item) => item.symbol === symbol);
+    const normalizedSymbol = normalizeSymbol(symbol, type);
+    return watchlist.some((item) => item.symbol === normalizedSymbol);
   };
 
   const resetToDefaults = () => {
     const defaultList = getDefaultList();
-    setWatchlist(defaultList);
-    localStorage.setItem(storageKey, JSON.stringify(defaultList));
+
+    void (async () => {
+      if (!isAuthenticated || !user) {
+        setWatchlist(defaultList);
+        setCachedMarketWatchlist(type, defaultList);
+        setIsUserWatchlist(false);
+        return;
+      }
+
+      try {
+        const nextMerged = getMergedWatchlist(defaultList);
+        const nextPreferences = {
+          ...((user.preferences || {}) as Record<string, unknown>),
+          watchlist: nextMerged,
+        };
+
+        const updatedProfile = await authService.updateProfile({
+          preferences: nextPreferences,
+        });
+
+        syncUserProfile(updatedProfile);
+
+        const updatedTypeItems = getWatchlistByType(
+          normalizeWatchlistFromPreferences(
+            (updatedProfile.preferences || {}) as Record<string, unknown>,
+          ),
+        );
+
+        const effective =
+          updatedTypeItems.length > 0 ? updatedTypeItems : getDefaultList();
+        setWatchlist(effective);
+        setCachedMarketWatchlist(type, effective);
+        setIsUserWatchlist(updatedTypeItems.length > 0);
+      } catch (error) {
+        console.error("Failed to reset watchlist defaults:", error);
+      }
+    })();
   };
 
   return {
-    watchlist, // This is the user's watchlist (can be modified)
+    watchlist, // This is the user's or default watchlist
     defaultList: getDefaultList(), // This is the constant default list
+    isUserWatchlist, // Whether this is the user's watchlist or the default list
     addToWatchlist,
     removeFromWatchlist,
     isInWatchlist,

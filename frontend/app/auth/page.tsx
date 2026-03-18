@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import StarryBackground from "@/components/ui/starry-background";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,22 +19,86 @@ import {
   Mail,
   Lock,
   User,
-  Github,
-  Chrome,
   ArrowRight,
-  LogIn,
-  UserPlus,
   Shield,
   Zap,
   TrendingUp,
   MessageCircle,
 } from "lucide-react";
 
+const GOOGLE_IDENTITY_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
+
+type GoogleCredentialResponse = {
+  credential?: string;
+};
+
+type GoogleAccountsId = {
+  initialize: (config: {
+    client_id: string;
+    callback: (response: GoogleCredentialResponse) => void;
+  }) => void;
+  renderButton: (
+    parent: HTMLElement,
+    options: Record<string, string | number | boolean>,
+  ) => void;
+};
+
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        id?: GoogleAccountsId;
+      };
+    };
+  }
+}
+
+const loadGoogleIdentityScript = async (): Promise<void> => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (window.google?.accounts?.id) {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector(
+      `script[src="${GOOGLE_IDENTITY_SCRIPT_SRC}"]`,
+    ) as HTMLScriptElement | null;
+
+    if (existingScript) {
+      if (window.google?.accounts?.id) {
+        resolve();
+        return;
+      }
+
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("Failed to load Google Identity script.")),
+        { once: true },
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = GOOGLE_IDENTITY_SCRIPT_SRC;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () =>
+      reject(new Error("Failed to load Google Identity script."));
+    document.head.appendChild(script);
+  });
+};
+
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -45,9 +108,99 @@ export default function AuthPage() {
     agreeToTerms: false,
   });
 
-  const { login } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const setupGoogleButton = async () => {
+      try {
+        await loadGoogleIdentityScript();
+
+        if (
+          isCancelled ||
+          !googleButtonRef.current ||
+          !window.google?.accounts?.id
+        ) {
+          return;
+        }
+
+        const googleAccountsId = window.google.accounts.id;
+        googleButtonRef.current.innerHTML = "";
+
+        googleAccountsId.initialize({
+          client_id: googleClientId,
+          callback: async (response: GoogleCredentialResponse) => {
+            if (!response.credential) {
+              toast({
+                title: "Google sign-in failed",
+                description: "Google did not return a valid credential token.",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            setIsLoading(true);
+            const result = await loginWithGoogle(response.credential, {
+              rememberMe: formData.rememberMe,
+            });
+
+            if (result.success) {
+              toast({
+                title: "Welcome",
+                description: "Signed in with Google successfully.",
+              });
+              router.push("/");
+            } else {
+              toast({
+                title: "Google sign-in failed",
+                description: result.error || "Unable to sign in with Google.",
+                variant: "destructive",
+              });
+            }
+            setIsLoading(false);
+          },
+        });
+
+        googleAccountsId.renderButton(googleButtonRef.current, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          shape: "rectangular",
+          text: isLogin ? "signin_with" : "signup_with",
+          width: 360,
+          logo_alignment: "left",
+        });
+      } catch {
+        toast({
+          title: "Google unavailable",
+          description: "Could not load Google sign-in. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    void setupGoogleButton();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    googleClientId,
+    formData.rememberMe,
+    isLogin,
+    loginWithGoogle,
+    router,
+    toast,
+  ]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({
@@ -60,11 +213,16 @@ export default function AuthPage() {
     e.preventDefault();
     setIsLoading(true);
 
+    const normalizedEmail = formData.email.trim().toLowerCase();
+    const normalizedName = formData.name.trim();
+
     if (isLogin) {
       // Handle login
-      const success = await login(formData.email, formData.password);
+      const result = await login(normalizedEmail, formData.password, {
+        rememberMe: formData.rememberMe,
+      });
 
-      if (success) {
+      if (result.success) {
         toast({
           title: "Login Successful",
           description: "Welcome back!",
@@ -73,26 +231,73 @@ export default function AuthPage() {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid email or password",
+          description: result.error || "Invalid email or password",
           variant: "destructive",
         });
       }
     } else {
-      // Handle signup - for now just show a message
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast({
-        title: "Account Created",
-        description: "Please use the login form to sign in",
+      if (!normalizedEmail) {
+        toast({
+          title: "Email required",
+          description: "Please enter a valid email address.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (formData.password.length < 8) {
+        toast({
+          title: "Weak password",
+          description: "Password must be at least 8 characters long.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        toast({
+          title: "Password mismatch",
+          description: "Password and confirm password must match.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!formData.agreeToTerms) {
+        toast({
+          title: "Terms required",
+          description: "Please agree to the terms to create an account.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Handle signup
+      const result = await register({
+        email: normalizedEmail,
+        password: formData.password,
+        full_name: normalizedName || undefined,
       });
-      setIsLogin(true);
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        rememberMe: false,
-        agreeToTerms: false,
-      });
+
+      if (result.success) {
+        toast({
+          title: "Account Created",
+          description: "Your account has been created successfully. Loading...",
+        });
+        // Auto login is handled in context or we can redirect to login
+        router.push("/");
+      } else {
+        toast({
+          title: "Registration Failed",
+          description:
+            result.error || "Could not create account. Email might be in use.",
+          variant: "destructive",
+        });
+      }
     }
 
     setIsLoading(false);
@@ -109,11 +314,6 @@ export default function AuthPage() {
       agreeToTerms: false,
     });
   };
-
-  const socialProviders = [
-    { name: "Google", icon: Chrome, color: "bg-red-600 hover:bg-red-700" },
-    // { name: "GitHub", icon: Github, color: "bg-gray-800 hover:bg-gray-900" },
-  ];
 
   const benefits = [
     {
@@ -349,7 +549,7 @@ export default function AuthPage() {
                             onChange={(e) =>
                               handleInputChange(
                                 "confirmPassword",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className="pl-10 pr-10 bg-transparent border-gray-500 text-white placeholder-gray-500 focus:border-blue-500"
@@ -472,16 +672,19 @@ export default function AuthPage() {
 
                 {/* Social Login */}
                 <div className="space-y-3">
-                  {socialProviders.map((provider) => (
-                    <Button
-                      key={provider.name}
-                      variant="outline"
-                      className="w-full h-12 border-gray-500 bg-transparent hover:bg-zinc-800 text-gray-300 hover:text-white cursor-pointer"
-                    >
-                      <provider.icon className="h-5 w-5 mr-3" />
-                      {provider.name}
-                    </Button>
-                  ))}
+                  {googleClientId ? (
+                    <div className="flex justify-center">
+                      <div
+                        ref={googleButtonRef}
+                        className="w-full flex justify-center"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-center text-sm text-gray-500">
+                      Google sign-in is unavailable. Add
+                      NEXT_PUBLIC_GOOGLE_CLIENT_ID.
+                    </p>
+                  )}
                 </div>
 
                 {/* Toggle Mode */}

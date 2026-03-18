@@ -3,15 +3,21 @@ import React, { useEffect, useRef, memo } from "react";
 interface TradingViewStocksProps {
   wishlist: Array<{ symbol: string; name: string }>;
   onResetToDefaults?: () => void;
+  isUserWatchlist?: boolean;
 }
 
 function TradingViewStocks({
   wishlist,
   onResetToDefaults,
+  isUserWatchlist = false,
 }: TradingViewStocksProps) {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (wishlist.length === 0) {
+      return;
+    }
+
     if (container.current) {
       // Clear any existing content
       container.current.innerHTML = "";
@@ -70,26 +76,46 @@ function TradingViewStocks({
     <div className="bg-zinc-900 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold text-white">
-          Your Stock Watchlist ({wishlist.length})
+          {isUserWatchlist ? "Your Stock Watchlist" : "Default Stock List"} (
+          {wishlist.length})
         </h3>
       </div>
-      <div
-        className="tradingview-widget-container"
-        ref={container}
-        style={{ height: "500px" }}
-      >
-        <div className="tradingview-widget-container__widget"></div>
-        <div className="tradingview-widget-copyright">
-          <a
-            href="https://www.tradingview.com/"
-            rel="noopener nofollow"
-            target="_blank"
-            className="text-blue-400 text-xs"
-          >
-            <span>Stock quotes by TradingView</span>
-          </a>
+      {wishlist.length === 0 ? (
+        <div className="h-[500px] rounded-lg border border-zinc-800 bg-zinc-950/60 flex flex-col items-center justify-center text-center px-6">
+          <p className="text-white font-medium mb-2">No stock symbols yet</p>
+          <p className="text-sm text-zinc-400 max-w-md">
+            Add symbols from search results, or restore defaults to populate
+            your stock watchlist.
+          </p>
+          {onResetToDefaults && (
+            <button
+              type="button"
+              onClick={onResetToDefaults}
+              className="mt-4 px-4 py-2 text-sm rounded-md border border-zinc-700 text-zinc-200 hover:bg-zinc-800 transition-colors"
+            >
+              Restore Default Stock List
+            </button>
+          )}
         </div>
-      </div>
+      ) : (
+        <div
+          className="tradingview-widget-container"
+          ref={container}
+          style={{ height: "500px" }}
+        >
+          <div className="tradingview-widget-container__widget"></div>
+          <div className="tradingview-widget-copyright">
+            <a
+              href="https://www.tradingview.com/"
+              rel="noopener nofollow"
+              target="_blank"
+              className="text-blue-400 text-xs"
+            >
+              <span>Stock quotes by TradingView</span>
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

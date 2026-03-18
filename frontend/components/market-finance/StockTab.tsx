@@ -18,6 +18,7 @@ export function StockTab() {
     removeFromWatchlist,
     isInWatchlist,
     resetToDefaults,
+    isUserWatchlist,
   } = useWishlist("stock");
 
   return (
@@ -194,6 +195,7 @@ export function StockTab() {
         <TradingViewStocks
           wishlist={watchlist}
           onResetToDefaults={resetToDefaults}
+          isUserWatchlist={isUserWatchlist}
         />
       </div>
     </div>

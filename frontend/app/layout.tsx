@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
+import AppRouteGuard from "@/components/auth/AppRouteGuard";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,16 +28,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <AuthProvider>
-          {children}
+          <AppRouteGuard>{children}</AppRouteGuard>
           <Toaster />
         </AuthProvider>
       </body>

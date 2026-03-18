@@ -1,27 +1,34 @@
-ipykernel
-flask
-asyncpg 
-aiohttp 
-uvicorn 
-python-dateutil
-requests
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+pydantic-settings
+pydantic
+asyncpg
+greenlet
+python-dotenv
+passlib
+python-jose[cryptography]
+httpx
+pgvector
+apscheduler
+newsapi-python
+
+# Data Processing
 beautifulsoup4
 newspaper3k
 lxml[html_clean]
 lxml_html_clean
-feedparser 
+feedparser
 asyncio-throttle
 python-dateutil
+numpy
 
+# AI / ML
 sentence-transformers
 transformers
-numpy
-python-dotenv
-psycopg2-binary
-aiodns==3.2.0  # For faster DNS resolution
-pydantic
-schedule
+# torch via index-url in installation (see below)
 
-
-# install following seperatly
-# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+google-auth
+pydantic[email]
+python-multipart

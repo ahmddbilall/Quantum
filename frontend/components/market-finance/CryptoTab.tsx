@@ -18,6 +18,7 @@ export function CryptoTab() {
     removeFromWatchlist,
     isInWatchlist,
     resetToDefaults,
+    isUserWatchlist,
   } = useWishlist("crypto");
 
   return (
@@ -182,6 +183,7 @@ export function CryptoTab() {
         <TradingViewCrypto
           wishlist={watchlist}
           onResetToDefaults={resetToDefaults}
+          isUserWatchlist={isUserWatchlist}
         />
       </div>
     </div>

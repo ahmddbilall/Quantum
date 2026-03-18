@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
@@ -10,12 +10,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { authService } from "@/services/authService";
+import { newsService } from "@/services/newsService";
+import { parseApiError } from "@/lib/error-parser";
+import { BackendUserProfile, NewsArticleSummary } from "@/types";
+import { useCryptoSearch, useStockSearch } from "@/components/market-finance";
 import {
   Select,
   SelectContent,
@@ -46,7 +51,6 @@ import {
   Edit2,
   Save,
   X,
-  Plus,
   Search,
   Star,
   Clock,
@@ -87,7 +91,27 @@ interface ContentPreferences {
   timezone: string;
 }
 
+const DEFAULT_CONTENT_PREFERENCES: ContentPreferences = {
+  categories: [],
+  sources: [],
+  updateFrequency: "real-time",
+  notifications: {
+    breaking: true,
+    daily: true,
+    weekly: false,
+    personalized: true,
+  },
+  language: "English",
+  timezone: "UTC",
+};
+
 interface WatchlistItem {
+  symbol: string;
+  name: string;
+  type: "stock" | "crypto";
+}
+
+interface WatchlistSuggestion {
   symbol: string;
   name: string;
   type: "stock" | "crypto";
@@ -108,11 +132,262 @@ interface BookmarkedArticle {
 }
 
 export default function ProfilePage() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, refreshProfile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [activeTab, setActiveTab] = useState("preferences");
-  const [searchWatchlist, setSearchWatchlist] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    name: "User",
+    email: "",
+    phone: "",
+    location: "",
+    bio: "",
+    joinDate: "-",
+    avatar: "/placeholder-user.jpg",
+  });
+
+  const [contentPreferences, setContentPreferences] =
+    useState<ContentPreferences>(DEFAULT_CONTENT_PREFERENCES);
+
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [watchlistQuery, setWatchlistQuery] = useState("");
+  const [savedPreferencesSnapshot, setSavedPreferencesSnapshot] =
+    useState<ContentPreferences | null>(null);
+  const [savedWatchlistSnapshot, setSavedWatchlistSnapshot] = useState<
+    WatchlistItem[]
+  >([]);
+
+  const {
+    searchResults: stockSearchResults,
+    setSearchQuery: setStockSearchQuery,
+    isSearching: isSearchingStocks,
+  } = useStockSearch();
+
+  const {
+    searchResults: cryptoSearchResults,
+    setSearchQuery: setCryptoSearchQuery,
+    isSearching: isSearchingCrypto,
+  } = useCryptoSearch();
+
+  const [bookmarkedArticles, setBookmarkedArticles] = useState<
+    BookmarkedArticle[]
+  >([]);
+
+  const mapBookmarkedArticle = (
+    article: NewsArticleSummary,
+  ): BookmarkedArticle => ({
+    id: article.id,
+    title: article.title,
+    summary: article.summary || "No summary available.",
+    source: article.source,
+    publishedAt: article.published_at || new Date().toISOString(),
+    url: article.url,
+    category: article.category || "General",
+    readTime: "5 min read",
+  });
+
+  const toCurrency = (value: number): string => {
+    return `$${value.toLocaleString(undefined, {
+      minimumFractionDigits: value < 1 ? 4 : 2,
+      maximumFractionDigits: value < 1 ? 6 : 2,
+    })}`;
+  };
+
+  const toSigned = (value: number): string => {
+    const fixed = value.toFixed(2);
+    return value >= 0 ? `+${fixed}` : fixed;
+  };
+
+  const toSignedPercent = (value: number): string => {
+    const fixed = value.toFixed(2);
+    return value >= 0 ? `+${fixed}%` : `${fixed}%`;
+  };
+
+  const mapStockSuggestion = (item: {
+    symbol: string;
+    name: string;
+    price: number;
+    change: number;
+    changePercent: number;
+  }): WatchlistSuggestion => ({
+    symbol: item.symbol,
+    name: item.name,
+    type: "stock",
+    price: toCurrency(item.price),
+    change: toSigned(item.change),
+    changePercent: toSignedPercent(item.changePercent),
+  });
+
+  const mapCryptoSuggestion = (item: {
+    symbol: string;
+    name: string;
+    price: number;
+    change: number;
+    changePercent: number;
+  }): WatchlistSuggestion => ({
+    symbol: item.symbol,
+    name: item.name,
+    type: "crypto",
+    price: toCurrency(item.price),
+    change: toSigned(item.change),
+    changePercent: toSignedPercent(item.changePercent),
+  });
+
+  const hasWatchlistItem = (
+    symbol: string,
+    type: "stock" | "crypto",
+    items: WatchlistItem[] = watchlist,
+  ) => {
+    return items.some(
+      (item) =>
+        item.symbol.toUpperCase() === symbol.toUpperCase() &&
+        item.type === type,
+    );
+  };
+
+  const stockSuggestions = stockSearchResults
+    .map(mapStockSuggestion)
+    .filter((item) => !hasWatchlistItem(item.symbol, item.type));
+
+  const cryptoSuggestions = cryptoSearchResults
+    .map(mapCryptoSuggestion)
+    .filter((item) => !hasWatchlistItem(item.symbol, item.type));
+
+  const isSearchingWatchlist = isSearchingStocks || isSearchingCrypto;
+  const hasWatchlistQuery = watchlistQuery.trim().length > 0;
+  const hasAnyWatchlistSuggestions =
+    stockSuggestions.length > 0 || cryptoSuggestions.length > 0;
+
+  const hasUnsavedPreferenceChanges = useMemo(() => {
+    if (!savedPreferencesSnapshot) {
+      return false;
+    }
+    return (
+      JSON.stringify(contentPreferences) !==
+      JSON.stringify(savedPreferencesSnapshot)
+    );
+  }, [contentPreferences, savedPreferencesSnapshot]);
+
+  const hasUnsavedWatchlistChanges = useMemo(
+    () => JSON.stringify(watchlist) !== JSON.stringify(savedWatchlistSnapshot),
+    [watchlist, savedWatchlistSnapshot],
+  );
+
+  const hasUnsavedChanges =
+    hasUnsavedPreferenceChanges || hasUnsavedWatchlistChanges;
+
+  const stockWatchlistItems = watchlist.filter((item) => item.type === "stock");
+  const cryptoWatchlistItems = watchlist.filter(
+    (item) => item.type === "crypto",
+  );
+
+  const normalizeWatchlist = (value: unknown): WatchlistItem[] => {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .map((item) => {
+        if (!item || typeof item !== "object") {
+          return null;
+        }
+
+        const raw = item as Record<string, unknown>;
+        const symbol = String(raw.symbol || "")
+          .trim()
+          .toUpperCase();
+        const type = raw.type === "crypto" ? "crypto" : "stock";
+
+        if (!symbol) {
+          return null;
+        }
+
+        return {
+          symbol,
+          name: String(raw.name || symbol).trim() || symbol,
+          type,
+        } as WatchlistItem;
+      })
+      .filter((item): item is WatchlistItem => item !== null);
+  };
+
+  const buildPreferencesPayload = (watchlistOverride?: WatchlistItem[]) => ({
+    categories: contentPreferences.categories,
+    sources: contentPreferences.sources,
+    watchlist: watchlistOverride ?? watchlist,
+    updateFrequency: contentPreferences.updateFrequency,
+    notifications: contentPreferences.notifications,
+    language: contentPreferences.language,
+    timezone: contentPreferences.timezone,
+  });
+
+  const hydrateProfile = (profile: BackendUserProfile) => {
+    const rawProfile = (profile.profile || {}) as Record<string, unknown>;
+    const rawPreferences = (profile.preferences || {}) as Record<
+      string,
+      unknown
+    >;
+    const notifications = (rawPreferences.notifications || {}) as Record<
+      string,
+      unknown
+    >;
+    const normalizedWatchlist = normalizeWatchlist(rawPreferences.watchlist);
+    const nextContentPreferences: ContentPreferences = {
+      categories: Array.isArray(rawPreferences.categories)
+        ? (rawPreferences.categories as string[])
+        : DEFAULT_CONTENT_PREFERENCES.categories,
+      sources: Array.isArray(rawPreferences.sources)
+        ? (rawPreferences.sources as string[])
+        : DEFAULT_CONTENT_PREFERENCES.sources,
+      updateFrequency: String(
+        rawPreferences.updateFrequency ||
+          DEFAULT_CONTENT_PREFERENCES.updateFrequency,
+      ),
+      language: String(
+        rawPreferences.language || DEFAULT_CONTENT_PREFERENCES.language,
+      ),
+      timezone: String(
+        rawPreferences.timezone || DEFAULT_CONTENT_PREFERENCES.timezone,
+      ),
+      notifications: {
+        breaking: Boolean(
+          notifications.breaking ??
+          DEFAULT_CONTENT_PREFERENCES.notifications.breaking,
+        ),
+        daily: Boolean(
+          notifications.daily ??
+          DEFAULT_CONTENT_PREFERENCES.notifications.daily,
+        ),
+        weekly: Boolean(
+          notifications.weekly ??
+          DEFAULT_CONTENT_PREFERENCES.notifications.weekly,
+        ),
+        personalized: Boolean(
+          notifications.personalized ??
+          DEFAULT_CONTENT_PREFERENCES.notifications.personalized,
+        ),
+      },
+    };
+
+    setWatchlist(normalizedWatchlist);
+    setSavedWatchlistSnapshot(normalizedWatchlist);
+
+    setUserProfile((prev) => ({
+      ...prev,
+      name: profile.full_name || user?.name || "User",
+      email: profile.email,
+      phone: String(rawProfile.phone || ""),
+      location: String(rawProfile.location || ""),
+      bio: String(rawProfile.bio || ""),
+      joinDate: profile.created_at ? formatDate(profile.created_at) : "-",
+    }));
+
+    setContentPreferences(nextContentPreferences);
+    setSavedPreferencesSnapshot(nextContentPreferences);
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -121,135 +396,92 @@ export default function ProfilePage() {
     }
   }, [user, isLoading, router]);
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-gray-300">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) {
+        return;
+      }
 
-  // Don't render if no user
-  if (!user) {
-    return null;
-  }
+      try {
+        const [profile, bookmarks] = await Promise.all([
+          authService.getProfile(),
+          newsService.getBookmarks(),
+        ]);
+        hydrateProfile(profile);
+        setBookmarkedArticles(bookmarks.map(mapBookmarkedArticle));
+      } catch (error) {
+        const parsed = parseApiError(
+          error,
+          "Some profile data could not be loaded.",
+        );
+        toast({
+          title: "Profile sync warning",
+          description: parsed.message,
+          variant: "destructive",
+        });
+      }
+    };
 
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    name: user.name,
-    email: user.email,
-    phone: "+1 (555) 123-4567",
-    location: "New York, NY",
-    bio: "Passionate news reader and financial market enthusiast. Love staying updated with the latest global events and market trends.",
-    joinDate: "January 2024",
-    avatar: "/placeholder-user.jpg",
-  });
+    void loadData();
+  }, [user]);
 
-  const [contentPreferences, setContentPreferences] =
-    useState<ContentPreferences>({
-      categories: ["Technology", "Business", "Politics", "Health"],
-      sources: ["BBC", "Reuters", "CNN", "The Guardian"],
-      updateFrequency: "real-time",
-      notifications: {
-        breaking: true,
-        daily: true,
-        weekly: false,
-        personalized: true,
-      },
-      language: "English",
-      timezone: "EST",
-    });
+  useEffect(() => {
+    const query = watchlistQuery.trim();
+    setStockSearchQuery(query);
+    setCryptoSearchQuery(query);
+  }, [watchlistQuery, setStockSearchQuery, setCryptoSearchQuery]);
 
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([
-    {
-      symbol: "AAPL",
-      name: "Apple Inc.",
-      type: "stock",
-      price: "$175.43",
-      change: "+2.15",
-      changePercent: "+1.24%",
-    },
-    {
-      symbol: "GOOGL",
-      name: "Alphabet Inc.",
-      type: "stock",
-      price: "$2,845.32",
-      change: "-12.45",
-      changePercent: "-0.43%",
-    },
-    {
-      symbol: "BTC",
-      name: "Bitcoin",
-      type: "crypto",
-      price: "$42,350.00",
-      change: "+1,250.00",
-      changePercent: "+3.04%",
-    },
-    {
-      symbol: "ETH",
-      name: "Ethereum",
-      type: "crypto",
-      price: "$2,450.75",
-      change: "+85.25",
-      changePercent: "+3.60%",
-    },
-  ]);
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return;
+    }
 
-  const [bookmarkedArticles, setBookmarkedArticles] = useState<
-    BookmarkedArticle[]
-  >([
-    {
-      id: "1",
-      title:
-        "Breakthrough in Quantum Computing: New Algorithm Achieves 1000x Speed Improvement",
-      summary:
-        "Researchers at MIT have developed a revolutionary quantum algorithm that significantly outperforms classical computing methods for optimization problems.",
-      source: "TechCrunch",
-      publishedAt: "2025-10-10T14:30:00Z",
-      url: "/news/quantum-computing-breakthrough",
-      category: "Technology",
-      readTime: "5 min read",
-    },
-    {
-      id: "2",
-      title:
-        "Global Climate Summit Reaches Historic Agreement on Carbon Emission Reduction",
-      summary:
-        "World leaders commit to ambitious new targets for carbon neutrality, with major economic implications for renewable energy markets.",
-      source: "BBC",
-      publishedAt: "2025-10-09T09:15:00Z",
-      url: "/news/climate-summit-agreement",
-      category: "Climate",
-      readTime: "8 min read",
-    },
-    {
-      id: "3",
-      title:
-        "Cryptocurrency Market Sees Major Rally as Institutional Adoption Increases",
-      summary:
-        "Bitcoin and Ethereum surge as major banks announce cryptocurrency trading services for institutional clients.",
-      source: "Coindesk",
-      publishedAt: "2025-10-08T16:45:00Z",
-      url: "/news/crypto-institutional-adoption",
-      category: "Cryptocurrency",
-      readTime: "6 min read",
-    },
-    {
-      id: "4",
-      title:
-        "AI Revolution in Healthcare: New Diagnostic Tool Shows 95% Accuracy Rate",
-      summary:
-        "Machine learning algorithm developed by researchers can detect early-stage diseases with unprecedented accuracy.",
-      source: "Reuters",
-      publishedAt: "2025-10-07T11:20:00Z",
-      url: "/news/ai-healthcare-diagnostics",
-      category: "Health",
-      readTime: "7 min read",
-    },
-  ]);
+    const warningMessage =
+      "You have some unsaved changes. Do you want to leave this page?";
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = warningMessage;
+    };
+
+    const handleDocumentNavigation = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest("a[href]") as HTMLAnchorElement | null;
+
+      if (!anchor) {
+        return;
+      }
+
+      const href = anchor.getAttribute("href");
+      if (!href || href.startsWith("#")) {
+        return;
+      }
+
+      const nextUrl = new URL(anchor.href, window.location.href);
+      const currentUrl = new URL(window.location.href);
+      const isSamePage =
+        nextUrl.pathname === currentUrl.pathname &&
+        nextUrl.search === currentUrl.search;
+
+      if (isSamePage) {
+        return;
+      }
+
+      const shouldLeave = window.confirm(warningMessage);
+      if (!shouldLeave) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("click", handleDocumentNavigation, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("click", handleDocumentNavigation, true);
+    };
+  }, [hasUnsavedChanges]);
 
   const availableCategories = [
     "Technology",
@@ -279,9 +511,62 @@ export default function ProfilePage() {
     "Coindesk",
   ];
 
-  const handleProfileUpdate = () => {
-    setIsEditingProfile(false);
-    // Here you would typically save to backend
+  const handleProfileUpdate = async () => {
+    try {
+      setIsSaving(true);
+      await authService.updateProfile({
+        full_name: userProfile.name,
+        email: userProfile.email,
+        profile: {
+          phone: userProfile.phone,
+          location: userProfile.location,
+          bio: userProfile.bio,
+        },
+      });
+      await refreshProfile();
+      setIsEditingProfile(false);
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been saved.",
+      });
+    } catch (error) {
+      const parsed = parseApiError(error, "Failed to save profile.");
+      toast({
+        title: "Failed to save profile",
+        description: parsed.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePreferencesSave = async () => {
+    if (!hasUnsavedChanges) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const updated = await authService.updateProfile({
+        preferences: buildPreferencesPayload(),
+      });
+      hydrateProfile(updated);
+      await refreshProfile();
+      toast({
+        title: "Preferences saved",
+        description: "Your content preferences were updated.",
+      });
+    } catch (error) {
+      const parsed = parseApiError(error, "Failed to save preferences.");
+      toast({
+        title: "Failed to save preferences",
+        description: parsed.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCategoryToggle = (category: string) => {
@@ -303,7 +588,7 @@ export default function ProfilePage() {
   };
 
   const handleNotificationToggle = (
-    type: keyof ContentPreferences["notifications"]
+    type: keyof ContentPreferences["notifications"],
   ) => {
     setContentPreferences((prev) => ({
       ...prev,
@@ -314,33 +599,65 @@ export default function ProfilePage() {
     }));
   };
 
-  const removeFromWatchlist = (symbol: string) => {
-    setWatchlist((prev) => prev.filter((item) => item.symbol !== symbol));
-  };
-
-  const addToWatchlist = () => {
-    // This would typically open a search dialog
-    // For demo, adding a sample item
-    const newItem: WatchlistItem = {
-      symbol: "TSLA",
-      name: "Tesla Inc.",
-      type: "stock",
-      price: "$245.67",
-      change: "+5.43",
-      changePercent: "+2.26%",
-    };
-    setWatchlist((prev) => [...prev, newItem]);
-  };
-
-  const removeBookmark = (articleId: string) => {
-    setBookmarkedArticles((prev) =>
-      prev.filter((article) => article.id !== articleId)
+  const removeFromWatchlist = (symbol: string, type: "stock" | "crypto") => {
+    setWatchlist((prev) =>
+      prev.filter((item) => !(item.symbol === symbol && item.type === type)),
     );
   };
 
-  const openArticle = (url: string) => {
-    // In a real app, this would navigate to the article
-    window.open(url, "_blank");
+  const addToWatchlist = (suggestion: WatchlistSuggestion) => {
+    if (hasWatchlistItem(suggestion.symbol, suggestion.type)) {
+      toast({
+        title: "Already added",
+        description: `${suggestion.symbol} is already in your watchlist.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setWatchlist((prev) => [
+      ...prev,
+      {
+        symbol: suggestion.symbol,
+        name: suggestion.name,
+        type: suggestion.type,
+      },
+    ]);
+    setWatchlistQuery("");
+  };
+
+  const removeBookmark = async (articleId: string) => {
+    try {
+      await newsService.removeBookmark(articleId);
+      setBookmarkedArticles((prev) =>
+        prev.filter((article) => article.id !== articleId),
+      );
+      toast({
+        title: "Bookmark removed",
+        description: "Article removed from bookmarks.",
+      });
+    } catch (error) {
+      const parsed = parseApiError(error, "Failed to remove bookmark.");
+      toast({
+        title: "Failed to remove bookmark",
+        description: parsed.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openArticle = (articleId: string) => {
+    if (hasUnsavedChanges) {
+      const shouldLeave = window.confirm(
+        "You have some unsaved changes. Do you want to leave this page?",
+      );
+
+      if (!shouldLeave) {
+        return;
+      }
+    }
+
+    router.push(`/news-feed/${articleId}`);
   };
 
   const formatDate = (dateString: string) => {
@@ -356,6 +673,21 @@ export default function ProfilePage() {
     inactive: { opacity: 0.6, scale: 0.95 },
     active: { opacity: 1, scale: 1 },
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -414,12 +746,24 @@ export default function ProfilePage() {
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2 text-sm">
                       <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-300">{userProfile.phone}</span>
+                      <span
+                        className={
+                          userProfile.phone ? "text-gray-300" : "text-gray-500"
+                        }
+                      >
+                        {userProfile.phone || "Add phone number"}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm">
                       <MapPin className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-300">
-                        {userProfile.location}
+                      <span
+                        className={
+                          userProfile.location
+                            ? "text-gray-300"
+                            : "text-gray-500"
+                        }
+                      >
+                        {userProfile.location || "Add location"}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm">
@@ -431,8 +775,12 @@ export default function ProfilePage() {
                   </div>
                   <Separator className="bg-gray-700" />
                   <div>
-                    <p className="text-sm text-gray-400 leading-relaxed">
-                      {userProfile.bio}
+                    <p
+                      className={`text-sm leading-relaxed ${
+                        userProfile.bio ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      {userProfile.bio || "Add a short bio"}
                     </p>
                   </div>
                 </CardContent>
@@ -762,7 +1110,7 @@ export default function ProfilePage() {
                                     </div>
                                     <h3
                                       className="font-semibold text-white hover:text-blue-400 cursor-pointer transition-colors"
-                                      onClick={() => openArticle(article.url)}
+                                      onClick={() => openArticle(article.id)}
                                     >
                                       {article.title}
                                     </h3>
@@ -773,7 +1121,7 @@ export default function ProfilePage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => openArticle(article.url)}
+                                        onClick={() => openArticle(article.id)}
                                         className="text-white hover:text-blue-300 hover:bg-blue-900/20 p-0"
                                       >
                                         <ExternalLink className="h-4 w-4 mr-1" />
@@ -813,91 +1161,275 @@ export default function ProfilePage() {
                   >
                     <Card className="bg-zinc-900 border border-gray-700">
                       <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="flex items-center space-x-2">
-                              <TrendingUp className="h-5 w-5 text-green-400" />
-                              <span className="text-white">
-                                Financial Watchlist
-                              </span>
-                            </CardTitle>
-                            <p className="text-sm text-gray-400 mt-1">
-                              Track your favorite stocks and cryptocurrencies
-                            </p>
-                          </div>
-                          <Button
-                            onClick={addToWatchlist}
-                            size="sm"
-                            className="border-white text-white hover:bg-white hover:text-black bg-transparent"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Item
-                          </Button>
-                        </div>
+                        <CardTitle className="flex items-center space-x-2">
+                          <TrendingUp className="h-5 w-5 text-green-400" />
+                          <span className="text-white">
+                            Financial Watchlist
+                          </span>
+                        </CardTitle>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Search and select verified stock/crypto symbols from
+                          API results.
+                        </p>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
-                          {watchlist.map((item) => (
-                            <motion.div
-                              key={item.symbol}
-                              layout
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -20 }}
-                              className="flex items-center justify-between p-4 bg-zinc-800 rounded-lg"
-                            >
-                              <div className="flex items-center space-x-4">
-                                <div
-                                  className={`p-2 rounded-lg ${
-                                    item.type === "stock"
-                                      ? "bg-blue-900/20"
-                                      : "bg-orange-900/20"
-                                  }`}
-                                >
-                                  {item.type === "stock" ? (
-                                    <DollarSign className="h-4 w-4 text-blue-400" />
+                        <div className="mb-6 space-y-3 rounded-xl border border-gray-700 bg-zinc-800/50 p-4">
+                          <Label className="text-sm text-gray-300">
+                            Add to watchlist
+                          </Label>
+                          <div className="relative">
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                            <Input
+                              placeholder="Search symbol or name (e.g., AAPL, BTC, Ethereum)"
+                              value={watchlistQuery}
+                              onChange={(e) =>
+                                setWatchlistQuery(e.target.value)
+                              }
+                              className="pl-10 bg-transparent border-gray-700 text-white"
+                            />
+                          </div>
+
+                          {hasWatchlistQuery && (
+                            <div className="max-h-80 overflow-y-auto rounded-lg border border-gray-700 bg-zinc-900/80 pr-1 dark-thin-scrollbar">
+                              {isSearchingWatchlist ? (
+                                <div className="px-4 py-3 text-sm text-gray-400">
+                                  Searching symbols...
+                                </div>
+                              ) : (
+                                <>
+                                  {!hasAnyWatchlistSuggestions ? (
+                                    <div className="px-4 py-3 text-sm text-gray-400">
+                                      No results. Select from the API list only.
+                                    </div>
                                   ) : (
-                                    <Bitcoin className="h-4 w-4 text-orange-400" />
+                                    <>
+                                      {stockSuggestions.length > 0 && (
+                                        <div>
+                                          <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-blue-300">
+                                            Stocks
+                                          </div>
+                                          <div className="space-y-1 px-2 pb-2">
+                                            {stockSuggestions.map((item) => (
+                                              <button
+                                                key={`stock-${item.symbol}`}
+                                                type="button"
+                                                onClick={() =>
+                                                  addToWatchlist(item)
+                                                }
+                                                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors hover:bg-zinc-800"
+                                              >
+                                                <div>
+                                                  <p className="text-sm font-semibold text-white">
+                                                    {item.symbol}
+                                                  </p>
+                                                  <p className="text-xs text-gray-400">
+                                                    {item.name}
+                                                  </p>
+                                                </div>
+                                                <div className="text-right">
+                                                  <p className="text-sm text-white">
+                                                    {item.price}
+                                                  </p>
+                                                  <p
+                                                    className={`text-xs ${
+                                                      item.change.startsWith(
+                                                        "+",
+                                                      )
+                                                        ? "text-green-400"
+                                                        : item.change.startsWith(
+                                                              "-",
+                                                            )
+                                                          ? "text-red-400"
+                                                          : "text-gray-400"
+                                                    }`}
+                                                  >
+                                                    {item.changePercent}
+                                                  </p>
+                                                </div>
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {stockSuggestions.length > 0 &&
+                                        cryptoSuggestions.length > 0 && (
+                                          <Separator className="bg-gray-700" />
+                                        )}
+
+                                      {cryptoSuggestions.length > 0 && (
+                                        <div>
+                                          <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-orange-300">
+                                            Crypto
+                                          </div>
+                                          <div className="space-y-1 px-2 pb-2">
+                                            {cryptoSuggestions.map((item) => (
+                                              <button
+                                                key={`crypto-${item.symbol}`}
+                                                type="button"
+                                                onClick={() =>
+                                                  addToWatchlist(item)
+                                                }
+                                                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left transition-colors hover:bg-zinc-800"
+                                              >
+                                                <div>
+                                                  <p className="text-sm font-semibold text-white">
+                                                    {item.symbol}
+                                                  </p>
+                                                  <p className="text-xs text-gray-400">
+                                                    {item.name}
+                                                  </p>
+                                                </div>
+                                                <div className="text-right">
+                                                  <p className="text-sm text-white">
+                                                    {item.price}
+                                                  </p>
+                                                  <p
+                                                    className={`text-xs ${
+                                                      item.change.startsWith(
+                                                        "+",
+                                                      )
+                                                        ? "text-green-400"
+                                                        : item.change.startsWith(
+                                                              "-",
+                                                            )
+                                                          ? "text-red-400"
+                                                          : "text-gray-400"
+                                                    }`}
+                                                  >
+                                                    {item.changePercent}
+                                                  </p>
+                                                </div>
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </>
                                   )}
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-white">
-                                    {item.symbol}
-                                  </h4>
-                                  <p className="text-sm text-gray-400">
-                                    {item.name}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-4">
-                                <div className="text-right">
-                                  <p className="font-semibold text-white">
-                                    {item.price}
-                                  </p>
-                                  <p
-                                    className={`text-sm ${
-                                      item.change.startsWith("+")
-                                        ? "text-green-400"
-                                        : "text-red-400"
-                                    }`}
-                                  >
-                                    {item.change} ({item.changePercent})
-                                  </p>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    removeFromWatchlist(item.symbol)
-                                  }
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </motion.div>
-                          ))}
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
+
+                        {watchlist.length === 0 ? (
+                          <div className="text-center py-8">
+                            <TrendingUp className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                            <p className="text-gray-400">
+                              No watchlist items yet
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Add a stock or crypto symbol to start tracking it.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="rounded-xl border border-gray-700 bg-zinc-800/40 p-4">
+                              <div className="mb-3 flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-blue-400" />
+                                <h3 className="text-sm font-semibold uppercase tracking-wide text-blue-300">
+                                  Stocks
+                                </h3>
+                                <Badge className="ml-auto bg-zinc-700 text-gray-200">
+                                  {stockWatchlistItems.length}
+                                </Badge>
+                              </div>
+                              <div className="max-h-80 space-y-2 overflow-y-auto pr-1 dark-thin-scrollbar">
+                                {stockWatchlistItems.length === 0 ? (
+                                  <p className="text-sm text-gray-500">
+                                    No stock symbols selected.
+                                  </p>
+                                ) : (
+                                  stockWatchlistItems.map((item) => (
+                                    <motion.div
+                                      key={`${item.type}:${item.symbol}`}
+                                      layout
+                                      initial={{ opacity: 0, y: 12 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -12 }}
+                                      className="flex items-center justify-between rounded-lg bg-zinc-800 px-3 py-2"
+                                    >
+                                      <div>
+                                        <p className="text-sm font-semibold text-white">
+                                          {item.symbol}
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                          {item.name}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          removeFromWatchlist(
+                                            item.symbol,
+                                            item.type,
+                                          )
+                                        }
+                                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </motion.div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="rounded-xl border border-gray-700 bg-zinc-800/40 p-4">
+                              <div className="mb-3 flex items-center gap-2">
+                                <Bitcoin className="h-4 w-4 text-orange-400" />
+                                <h3 className="text-sm font-semibold uppercase tracking-wide text-orange-300">
+                                  Crypto
+                                </h3>
+                                <Badge className="ml-auto bg-zinc-700 text-gray-200">
+                                  {cryptoWatchlistItems.length}
+                                </Badge>
+                              </div>
+                              <div className="max-h-80 space-y-2 overflow-y-auto pr-1 dark-thin-scrollbar">
+                                {cryptoWatchlistItems.length === 0 ? (
+                                  <p className="text-sm text-gray-500">
+                                    No crypto symbols selected.
+                                  </p>
+                                ) : (
+                                  cryptoWatchlistItems.map((item) => (
+                                    <motion.div
+                                      key={`${item.type}:${item.symbol}`}
+                                      layout
+                                      initial={{ opacity: 0, y: 12 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -12 }}
+                                      className="flex items-center justify-between rounded-lg bg-zinc-800 px-3 py-2"
+                                    >
+                                      <div>
+                                        <p className="text-sm font-semibold text-white">
+                                          {item.symbol}
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                          {item.name}
+                                        </p>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          removeFromWatchlist(
+                                            item.symbol,
+                                            item.type,
+                                          )
+                                        }
+                                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </motion.div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -970,7 +1502,7 @@ export default function ProfilePage() {
                               }
                               onCheckedChange={() =>
                                 handleNotificationToggle(
-                                  notification.key as keyof ContentPreferences["notifications"]
+                                  notification.key as keyof ContentPreferences["notifications"],
                                 )
                               }
                             />
@@ -991,10 +1523,20 @@ export default function ProfilePage() {
               >
                 <Button
                   size="lg"
-                  className="border-1 text-white hover:bg-white hover:text-black bg-transparent px-8 border-white"
+                  onClick={handlePreferencesSave}
+                  disabled={isSaving || !hasUnsavedChanges}
+                  className={`border-1 px-8 border-white ${
+                    hasUnsavedChanges
+                      ? "bg-white text-black hover:bg-white/90"
+                      : "text-white hover:bg-white hover:text-black bg-transparent"
+                  }`}
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  Save Preferences
+                  {isSaving
+                    ? "Saving..."
+                    : hasUnsavedChanges
+                      ? "Save Changes"
+                      : "Save Preferences"}
                 </Button>
               </motion.div>
             </motion.div>
@@ -1092,9 +1634,10 @@ export default function ProfilePage() {
             </Button>
             <Button
               onClick={handleProfileUpdate}
+              disabled={isSaving}
               className="border-white text-white hover:bg-white hover:text-black bg-transparent"
             >
-              Save changes
+              {isSaving ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
