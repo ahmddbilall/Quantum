@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { buildAuthUrl } from "@/lib/auth-redirect";
 
 interface AppRouteGuardProps {
   children: React.ReactNode;
@@ -20,14 +21,24 @@ export default function AppRouteGuard({ children }: AppRouteGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const protectedPath = isProtectedPath(pathname || "");
 
   useEffect(() => {
     if (!isLoading && protectedPath && !isAuthenticated) {
-      router.replace("/auth");
+      const query = searchParams.toString();
+      const returnPath = `${pathname || "/"}${query ? `?${query}` : ""}`;
+      router.replace(buildAuthUrl(returnPath));
     }
-  }, [isLoading, protectedPath, isAuthenticated, router]);
+  }, [
+    isLoading,
+    protectedPath,
+    isAuthenticated,
+    pathname,
+    searchParams,
+    router,
+  ]);
 
   if (protectedPath && (isLoading || !isAuthenticated)) {
     return null;

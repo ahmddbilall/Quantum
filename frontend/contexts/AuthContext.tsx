@@ -148,6 +148,18 @@ const mapBackendProfileToUser = (profile: BackendUserProfile): User => ({
   preferences: profile.preferences,
 });
 
+const PROTECTED_ROUTE_PREFIXES = ["/profile"];
+
+const isProtectedRoute = (pathname: string): boolean => {
+  if (!pathname) {
+    return false;
+  }
+
+  return PROTECTED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+};
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -336,15 +348,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    const currentPathname =
+      typeof window !== "undefined"
+        ? new URL(window.location.href).pathname
+        : "";
+    const shouldRedirectHome = isProtectedRoute(currentPathname);
+
     setUser(null);
     setIsAuthenticated(false);
     clearAllClientCache();
 
-    setTimeout(() => {
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
-    }, 0);
+    if (shouldRedirectHome) {
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
+      }, 0);
+    }
   };
 
   return (

@@ -4,6 +4,7 @@ Base scraper class and utilities for news scraping.
 import asyncio
 import aiohttp
 import logging
+import json
 from typing import Dict, List, Optional, Any, Set
 from abc import ABC, abstractmethod
 from bs4 import BeautifulSoup
@@ -39,7 +40,6 @@ class ArticleData:
         if self.metadata is None:
             self.metadata = {}
 
-
 # Initialize with a source name and then start scraping
 class BaseScraper(ABC):
     """Base class for all news scrapers."""
@@ -50,6 +50,8 @@ class BaseScraper(ABC):
         self.session = None
         self.source_id = None
         self.scraped_count = 0
+        self.inserted_count = 0
+        self.updated_count = 0
         self.failed_count = 0
         self.existing_urls = set()
         
@@ -181,21 +183,175 @@ class BaseScraper(ABC):
         
         return None
     
-    def extract_category(self, soup: BeautifulSoup, url: str) -> Optional[str]:
-        """Extract category from article."""
-        # Try meta tags first
-        category_meta = soup.select_one('meta[property="article:section"]')
-        if category_meta:
-            return category_meta.get('content')
-        
-        # Try to extract from URL path
-        path_parts = urlparse(url).path.split('/')
+    def extract_category(
+        self,
+        soup: BeautifulSoup,
+        url: str,
+        title: Optional[str] = None,
+    ) -> Optional[str]:
+        """Extract category from metadata/breadcrumbs/URL while filtering title-like values."""
+        generic_categories = {
+            "",
+            "news",
+            "latest",
+            "latest news",
+            "article",
+            "articles",
+            "story",
+            "stories",
+            "home",
+        }
+
+        def normalize_for_compare(value: Optional[str]) -> str:
+            if not value:
+                return ""
+            return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+        title_fingerprint = normalize_for_compare(title)
+
+        def normalize_category(value: Optional[str]) -> Optional[str]:
+            if not value:
+                return None
+            cleaned = re.sub(r"\s+", " ", value.replace("-", " ").replace("_", " ")).strip(" |:-")
+            if not cleaned:
+                return None
+            if len(cleaned) > 60:
+                return None
+            if cleaned.lower() in generic_categories:
+                return None
+            if title_fingerprint and normalize_for_compare(cleaned) == title_fingerprint:
+                return None
+            return cleaned
+
+        def extract_jsonld_categories(payload: Any) -> List[str]:
+            categories: List[str] = []
+            if isinstance(payload, dict):
+                for key in ("articleSection", "section", "genre"):
+                    value = payload.get(key)
+                    if isinstance(value, str):
+                        categories.append(value)
+
+                about = payload.get("about")
+                if isinstance(about, dict):
+                    name = about.get("name")
+                    if isinstance(name, str):
+                        categories.append(name)
+                elif isinstance(about, list):
+                    for item in about:
+                        if isinstance(item, dict):
+                            name = item.get("name")
+                            if isinstance(name, str):
+                                categories.append(name)
+
+                graph = payload.get("@graph")
+                if isinstance(graph, list):
+                    for item in graph:
+                        categories.extend(extract_jsonld_categories(item))
+
+            elif isinstance(payload, list):
+                for item in payload:
+                    categories.extend(extract_jsonld_categories(item))
+
+            return categories
+
+        # 1) Meta tags from the page.
+        for selector, attr in [
+            ('meta[property="article:section"]', 'content'),
+            ('meta[name="article:section"]', 'content'),
+            ('meta[name="section"]', 'content'),
+            ('meta[name="parsely-section"]', 'content'),
+            ('meta[property="og:section"]', 'content'),
+            ('meta[property="article:tag"]', 'content'),
+            ('[itemprop="articleSection"]', None),
+        ]:
+            element = soup.select_one(selector)
+            if not element:
+                continue
+
+            candidate = element.get(attr) if attr else element.get_text(strip=True)
+            normalized = normalize_category(candidate)
+            if normalized:
+                return normalized
+
+        # 2) JSON-LD structured data.
+        for script in soup.select('script[type="application/ld+json"]'):
+            json_text = script.string or script.get_text(strip=True)
+            if not json_text:
+                continue
+
+            try:
+                payload = json.loads(json_text)
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+            for candidate in extract_jsonld_categories(payload):
+                normalized = normalize_category(candidate)
+                if normalized:
+                    return normalized
+
+        # 3) Breadcrumb/topic links from page chrome.
+        for selector in [
+            'nav[aria-label*="breadcrumb" i] a',
+            '[data-testid*="breadcrumb" i] a',
+            '[class*="breadcrumb"] a',
+            '[data-testid*="topic" i] a',
+            '[data-component*="topic" i] a',
+            'a[data-link-name*="article section" i]',
+            'a[href*="/topic/"]',
+        ]:
+            for element in soup.select(selector):
+                normalized = normalize_category(element.get_text(strip=True))
+                if normalized:
+                    return normalized
+
+        # 4) URL fallback while skipping generic/date/id path segments.
+        skip_tokens = {
+            "news",
+            "article",
+            "articles",
+            "latest",
+            "story",
+            "stories",
+            "live",
+            "amp",
+            "tag",
+            "tags",
+            "category",
+        }
+        path_parts = [part.strip().lower() for part in urlparse(url).path.split('/') if part.strip()]
+        candidate_parts = path_parts[:-1] if len(path_parts) > 1 else path_parts
+
+        for part in candidate_parts:
+            if part in skip_tokens:
+                continue
+            if part.isdigit() or re.fullmatch(r"\d{4}", part):
+                continue
+            if re.fullmatch(r"[a-z0-9]{12,}", part):
+                continue
+
+            slug_without_numeric_suffix = re.sub(r"-\d+$", "", part)
+            normalized = normalize_category(slug_without_numeric_suffix)
+            if normalized:
+                return normalized
+
+        # Only inspect the final path segment when it looks like a compact taxonomy token.
         if len(path_parts) > 1:
-            for part in path_parts[1:]:
-                if part and not part.isdigit() and len(part) > 2:
-                    return part.replace('-', ' ').title()
-        
-        return None
+            final_part = re.sub(r"-\d+$", "", path_parts[-1])
+            final_words = [word for word in final_part.split("-") if word]
+            if (
+                final_part
+                and final_part not in skip_tokens
+                and not re.fullmatch(r"[a-z0-9]{12,}", final_part)
+                and not any(ch.isdigit() for ch in final_part)
+                and len(final_words) <= 2
+                and len(final_part) <= 24
+            ):
+                normalized = normalize_category(final_part)
+                if normalized:
+                    return normalized
+
+        # Required fallback for web sources when no category is available.
+        return "News"
     
 
     def parse_date(self, date_str: str) -> Optional[datetime]:
@@ -390,6 +546,7 @@ class BaseScraper(ABC):
         try:
             article_data = {
                 'source_id': self.source_id,
+                'source': self.source_name,  # Always include source name to prevent "unknown"
                 'title': article.title,
                 'url': article.url,
                 'published_date': article.published_date,
@@ -401,12 +558,23 @@ class BaseScraper(ABC):
                 'tags': article.tags,
                 'metadata': article.metadata
             }
-            
-            article_id = await db_manager.insert_article(article_data)
-            if article_id:
-                self.scraped_count += 1
-                logger.info(f"Saved article: {article.title}")
-                return True
+
+            result = await db_manager.insert_article(article_data, return_action=True)
+            if result and result.get("id"):
+                action = result.get("action")
+                if action == "inserted":
+                    self.inserted_count += 1
+                elif action == "updated":
+                    self.updated_count += 1
+
+                self.scraped_count = self.inserted_count + self.updated_count
+
+                if action in {"inserted", "updated"}:
+                    logger.info(f"Saved article: {article.title} ({action})")
+                    return True
+
+                logger.info(f"Skipped unchanged article: {article.title}")
+                return False
             
         except Exception as e:
             logger.error(f"Error saving article {article.url}: {e}")
@@ -447,9 +615,12 @@ class BaseScraper(ABC):
             
             # Log completion
             await db_manager.log_scraping_activity(
-                self.source_id, 'success', 
+                self.source_id,
+                'success',
                 f"Completed scraping {self.source_name}",
-                self.scraped_count, self.failed_count
+                articles_scraped=self.inserted_count,
+                articles_failed=self.failed_count,
+                articles_updated=self.updated_count,
             )
             
             logger.info(f"Scraping completed for {self.source_name}: "
@@ -457,6 +628,8 @@ class BaseScraper(ABC):
             
             return {
                 'scraped': self.scraped_count,
+                'inserted': self.inserted_count,
+                'updated': self.updated_count,
                 'failed': self.failed_count,
                 'total_links': len(all_links),
                 'new_links': len(new_links)
@@ -465,13 +638,18 @@ class BaseScraper(ABC):
         except Exception as e:
             logger.error(f"Error during scraping {self.source_name}: {e}")
             await db_manager.log_scraping_activity(
-                self.source_id, 'error', 
+                self.source_id,
+                'error',
                 f"Error scraping {self.source_name}: {str(e)}",
-                self.scraped_count, self.failed_count,
-                {'error': str(e), 'type': type(e).__name__}
+                articles_scraped=self.inserted_count,
+                articles_failed=self.failed_count,
+                error_details={'error': str(e), 'type': type(e).__name__},
+                articles_updated=self.updated_count,
             )
             return {
                 'scraped': self.scraped_count,
+                'inserted': self.inserted_count,
+                'updated': self.updated_count,
                 'failed': self.failed_count,
                 'error': str(e)
             }

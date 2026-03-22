@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { ArticleChatButton } from "@/components/aichat";
 import { useToast } from "@/hooks/use-toast";
 import { parseApiError } from "@/lib/error-parser";
+import { buildAuthUrl, getCurrentPathWithSearch } from "@/lib/auth-redirect";
 import {
   ArticleHeader,
   AISummaryCard,
@@ -16,7 +17,20 @@ import {
   BackButton,
 } from "@/components/article";
 import { newsService } from "@/services/newsService";
-import { NewsArticleDetail } from "@/types";
+import { NewsArticleDetail, NewsArticleSummary } from "@/types";
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SentimentView {
   overall: "Positive" | "Negative" | "Neutral";
@@ -66,6 +80,7 @@ function toHtml(content?: string | null): string {
 
 export default function NewsDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const articleId = params.id as string;
   const { toast } = useToast();
 
@@ -74,6 +89,11 @@ export default function NewsDetailPage() {
   const [isGenerating, setIsGenerating] = useState(true);
   const [showSummary, setShowSummary] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [relatedArticles, setRelatedArticles] = useState<NewsArticleSummary[]>(
+    [],
+  );
+  const [isLoadingRelated, setIsLoadingRelated] = useState(true);
 
   const sentiment = useMemo(
     () => toSentiment(article?.sentiment_label, article?.sentiment_score),
@@ -121,6 +141,20 @@ export default function NewsDetailPage() {
 
     void loadArticle();
 
+    // Fetch related articles independently
+    const loadRelated = async () => {
+      setIsLoadingRelated(true);
+      try {
+        const related = await newsService.getRelatedArticles(articleId, 4);
+        setRelatedArticles(related);
+      } catch (err) {
+        console.error("Failed to load related articles", err);
+      } finally {
+        setIsLoadingRelated(false);
+      }
+    };
+    void loadRelated();
+
     return () => {
       if (generatingTimer) {
         clearTimeout(generatingTimer);
@@ -147,8 +181,32 @@ export default function NewsDetailPage() {
     }
   };
 
+  const handleOpenOriginalArticle = () => {
+    if (!article) {
+      return;
+    }
+
+    const targetUrl = (article.original_url || article.url || "").trim();
+    if (!targetUrl) {
+      toast({
+        title: "Original link unavailable",
+        description: "No source URL is available for this article.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  };
+
   const handleBookmark = async () => {
     if (!article) {
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setShowLoginDialog(true);
       return;
     }
 
@@ -170,12 +228,13 @@ export default function NewsDetailPage() {
       }
     } catch (error) {
       const parsed = parseApiError(error, "Could not update bookmark.");
+      if (parsed.status === 401) {
+        setShowLoginDialog(true);
+        return;
+      }
       toast({
-        title: parsed.status === 401 ? "Login required" : "Bookmark failed",
-        description:
-          parsed.status === 401
-            ? "Please sign in to manage bookmarks."
-            : parsed.message,
+        title: "Bookmark failed",
+        description: parsed.message,
         variant: "destructive",
       });
     }
@@ -222,6 +281,7 @@ export default function NewsDetailPage() {
             category={article.category || "General"}
             isBookmarked={isBookmarked}
             onShare={handleShare}
+            onOpenOriginalArticle={handleOpenOriginalArticle}
             onBookmark={handleBookmark}
           />
         </div>
@@ -240,11 +300,103 @@ export default function NewsDetailPage() {
         </div>
 
         <ArticleTags tags={article.tags || []} />
+
+        {/* Related News Section */}
+        {relatedArticles.length > 0 && (
+          <div className="mt-16 pt-8 border-t border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-6">Related News</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {relatedArticles.slice(0, 3).map((relatedArticle) => (
+                <Link
+                  key={relatedArticle.id}
+                  href={`/news-feed/${relatedArticle.id}`}
+                  className="group block h-full"
+                >
+                  <Card className="flex h-full flex-col gap-0 overflow-hidden rounded-xl border border-white/15 bg-zinc-950 py-0 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/35 hover:bg-zinc-900/90 hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)]">
+                    <CardContent className="flex h-full flex-col p-0">
+                      {relatedArticle.image_url && (
+                        <div className="relative overflow-hidden shrink-0">
+                          <img
+                            src={relatedArticle.image_url}
+                            alt={relatedArticle.title}
+                            className="h-32 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          />
+                          <div className="absolute top-3 left-3 flex gap-2">
+                            <span className="rounded-full border border-white/20 bg-black/75 px-2 py-1 text-xs text-white">
+                              {relatedArticle.category || "Related"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <div
+                        className={`flex flex-1 flex-col justify-between p-4 ${
+                          relatedArticle.image_url
+                            ? "border-t border-white/10"
+                            : ""
+                        }`}
+                      >
+                        <div>
+                          <h3 className="mb-2 line-clamp-2 text-md font-bold text-white transition-colors duration-300 group-hover:text-gray-100">
+                            {relatedArticle.title}
+                          </h3>
+                          <p className="mb-3 line-clamp-2 text-sm text-zinc-400">
+                            {relatedArticle.summary}
+                          </p>
+                        </div>
+                        <div className="mt-auto flex items-center gap-2 text-xs text-zinc-500">
+                          <span className="font-medium text-zinc-300">
+                            {relatedArticle.source}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(
+                              relatedArticle.published_at!,
+                            ).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <ArticleChatButton articleId={articleId} articleTitle={article.title} />
 
       <Footer />
+
+      <AlertDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <AlertDialogContent className="bg-black border-white/20 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">
+              Login first to bookmark
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-200">
+              You need to login before saving articles to your bookmarks.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-white text-black hover:bg-gray-200"
+              onClick={() => {
+                router.push(buildAuthUrl(getCurrentPathWithSearch()));
+              }}
+            >
+              Login
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

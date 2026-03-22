@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,58 +12,112 @@ import {
   Clock,
   ArrowUpRight,
   Newspaper,
+  Loader2,
+  Sparkles,
+  User,
 } from "lucide-react";
-import { NewsArticle } from "./types";
+import { newsService } from "@/services/newsService";
+import { NewsArticleSummary } from "@/types";
+import { parseApiError } from "@/lib/error-parser";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock finance news data
-const financeNews: NewsArticle[] = [
-  {
-    id: "1",
-    title: "Federal Reserve Announces Interest Rate Decision",
-    summary:
-      "The Fed has decided to maintain current interest rates amid economic uncertainty.",
-    category: "Economics",
-    source: "Financial Times",
-    publishedAt: "1 hour ago",
-    views: 2134,
-    image: "/business-finance.png",
-    tags: ["Fed", "Interest Rates", "Economics"],
-    sentiment: "neutral", // "positive", "negative", or "neutral"
-  },
-  {
-    id: "2",
-    title: "Bitcoin Surges Past $68,000 on Institutional Adoption",
-    summary:
-      "Major corporations continue to add Bitcoin to their treasury reserves.",
-    category: "Cryptocurrency",
-    source: "CoinDesk",
-    publishedAt: "3 hours ago",
-    views: 1856,
-    image: "/business-finance.png",
-    tags: ["Bitcoin", "Cryptocurrency", "Institutional"],
-    sentiment: "positive",
-  },
-  {
-    id: "3",
-    title: "Tech Stocks Rally on Strong Earnings Reports",
-    summary: "Major technology companies exceed earnings expectations for Q4.",
-    category: "Stocks",
-    source: "MarketWatch",
-    publishedAt: "5 hours ago",
-    views: 1342,
-    image: "/business-finance.png",
-    tags: ["Tech Stocks", "Earnings", "Q4"],
-    sentiment: "positive",
-  },
-];
+const PAGE_LIMIT = 18;
+const SEARCH_DEBOUNCE_MS = 400;
+const MIN_SEARCH_QUERY_LENGTH = 3;
 
 export function NewsTab() {
   const router = useRouter();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [articles, setArticles] = useState<NewsArticleSummary[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [recommendedArticles, setRecommendedArticles] = useState<
+    NewsArticleSummary[]
+  >([]);
+  const [isLoadingRecommended, setIsLoadingRecommended] = useState(false);
 
-  // Helper function to get sentiment styling
-  const getSentimentStyle = (sentiment: string | undefined) => {
-    switch (sentiment) {
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const loadRecommendations = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      setIsLoadingRecommended(true);
+      try {
+        const response = await newsService.getRecommendations({
+          limit: 14,
+          feedContext: "market",
+        });
+        setRecommendedArticles(response.items || []);
+      } catch (err) {
+        console.error("Failed to load recommendations", err);
+      } finally {
+        setIsLoadingRecommended(false);
+      }
+    };
+    void loadRecommendations();
+  }, []);
+
+  const fetchArticles = async (targetPage: number, append: boolean) => {
+    try {
+      setError(null);
+      if (append) {
+        setIsLoadingMore(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      const normalizedSearchQuery = debouncedSearchQuery.trim();
+      const effectiveSearchQuery =
+        normalizedSearchQuery.length >= MIN_SEARCH_QUERY_LENGTH
+          ? normalizedSearchQuery
+          : undefined;
+
+      const response = await newsService.getMarketNews({
+        page: targetPage,
+        limit: PAGE_LIMIT,
+        searchQuery: effectiveSearchQuery,
+        excludeArticleIds: append ? articles.map((a) => a.id) : undefined,
+      });
+
+      setArticles((prev) =>
+        append ? [...prev, ...response.items] : response.items,
+      );
+      setPage(targetPage);
+      setHasMore(response.has_more);
+    } catch (err) {
+      const parsed = parseApiError(err, "Failed to load market news.");
+      setError(parsed.message);
+      toast({
+        title: "Could not load news",
+        description: parsed.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchArticles(1, false);
+  }, [debouncedSearchQuery, toast]);
+
+  const getSentimentStyle = (sentiment: string | undefined | null) => {
+    const sentimentStr = (sentiment || "").toLowerCase();
+    switch (sentimentStr) {
       case "positive":
         return {
           bgColor: "bg-white/5",
@@ -89,19 +143,95 @@ export function NewsTab() {
     }
   };
 
-  const filteredNews = financeNews.filter(
-    (article) =>
-      searchQuery === "" ||
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
+  if (isLoading && articles.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Search for Finance News */}
+      {recommendedArticles.length > 0 && !searchQuery && (
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-6 text-purple-400">
+            <Sparkles className="h-5 w-5" />
+            <h2 className="text-xl font-bold text-white">
+              Recommended for You
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {recommendedArticles.map((article) => (
+              <Card
+                key={`rec-${article.id}`}
+                onClick={() =>
+                  router.push(`/market-finance/news/${article.id}`)
+                }
+                className="group relative bg-purple-950/20 border border-purple-900/40 hover:border-purple-500/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col sm:flex-row h-full rounded-xl"
+              >
+                {article.image_url && (
+                  <div className="w-full sm:w-1/3 aspect-video sm:aspect-auto sm:h-full bg-gray-800 relative overflow-hidden shrink-0">
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute top-3 left-3 flex gap-2 sm:hidden">
+                      <Badge className="bg-purple-600/80 text-white border-0 hover:bg-purple-700 backdrop-blur-sm shadow-sm font-semibold tracking-wide">
+                        FOR YOU
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+                <div className="flex-1 p-5 flex flex-col justify-between">
+                  <div>
+                    <div className="hidden sm:flex items-center gap-2 mb-3">
+                      <Badge className="bg-purple-600/80 text-white border-0 hover:bg-purple-700 backdrop-blur-sm shadow-sm font-semibold tracking-wide">
+                        FOR YOU
+                      </Badge>
+                      {article.category && (
+                        <Badge className="bg-white/10 text-white border-0 hover:bg-white/20">
+                          {article.category}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardTitle className="text-white text-lg font-bold group-hover:text-purple-300 transition-colors duration-300 line-clamp-2 leading-tight mb-2">
+                      {article.title}
+                    </CardTitle>
+                    <p className="text-gray-400 text-sm line-clamp-2 leading-relaxed mb-4">
+                      {article.summary}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-purple-900/30">
+                    <span className="flex items-center gap-1 font-medium truncate max-w-[120px]">
+                      <User className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{article.source}</span>
+                    </span>
+                    <span className="shrink-0 flex items-center gap-1 text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      {article.published_at
+                        ? new Date(article.published_at).toLocaleDateString(
+                            undefined,
+                            { month: "short", day: "numeric" },
+                          )
+                        : ""}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Latest News */}
+      {(recommendedArticles.length > 0 || searchQuery) && (
+        <h2 className="text-xl font-bold mb-6 text-white border-b border-gray-800 pb-2">
+          {searchQuery ? "Search Results" : "Latest Market News"}
+        </h2>
+      )}
+
       <div className="mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -114,10 +244,15 @@ export function NewsTab() {
         </div>
       </div>
 
-      {/* Finance News Articles */}
+      {error && (
+        <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredNews.length > 0 ? (
-          filteredNews.map((article, index) => (
+        {articles.length > 0 ? (
+          articles.map((article) => (
             <Card
               key={article.id}
               onClick={() => router.push(`/market-finance/news/${article.id}`)}
@@ -129,14 +264,16 @@ export function NewsTab() {
                     <div className="flex items-center gap-2 mb-2">
                       <Badge className="bg-white/10 text-white border border-white/20 hover:bg-white/20">
                         <TrendingUp className="h-3 w-3 mr-1" />
-                        {article.category}
+                        {article.category || "Market"}
                       </Badge>
                       <Badge
                         variant="outline"
                         className="border-zinc-700 text-zinc-400"
                       >
                         <Clock className="h-3 w-3 mr-1" />
-                        {article.publishedAt}
+                        {article.published_at
+                          ? new Date(article.published_at).toLocaleDateString()
+                          : "Unknown"}
                       </Badge>
                     </div>
                     <CardTitle className="text-white text-lg font-bold group-hover:text-white transition-colors duration-300 line-clamp-2 leading-tight">
@@ -144,19 +281,23 @@ export function NewsTab() {
                     </CardTitle>
                   </div>
 
-                  {/* Sentiment Indicator */}
                   <div className="flex-shrink-0">
                     <div
-                      className={`px-3 py-1 rounded-full ${getSentimentStyle(article.sentiment).bgColor
-                        } border ${getSentimentStyle(article.sentiment).borderColor
-                        } ${getSentimentStyle(article.sentiment).textColor
-                        } text-xs font-medium flex items-center gap-1`}
-                      title={`Sentiment: ${article.sentiment}`}
+                      className={`px-3 py-1 rounded-full ${
+                        getSentimentStyle(article.sentiment_label).bgColor
+                      } border ${
+                        getSentimentStyle(article.sentiment_label).borderColor
+                      } ${
+                        getSentimentStyle(article.sentiment_label).textColor
+                      } text-xs font-medium flex items-center gap-1`}
+                      title={`Sentiment: ${article.sentiment_label || "Unknown"}`}
                     >
                       <span className="text-sm">
-                        {getSentimentStyle(article.sentiment).icon}
+                        {getSentimentStyle(article.sentiment_label).icon}
                       </span>
-                      <span className="capitalize">{article.sentiment}</span>
+                      <span className="capitalize">
+                        {article.sentiment_label || "neutral"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -164,12 +305,11 @@ export function NewsTab() {
 
               <CardContent className="space-y-4 flex-grow flex flex-col">
                 <p className="text-gray-400 text-sm line-clamp-2 leading-relaxed">
-                  {article.summary}
+                  {article.summary || "No summary available"}
                 </p>
 
-                {/* Finance-style tag display */}
                 <div className="flex flex-wrap gap-2">
-                  {article.tags.map((tag, idx) => (
+                  {(article.tags || []).slice(0, 3).map((tag) => (
                     <span
                       key={tag}
                       className="text-xs px-2 py-1 rounded bg-zinc-900 text-zinc-300 border border-zinc-800 hover:border-white/30 transition-colors"
@@ -179,21 +319,19 @@ export function NewsTab() {
                   ))}
                 </div>
 
-                {/* Bottom section with source and action */}
                 <div className="flex items-center justify-between pt-3 border-t border-zinc-900 mt-auto">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800">
                       <Newspaper className="h-3 w-3 text-zinc-400" />
                     </div>
                     <span className="text-xs text-zinc-400 font-medium">
-                      {article.source}
+                      {article.source || "Unknown"}
                     </span>
                   </div>
                   <ArrowUpRight className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" />
                 </div>
               </CardContent>
 
-              {/* Decorative financial pattern */}
               <div className="absolute bottom-0 right-0 w-32 h-32 opacity-5 pointer-events-none">
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                   <path
@@ -229,14 +367,22 @@ export function NewsTab() {
         )}
       </div>
 
-      {/* Load More Button */}
-      {filteredNews.length > 0 && (
+      {hasMore && articles.length > 0 && (
         <div className="text-center">
           <Button
             variant="outline"
+            disabled={isLoadingMore}
+            onClick={() => void fetchArticles(page + 1, true)}
             className="border-white text-white hover:bg-white hover:text-black transition-all duration-300 bg-transparent group"
           >
-            Load More Articles
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Load More Articles"
+            )}
           </Button>
         </div>
       )}

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from functools import partial
 from pathlib import Path
 from typing import List, Optional
@@ -13,6 +14,7 @@ class EmbeddingService:
 
     _model = None
     _lock = asyncio.Lock()
+    _logger = logging.getLogger(__name__)
 
     @classmethod
     async def _load_model(cls):
@@ -34,8 +36,15 @@ class EmbeddingService:
             if not model_path:
                 model_path = "BAAI/bge-base-en-v1.5"
 
+            cls._logger.info("Loading embedding model from '%s'", model_path)
             cls._model = await run_in_threadpool(SentenceTransformer, model_path)
+            cls._logger.info("Embedding model loaded successfully")
             return cls._model
+
+    @classmethod
+    async def warmup(cls) -> None:
+        """Warm up the model at startup to avoid first-query cold start."""
+        await cls._load_model()
 
     @staticmethod
     def _to_list(embedding) -> List[float]:
@@ -60,6 +69,7 @@ class EmbeddingService:
             )
             return cls._to_list(encoded)
         except Exception:
+            cls._logger.exception("Failed to encode document embedding")
             return None
 
     @classmethod
@@ -79,4 +89,5 @@ class EmbeddingService:
             )
             return cls._to_list(encoded)
         except Exception:
+            cls._logger.exception("Failed to encode query embedding")
             return None

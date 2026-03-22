@@ -15,7 +15,33 @@ export interface GetNewsFeedParams {
   searchQuery?: string;
   startDate?: string;
   endDate?: string;
+  feedContext?: string;
+  excludeArticleIds?: string[];
 }
+
+class CacheService {
+  private cache = new Map<string, { data: any; expiry: number }>();
+
+  get<T>(key: string): T | null {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    if (Date.now() > item.expiry) {
+      this.cache.delete(key);
+      return null;
+    }
+    return item.data as T;
+  }
+
+  set(key: string, data: any, ttlMin = 5) {
+    this.cache.set(key, { data, expiry: Date.now() + ttlMin * 60 * 1000 });
+  }
+
+  invalidateAll() {
+    this.cache.clear();
+  }
+}
+
+export const apiCache = new CacheService();
 
 export const newsService = {
   async getFeed(params: GetNewsFeedParams = {}): Promise<NewsFeedResponse> {
@@ -55,12 +81,153 @@ export const newsService = {
     }
   },
 
+  async getNewsFeed(params: GetNewsFeedParams = {}): Promise<NewsFeedResponse> {
+    try {
+      const queryParams: Record<string, string | number> = {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+      };
+
+      if (params.category && params.category.toLowerCase() !== "all") {
+        queryParams.category = params.category;
+      }
+
+      if (params.sources && params.sources.length > 0) {
+        queryParams.source = params.sources.join(",");
+      }
+
+      if (params.searchQuery?.trim()) {
+        queryParams.q = params.searchQuery.trim();
+      }
+
+      if (params.startDate) {
+        queryParams.start_date = params.startDate;
+      }
+
+      if (params.endDate) {
+        queryParams.end_date = params.endDate;
+      }
+
+      if (params.excludeArticleIds && params.excludeArticleIds.length > 0) {
+        queryParams.exclude_article_ids = params.excludeArticleIds.join(",");
+      }
+
+      const cacheKey = "news-feed:" + JSON.stringify(queryParams);
+      const cached = apiCache.get<NewsFeedResponse>(cacheKey);
+      if (cached) return cached;
+
+      const response = await api.get<NewsFeedResponse>("/news/news-feed", {
+        params: queryParams,
+      });
+
+      apiCache.set(cacheKey, response.data, 5);
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load news feed.");
+    }
+  },
+
+  async getMarketNews(
+    params: GetNewsFeedParams = {},
+  ): Promise<NewsFeedResponse> {
+    try {
+      const queryParams: Record<string, string | number> = {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+      };
+
+      if (params.category && params.category.toLowerCase() !== "all") {
+        queryParams.category = params.category;
+      }
+
+      if (params.sources && params.sources.length > 0) {
+        queryParams.source = params.sources.join(",");
+      }
+
+      if (params.searchQuery?.trim()) {
+        queryParams.q = params.searchQuery.trim();
+      }
+
+      if (params.startDate) {
+        queryParams.start_date = params.startDate;
+      }
+
+      if (params.endDate) {
+        queryParams.end_date = params.endDate;
+      }
+
+      if (params.excludeArticleIds && params.excludeArticleIds.length > 0) {
+        queryParams.exclude_article_ids = params.excludeArticleIds.join(",");
+      }
+
+      const cacheKey = "market-news:" + JSON.stringify(queryParams);
+      const cached = apiCache.get<NewsFeedResponse>(cacheKey);
+      if (cached) return cached;
+
+      const response = await api.get<NewsFeedResponse>("/news/market-news", {
+        params: queryParams,
+      });
+
+      apiCache.set(cacheKey, response.data, 5);
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load market news.");
+    }
+  },
+
   async getArticle(articleId: string): Promise<NewsArticleDetail> {
     try {
-      const response = await api.get<NewsArticleDetail>(`/news/${articleId}`);
+      const response = await api.get<NewsArticleDetail>(
+        `/news/article/${articleId}`,
+      );
       return response.data;
     } catch (error) {
       throw toApiClientError(error, "Unable to load article.");
+    }
+  },
+
+  async getCategories(): Promise<string[]> {
+    try {
+      const response = await api.get<string[]>("/news/categories");
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load categories.");
+    }
+  },
+
+  async getSources(): Promise<string[]> {
+    try {
+      const response = await api.get<string[]>("/news/sources");
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load sources.");
+    }
+  },
+
+  async getNewsFeedSources(): Promise<string[]> {
+    try {
+      const response = await api.get<string[]>("/news/news-feed/sources");
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load news feed sources.");
+    }
+  },
+
+  async getNewsFeedCategories(): Promise<string[]> {
+    try {
+      const response = await api.get<string[]>("/news/news-feed/categories");
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load news feed categories.");
+    }
+  },
+
+  async getMarketNewsSources(): Promise<string[]> {
+    try {
+      const response = await api.get<string[]>("/news/market-news/sources");
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load market news sources.");
     }
   },
 
@@ -92,6 +259,77 @@ export const newsService = {
       return response.data;
     } catch (error) {
       throw toApiClientError(error, "Unable to remove bookmark.");
+    }
+  },
+
+  async getRecommendations(
+    params: GetNewsFeedParams & { excludeArticleId?: string } = {},
+  ): Promise<NewsFeedResponse> {
+    try {
+      const queryParams: Record<string, string | number> = {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+      };
+
+      if (params.category && params.category.toLowerCase() !== "all") {
+        queryParams.category = params.category;
+      }
+
+      if (params.sources && params.sources.length > 0) {
+        queryParams.source = params.sources.join(",");
+      }
+
+      if (params.excludeArticleId) {
+        queryParams.exclude_article_id = params.excludeArticleId;
+      }
+
+      if (params.excludeArticleIds && params.excludeArticleIds.length > 0) {
+        queryParams.exclude_article_ids = params.excludeArticleIds.join(",");
+      }
+
+      if (params.feedContext) {
+        queryParams.feed_context = params.feedContext;
+      }
+
+      const cacheKey = "recs:" + JSON.stringify(queryParams);
+      const cached = apiCache.get<NewsFeedResponse>(cacheKey);
+      if (cached) return cached;
+
+      const response = await api.get<NewsFeedResponse>(
+        "/news/recommendations",
+        { params: queryParams },
+      );
+
+      apiCache.set(cacheKey, response.data, 5);
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load recommendations.");
+    }
+  },
+
+  async getRelatedArticles(
+    articleId: string,
+    limit: number = 6,
+  ): Promise<NewsArticleSummary[]> {
+    try {
+      const response = await api.get<NewsArticleSummary[]>(
+        `/news/article/${articleId}/related`,
+        { params: { limit } },
+      );
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load related articles.");
+    }
+  },
+
+  async getFeaturedNews(limit: number = 10): Promise<NewsArticleSummary[]> {
+    try {
+      const response = await api.get<NewsArticleSummary[]>("/news/featured", {
+        params: { limit },
+      });
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to load featured news.");
     }
   },
 };

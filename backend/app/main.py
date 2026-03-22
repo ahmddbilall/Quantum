@@ -1,11 +1,31 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.services.embedding_service import EmbeddingService
+
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if settings.EMBEDDING_WARMUP_ON_STARTUP:
+        logger.info("Embedding warmup started")
+        try:
+            await EmbeddingService.warmup()
+            logger.info("Embedding warmup completed")
+        except Exception:
+            logger.exception("Embedding warmup failed")
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan,
 )
 
 # Set all CORS enabled origins

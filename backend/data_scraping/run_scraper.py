@@ -29,7 +29,7 @@ try:
 except ImportError as e:
     print(f"Error importing news_scraper: {e}")
     print("Make sure you have installed all dependencies:")
-    print("pip install -r news_scraper/requirements.txt")
+    print("pip install -r ../requirements.txt")
     sys.exit(1)
 
 if __name__ == '__main__':

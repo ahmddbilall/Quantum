@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
+from app.models.user import User
 from app.schemas.article import (
     ArticleDetail,
     ArticleSummary,
@@ -15,9 +16,23 @@ from app.schemas.article import (
     NewsSyncRequest,
     NewsSyncResponse,
 )
-from app.services.news_service import news_service
+from app.services.news_service import MARKET_NEWS_SOURCES, news_service
+from app.services.recommendation_service import recommendation_service
 
 router = APIRouter()
+
+
+def _parse_sources(source: Optional[str]) -> Optional[List[str]]:
+    if not source:
+        return None
+    parsed = [item.strip() for item in source.split(",") if item.strip()]
+    return parsed or None
+
+
+def _to_article_detail_payload(article: Any) -> dict:
+    payload = news_service._to_summary(article)
+    payload["content"] = article.content
+    return payload
 
 
 @router.get("/feed", response_model=NewsFeedResponse)
@@ -32,9 +47,7 @@ async def get_news_feed(
     start_date: Optional[datetime] = Query(default=None),
     end_date: Optional[datetime] = Query(default=None),
 ) -> Any:
-    sources: Optional[List[str]] = None
-    if source:
-        sources = [item.strip() for item in source.split(",") if item.strip()]
+    sources = _parse_sources(source)
 
     query_value = search_query or q
     return await news_service.get_feed(
@@ -46,6 +59,90 @@ async def get_news_feed(
         search_query=query_value,
         start_date=start_date,
         end_date=end_date,
+    )
+
+
+@router.get("/news-feed", response_model=NewsFeedResponse)
+async def get_news_feed_page(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(deps.get_optional_current_user),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=100),
+    category: Optional[str] = Query(default=None),
+    source: Optional[str] = Query(default=None),
+    search_query: Optional[str] = Query(default=None),
+    q: Optional[str] = Query(default=None),
+    start_date: Optional[datetime] = Query(default=None),
+    end_date: Optional[datetime] = Query(default=None),
+    exclude_article_ids: Optional[str] = Query(default=None),
+) -> Any:
+    query_value = search_query or q
+
+    # When a search query is active, use the standard text/vector feed
+    if query_value:
+        return await news_service.get_feed(
+            db,
+            page=page,
+            limit=limit,
+            category=category,
+            sources=_parse_sources(source),
+            exclude_sources=MARKET_NEWS_SOURCES,
+            search_query=query_value,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    # Otherwise use the recommendation engine (works for anon + logged-in)
+    return await recommendation_service.get_recommended_feed(
+        db,
+        user=current_user,
+        page=page,
+        limit=limit,
+        category=category,
+        sources=_parse_sources(source),
+        exclude_sources=MARKET_NEWS_SOURCES,
+        exclude_article_ids=exclude_article_ids,
+    )
+
+
+@router.get("/market-news", response_model=NewsFeedResponse)
+async def get_market_news_page(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(deps.get_optional_current_user),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=100),
+    category: Optional[str] = Query(default=None),
+    source: Optional[str] = Query(default=None),
+    search_query: Optional[str] = Query(default=None),
+    q: Optional[str] = Query(default=None),
+    start_date: Optional[datetime] = Query(default=None),
+    end_date: Optional[datetime] = Query(default=None),
+    exclude_article_ids: Optional[str] = Query(default=None),
+) -> Any:
+    query_value = search_query or q
+
+    if query_value:
+        return await news_service.get_feed(
+            db,
+            page=page,
+            limit=limit,
+            category=category,
+            sources=_parse_sources(source),
+            include_sources=MARKET_NEWS_SOURCES,
+            search_query=query_value,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    return await recommendation_service.get_recommended_feed(
+        db,
+        user=current_user,
+        page=page,
+        limit=limit,
+        category=category,
+        sources=_parse_sources(source),
+        include_sources=MARKET_NEWS_SOURCES,
+        exclude_article_ids=exclude_article_ids,
     )
 
 
@@ -112,6 +209,119 @@ async def sync_news(
         ) from exc
 
 
+@router.get("/categories", response_model=List[str])
+async def get_news_categories(
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    """Get all available news categories."""
+    return await news_service.get_categories(db)
+
+
+@router.get("/sources", response_model=List[str])
+async def get_news_sources(
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    """Get all available news sources."""
+    return await news_service.get_sources(db)
+
+
+@router.get("/news-feed/sources", response_model=List[str])
+async def get_news_feed_sources(
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    return await news_service.get_sources(db, exclude_sources=MARKET_NEWS_SOURCES)
+
+
+@router.get("/news-feed/categories", response_model=List[str])
+async def get_news_feed_categories(
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    return await news_service.get_ranked_categories(
+        db,
+        limit=10,
+        exclude_sources=MARKET_NEWS_SOURCES,
+        include_all=True,
+    )
+
+
+@router.get("/market-news/sources", response_model=List[str])
+async def get_market_news_sources(
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    return await news_service.get_sources(db, include_sources=MARKET_NEWS_SOURCES)
+
+
+@router.get("/article/{article_id}", response_model=ArticleDetail)
+async def get_article_detail(
+    article_id: UUID,
+    db: AsyncSession = Depends(deps.get_db),
+) -> Any:
+    article = await news_service.get_article(db, article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    return _to_article_detail_payload(article)
+
+
+# ── Recommendation Endpoints ──────────────────────────────────────────
+# NOTE: These must be defined BEFORE the catch-all /{article_id} route
+# so that FastAPI does not try to parse "recommendations" etc. as a UUID.
+
+@router.get("/recommendations", response_model=NewsFeedResponse)
+async def get_recommendations(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(deps.get_optional_current_user),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=20, ge=1, le=100),
+    category: Optional[str] = Query(default=None),
+    source: Optional[str] = Query(default=None),
+    exclude_article_id: Optional[UUID] = Query(default=None),
+    exclude_article_ids: Optional[str] = Query(default=None),
+    feed_context: str = Query(default="general"),
+) -> Any:
+    """Personalised news recommendations (works for anonymous & logged-in users)."""
+    include_srcs = MARKET_NEWS_SOURCES if feed_context == "market" else None
+    exclude_srcs = MARKET_NEWS_SOURCES if feed_context == "general" else None
+
+    return await recommendation_service.get_recommended_feed(
+        db,
+        user=current_user,
+        page=page,
+        limit=limit,
+        category=category,
+        sources=_parse_sources(source),
+        exclude_sources=exclude_srcs,
+        include_sources=include_srcs,
+        exclude_article_id=exclude_article_id,
+        exclude_article_ids=exclude_article_ids,
+    )
+
+
+@router.get("/article/{article_id}/related", response_model=List[ArticleSummary])
+async def get_related_articles(
+    article_id: UUID,
+    db: AsyncSession = Depends(deps.get_db),
+    limit: int = Query(default=6, ge=1, le=20),
+) -> Any:
+    """Return articles most similar to the given article by embedding."""
+    return await recommendation_service.get_related_articles(
+        db, article_id, limit=limit
+    )
+
+
+@router.get("/featured", response_model=List[ArticleSummary])
+async def get_featured_news(
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(deps.get_optional_current_user),
+    limit: int = Query(default=10, ge=1, le=50),
+) -> Any:
+    """Trending / featured articles for the home page."""
+    return await recommendation_service.get_featured_news(
+        db, user=current_user, limit=limit
+    )
+
+
+# ── Catch-all (must be LAST) ─────────────────────────────────────────
+
 @router.get("/{article_id}", response_model=ArticleDetail)
 async def get_news_article(
     article_id: UUID,
@@ -120,4 +330,4 @@ async def get_news_article(
     article = await news_service.get_article(db, article_id)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
-    return article
+    return _to_article_detail_payload(article)

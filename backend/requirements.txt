@@ -10,6 +10,7 @@ python-dotenv
 passlib
 python-jose[cryptography]
 httpx
+aiohttp
 pgvector
 apscheduler
 newsapi-python
@@ -27,6 +28,7 @@ numpy
 # AI / ML
 sentence-transformers
 transformers
+torch
 # torch via index-url in installation (see below)
 
 google-auth

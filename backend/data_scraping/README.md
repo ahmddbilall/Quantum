@@ -7,7 +7,8 @@ This guide provides step-by-step instructions for setting up PostgreSQL with `pg
 ## 1. PostgreSQL Setup
 
 ### PostgreSQL Server Configuration
-- **Password:** `1234567` (required when creating a new server)  
+
+- **Password:** `1234567` (required when creating a new server)
 - **Port:** `5432`
 
 ---
@@ -15,6 +16,7 @@ This guide provides step-by-step instructions for setting up PostgreSQL with `pg
 ### Install `pgvector` Extension
 
 #### Option 1: Build from source
+
 1. Open **x64 Native Tools Command Prompt for VS 2022** as Administrator.
 2. Run the following commands:
 
@@ -26,28 +28,31 @@ git clone --branch v0.8.0 https://github.com/pgvector/pgvector.git
 cd pgvector
 nmake /F Makefile.win
 nmake /F Makefile.win install
-````
+```
 
 #### Option 2: Precompiled binaries (if x64 tools are not available)
 
-* Download from [pgvector\_pgsql\_windows Releases](https://github.com/andreiramani/pgvector_pgsql_windows/releases).
-* Move the downloaded files to the corresponding PostgreSQL folders.
+- Download from [pgvector_pgsql_windows Releases](https://github.com/andreiramani/pgvector_pgsql_windows/releases).
+- Move the downloaded files to the corresponding PostgreSQL folders.
 
 ---
 
-### Database & User Setup (Development Environment)
+### Database Setup (Shared with FastAPI App)
 
-After installing PostgreSQL and `pgvector`, follow these steps:
+The scraper now writes directly into the same canonical tables used by the FastAPI app.
+Use the same database configured in `backend/.env` (`POSTGRES_*` or `SQLALCHEMY_DATABASE_URI`).
+
+If you need a local DB from scratch, follow these steps:
 
 ```sql
 -- Create a database
-CREATE DATABASE newsdb;
+CREATE DATABASE quantum;
 
 -- Create a user
 CREATE USER newsuser WITH PASSWORD 'pass123';
 
 -- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE newsdb TO newsuser;
+GRANT ALL PRIVILEGES ON DATABASE quantum TO newsuser;
 
 -- Enable pgvector extension
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -61,11 +66,13 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO newsuser;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO newsuser;
 ```
 
-#### Database URL
+#### Database URL (optional scraper override)
 
 ```
-DATABASE_URL=postgresql://newsuser:pass123@localhost:5432/newsdb
+DATABASE_URL=postgresql://newsuser:pass123@localhost:5432/quantum
 ```
+
+Preferred approach is to keep scraper and FastAPI on the same `POSTGRES_*` settings.
 
 ---
 
@@ -96,7 +103,10 @@ drive.mount('/content/drive')
 !cp bge-base-en-v1.5.zip /content/drive/MyDrive/
 ```
 
-➡️ After downloading, unzip the file inside the `models/` directory in your project.
+After downloading, unzip the model in either:
+
+- `backend/bge_model/bge-base-en-v1.5` (default)
+- or set `EMBEDDING_MODEL_PATH` explicitly in env.
 
 ---
 
@@ -113,11 +123,14 @@ pip install -r requirements.txt
 ✅ At this point, PostgreSQL + `pgvector`, the model, and Python dependencies should be ready for running the scraping pipeline.
 
 ---
----
----
----
+
 ---
 
+---
+
+---
+
+---
 
 # Documentation
 
@@ -129,13 +142,13 @@ data scraping/
 │   ├── __init__.py           # Package initialization
 │   ├── config.py             # Configuration management
 │   ├── database.py           # PostgreSQL + pgvector integration
-│   ├── base_scraper.py       # Base scraper class with error 
+│   ├── base_scraper.py       # Base scraper class with error
 │   ├── scrapers.py           # Source-specific scrapers
 │   ├── embeddings.py         # Vector embedding processing
 │   ├── scheduler.py          # Automated task scheduling
 │   ├── logging_utils.py      # Comprehensive logging system
 │   └── manager.py            # Main system manager
-│    
+│
 ├── run_scraper.py            # Main entry point
 ├── .env.example              # Environment configuration template
 ├── README.md                 # Comprehensive documentation
@@ -143,19 +156,23 @@ data scraping/
 ```
 
 ---
+
 ## 📁 File Structure & Responsibilities
 
 ### **Core System Files**
 
 #### 1. `manager.py` - **MAIN ORCHESTRATOR**
+
 **Purpose**: Central command center that coordinates all system operations
 **Key Responsibilities**:
+
 - System initialization and cleanup
 - Command-line interface handling
 - Coordinating scraping, embedding, and search operations
 - Performance monitoring and error tracking
 
 **Key Classes**:
+
 ```python
 class NewsScraperManager:
     async def run_continuous()     # Run system 24/7 with scheduler
@@ -166,8 +183,10 @@ class NewsScraperManager:
 ```
 
 #### 2. `config.py` - **CONFIGURATION HUB**
+
 **Purpose**: Centralized configuration management
 **Key Configurations**:
+
 ```python
 DATABASE_CONFIG     # PostgreSQL connection settings
 EMBEDDING_CONFIG    # BGE model settings (768-dim, BAAI/bge-base-en-v1.5)
@@ -177,20 +196,24 @@ SCHEDULER_CONFIG    # Automation intervals (6hr scraping, 30min embeddings)
 ```
 
 #### 3. `database.py` - **DATA PERSISTENCE LAYER**
+
 **Purpose**: PostgreSQL integration with vector search capabilities
 **Key Features**:
+
 - Connection pooling (5-20 connections)
 - Vector similarity search using pgvector
 - Article deduplication (URL + title hashing)
 - Metadata storage and retrieval
 
 **Key Tables**:
+
 ```sql
 articles: id, url, title, content, summary, source_name, published_at, created_at
 embeddings: article_id, embedding_vector (768-dim), created_at
 ```
 
 **Key Methods**:
+
 ```python
 class DatabaseManager:
     async def save_article()           # Store article with deduplication
@@ -200,14 +223,17 @@ class DatabaseManager:
 ```
 
 #### 4. `embeddings.py` - **VECTOR PROCESSING ENGINE**
+
 **Purpose**: Generate semantic embeddings using local BGE model
 **Key Features**:
+
 - BAAI/bge-base-en-v1.5 integration (768 dimensions)
 - Batch processing for efficiency
 - Local processing (no API costs)
 - Optimized text preparation for retrieval
 
 **Key Classes**:
+
 ```python
 class BGEEmbeddingProcessor:
     async def generate_embedding()      # Single text → 768-dim vector
@@ -217,14 +243,17 @@ class BGEEmbeddingProcessor:
 ```
 
 #### 5. `scheduler.py` - **AUTOMATION ENGINE**
+
 **Purpose**: Automated task scheduling and background processing
 **Key Features**:
+
 - Multi-source scraping every 6 hours
 - Embedding processing every 30 minutes
 - Database cleanup every 7 days
 - Error handling and retry logic
 
 **Key Classes**:
+
 ```python
 class SchedulerService:
     async def start()           # Start continuous automation
@@ -233,8 +262,10 @@ class SchedulerService:
 ```
 
 #### 6. `scrapers.py` - **WEB SCRAPING ENGINES**
+
 **Purpose**: Source-specific content extraction
 **Scraper Classes**:
+
 ```python
 class AlJazeeraScraper:    # Al Jazeera RSS + article content
 class BBCScraper:          # BBC RSS + full article extraction
@@ -243,32 +274,38 @@ class CryptoScraper:       # Cryptocurrency news aggregation
 ```
 
 **Each scraper handles**:
+
 - RSS feed parsing
 - Full article content extraction
 - Metadata extraction (title, summary, published date)
 - Content cleaning and validation
 
 #### 7. `base_scraper.py` - **SCRAPING FRAMEWORK**
+
 **Purpose**: Common scraping functionality and patterns
 **Key Features**:
+
 - Rate limiting and request throttling
 - Error handling and retries
 - Content validation
 - Base classes for consistent scraper implementation
 
 #### 8. `logging_utils.py` - **MONITORING & DIAGNOSTICS**
+
 **Purpose**: Comprehensive logging, performance tracking, and error monitoring
 **Key Features**:
+
 ```python
 perf_logger:     # Performance timing and metrics
 error_tracker:   # Error aggregation and analysis
 metrics_tracker: # System metrics and statistics
 ```
 
-
 #### 9. `run_scraper.py` - **MAIN ENTRY POINT**
+
 **Purpose**: Command-line interface for system operations
 **Usage Examples**:
+
 ```bash
 python run_scraper.py run              # Continuous operation
 python run_scraper.py run-once         # Single execution
@@ -278,10 +315,10 @@ python run_scraper.py search --query "cryptocurrency"
 
 ---
 
-
 ## 🔄 Data Flow Architecture
 
 ### **1. News Scraping Flow**
+
 ```
 RSS Feeds → Source Scrapers → Content Extraction → Database Storage
     ↓           ↓                    ↓                    ↓
@@ -292,6 +329,7 @@ Crypto      (parallel)         Cleaning          URL hashing
 ```
 
 ### **2. Embedding Processing Flow**
+
 ```
 Unprocessed Articles → Text Preparation → BGE Model → Vector Storage
         ↓                     ↓              ↓            ↓
@@ -301,6 +339,7 @@ Unprocessed Articles → Text Preparation → BGE Model → Vector Storage
 ```
 
 ### **3. Search & Retrieval Flow**
+
 ```
 User Query → BGE Embedding → Vector Search → Ranked Results
      ↓            ↓              ↓              ↓
@@ -311,25 +350,29 @@ User Query → BGE Embedding → Vector Search → Ranked Results
 
 ---
 
-## Database Schema For news articles 
+## Database Schema (Canonical)
 
 ### news_sources
 
-- id, name, base_url,  is_active, timestamps
+- id, name, base_url, is_active, timestamps
 
-### news_articles
+### articles
 
-- id, source_id, title, url, published_date, content, summary
-- main_image_url, author, category, tags, metadata
-- scraped_at, updated_at, is_processed, embedding (vector)
+- id, source_id, title, url, published_at, content, summary
+- image_url, author, category, tags, source, language
+- scraped_at, ingestion_meta, content_hash, sentiment fields
 
-### scraping_logs
+### article_embeddings
 
-- id, source_id, status, message, articles_scraped/failed
+- article_id, embedding (vector)
+
+### scraping_runs
+
+- id, source_id, run_type, status, message
+- articles_found, articles_inserted, articles_updated, articles_failed
 - started_at, completed_at, error_details
 
 ---
-
 
 ## Usage
 

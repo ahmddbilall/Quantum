@@ -7,7 +7,8 @@ storing them in PostgreSQL database, and generating vector embeddings for RAG-ba
 Main Components:
 - Database management with PostgreSQL and pgvector
 - Configurable scrapers for different news sources
-- Vector embedding generation using OpenAI
+- API-based ingestion for general/world news from major outlets
+- Vector embedding generation using local BGE models
 - Automated scheduling and error handling
 - Performance monitoring and logging
 
@@ -23,6 +24,7 @@ from .manager import NewsScraperManager, news_manager
 from .scheduler import SchedulerService
 from .database import db_manager, DatabaseManager
 from .embeddings import EmbeddingService
+from .api_news_service import APINewsService
 from .config import get_config
 from .logging_utils import setup_logging
 
@@ -37,6 +39,7 @@ __all__ = [
     'db_manager',
     'DatabaseManager',
     'EmbeddingService',
+    'APINewsService',
     'get_config',
     'setup_logging'
 ]
@@ -48,6 +51,7 @@ PACKAGE_INFO = {
     'description': 'Robust news scraping system with PostgreSQL and vector embeddings',
     'features': [
         'Multi-source news scraping',
+        'API-based general/world news ingestion',
         'PostgreSQL database storage',
         'Vector embeddings for RAG',
         'Automated scheduling',
@@ -58,6 +62,7 @@ PACKAGE_INFO = {
         'Al Jazeera',
         'BBC',
         'The Guardian',
-        'Crypto News (RSS feeds)'
+        'Crypto News (RSS feeds)',
+        'General/World News (API providers)'
     ]
 }

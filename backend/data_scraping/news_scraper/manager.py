@@ -97,7 +97,7 @@ class NewsScraperManager:
             await self.cleanup()
     
     async def run_once(self) -> Dict[str, Any]:
-        """Run scraping and processing once."""
+        """Run scraping, API ingestion, and embedding processing once."""
         if not self.initialized:
             await self.initialize()
         
@@ -109,6 +109,7 @@ class NewsScraperManager:
             
             duration = perf_logger.end_timer('run_once', {
                 'articles_scraped': result.get('scraping', {}).get('total_scraped', 0),
+                'api_news_upserted': result.get('api_news', {}).get('upserted', 0),
                 'embeddings_processed': result.get('embeddings', {}).get('processed', 0)
             })
             
@@ -171,6 +172,32 @@ class NewsScraperManager:
         except Exception as e:
             error_tracker.log_error(e, {'operation': 'process_embeddings'})
             logger.error(f"Error processing embeddings: {e}")
+            raise
+        finally:
+            await self.cleanup()
+
+    async def process_api_news(self) -> Dict[str, Any]:
+        """Process API-based general/world news ingestion."""
+        if not self.initialized:
+            await self.initialize()
+
+        logger.info("Processing API news pipeline")
+        perf_logger.start_timer('process_api_news')
+
+        try:
+            result = await SchedulerService.process_api_news()
+
+            duration = perf_logger.end_timer('process_api_news', {
+                'api_news_upserted': result.get('upserted', 0),
+                'api_news_failed': result.get('failed', 0)
+            })
+
+            logger.info(f"API news processed in {duration:.2f} seconds")
+            return result
+
+        except Exception as e:
+            error_tracker.log_error(e, {'operation': 'process_api_news'})
+            logger.error(f"Error processing API news: {e}")
             raise
         finally:
             await self.cleanup()
@@ -257,7 +284,7 @@ async def main():
     """Main entry point for the news scraper."""
     parser = argparse.ArgumentParser(description='News Scraper System')
     parser.add_argument('command', choices=[
-        'run', 'run-once', 'scrape', 'embeddings', 'search', 'recent'
+        'run', 'run-once', 'scrape', 'embeddings', 'api-news', 'search', 'recent'
     ], help='Command to execute')
     parser.add_argument('--source', help='Specific source to scrape (for scrape command)')
     parser.add_argument('--query', help='Search query (for search command)')
@@ -287,6 +314,11 @@ async def main():
         elif args.command == 'embeddings':
             # Process embeddings
             result = await news_manager.process_embeddings()
+            print(f"Results: {result}")
+
+        elif args.command == 'api-news':
+            # Process API news ingestion
+            result = await news_manager.process_api_news()
             print(f"Results: {result}")
             
         elif args.command == 'search':

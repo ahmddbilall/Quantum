@@ -79,7 +79,7 @@ class AlJazeeraScraper(BaseScraper):
         # Extract other metadata
         main_image_url = self.extract_image_url(soup, url)
         author = self.extract_author(soup)
-        category = self.extract_category(soup, url)
+        category = self.extract_category(soup, url, title=title)
         tags = self.extract_tags(soup, content)
         
         return ArticleData(
@@ -156,7 +156,7 @@ class BBCScraper(BaseScraper):
         # Extract other metadata
         main_image_url = self.extract_image_url(soup, url)
         author = self.extract_author(soup)
-        category = self.extract_category(soup, url)
+        category = self.extract_category(soup, url, title=title)
         tags = self.extract_tags(soup, content)
         
         return ArticleData(
@@ -228,7 +228,7 @@ class GuardianScraper(BaseScraper):
         # Extract other metadata
         main_image_url = self.extract_image_url(soup, url)
         author = self.extract_author(soup)
-        category = self.extract_category(soup, url)
+        category = self.extract_category(soup, url, title=title)
         tags = self.extract_tags(soup, content)
         
         return ArticleData(
@@ -459,10 +459,9 @@ class CryptoScraper(BaseScraper):
             # Author - prefer RSS, fallback to newspaper
             author = rss_item.get("author") or (article.authors[0] if article.authors else None)
             
-            # Category from RSS or URL
-            category = rss_item.get("category") or self.extract_category_from_url(url)
-            if not category and 'crypto' in url.lower():
-                category = 'Cryptocurrency'
+            # Category normalization for crypto feeds.
+            # Some feeds (notably ambcrypto/blockonomi) often publish generic "news".
+            category = self.normalize_crypto_category(rss_item.get("category"), url)
             
             # Tags - combine RSS tags and newspaper keywords
             tags = rss_item.get("tags", [])
@@ -503,18 +502,74 @@ class CryptoScraper(BaseScraper):
         except Exception as e:
             logger.error(f"Error parsing crypto article {url}: {e}")
             return None
+
+    def normalize_crypto_category(self, raw_category: Optional[str], url: str) -> str:
+        """Normalize RSS category to avoid generic categories for crypto sources."""
+        source_slug = (self.source_name or "").strip().lower()
+        category = (raw_category or "").strip()
+        lowered = category.lower()
+
+        generic_categories = {
+            "",
+            "news",
+            "latest",
+            "latest news",
+            "crypto news",
+            "cryptocurrency news",
+        }
+
+        # AMBCrypto/Blockonomi frequently provide generic "news" in RSS categories.
+        # Prefer URL-derived categories for these sources.
+        if source_slug in {"ambcrypto", "blockonomi"} and lowered in generic_categories:
+            return self.extract_category_from_url(url) or "Cryptocurrency"
+
+        # Normalize patterns like "Bitcoin News" -> "Bitcoin"
+        if lowered.endswith(" news") and len(lowered) > 5:
+            category = category[:-5].strip()
+
+        if category:
+            return category
+
+        return self.extract_category_from_url(url) or "Cryptocurrency"
         
     def extract_category_from_url(self, url: str) -> Optional[str]:
         """Extract category from URL path since we don't have soup."""
         try:
             from urllib.parse import urlparse
-            path_parts = urlparse(url).path.split('/')
-            if len(path_parts) > 1:
-                for part in path_parts[1:]:
-                    if part and not part.isdigit() and len(part) > 2:
-                        # Common crypto categories
-                        if part.lower() in ['analysis', 'news', 'market', 'trading', 'defi', 'nft', 'bitcoin', 'ethereum']:
-                            return part.replace('-', ' ').title()
+            path_parts = [part.strip().lower() for part in urlparse(url).path.split('/') if part.strip()]
+
+            category_map = {
+                'analysis': 'Analysis',
+                'market': 'Market',
+                'markets': 'Market',
+                'trading': 'Trading',
+                'defi': 'DeFi',
+                'nft': 'NFT',
+                'bitcoin': 'Bitcoin',
+                'ethereum': 'Ethereum',
+                'altcoin': 'Altcoin',
+                'altcoins': 'Altcoin',
+                'blockchain': 'Blockchain',
+                'regulation': 'Regulation',
+                'policy': 'Regulation',
+            }
+
+            # Skip generic URL segments and prefer domain-specific category tokens.
+            ignore_tokens = {'news', 'category', 'tag'}
+
+            if path_parts:
+                for idx, part in enumerate(path_parts):
+                    if part in ignore_tokens:
+                        # If URL has /category/<name>/ pattern, inspect next token.
+                        if part == 'category' and idx + 1 < len(path_parts):
+                            next_part = path_parts[idx + 1]
+                            if next_part in category_map:
+                                return category_map[next_part]
+                        continue
+
+                    if part in category_map:
+                        return category_map[part]
+
             return 'Cryptocurrency'
         except Exception:
             return 'Cryptocurrency'
@@ -545,7 +600,6 @@ class CryptoScraper(BaseScraper):
             article_data = await self.parse_article(None, url)
             
             if article_data and self.validate_article(article_data):
-                self.scraped_count += 1
                 return article_data
             else:
                 self.failed_count += 1
@@ -565,6 +619,7 @@ class CryptoScraper(BaseScraper):
             
             article_data = {
                 'source_id': source_id,
+                'source': self.source_name,  # Always include source name to prevent "unknown"
                 'title': article.title,
                 'url': article.url,
                 'published_date': article.published_date,
@@ -576,12 +631,21 @@ class CryptoScraper(BaseScraper):
                 'tags': article.tags,
                 'metadata': article.metadata
             }
-            
-            article_id = await db_manager.insert_article(article_data)
-            if article_id:
-                self.scraped_count += 1
-                logger.info(f"Saved article: {article.title} (source_id: {source_id})")
-                return True
+
+            result = await db_manager.insert_article(article_data, return_action=True)
+            if result and result.get("id"):
+                action = result.get("action")
+                if action == "inserted":
+                    self.inserted_count += 1
+                elif action == "updated":
+                    self.updated_count += 1
+
+                self.scraped_count = self.inserted_count + self.updated_count
+
+                logger.info(
+                    f"Saved article: {article.title} (source_id: {source_id}, action: {action})"
+                )
+                return action in {"inserted", "updated"}
             
         except Exception as e:
             logger.error(f"Error saving article {article.url}: {e}")

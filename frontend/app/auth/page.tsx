@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeReturnPath } from "@/lib/auth-redirect";
 import {
   Eye,
   EyeOff,
@@ -108,11 +109,25 @@ export default function AuthPage() {
     agreeToTerms: false,
   });
 
-  const { login, register, loginWithGoogle } = useAuth();
+  const {
+    login,
+    register,
+    loginWithGoogle,
+    isAuthenticated,
+    isLoading: isAuthLoading,
+  } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const redirectAfterAuth = sanitizeReturnPath(searchParams.get("next"));
 
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      router.replace(redirectAfterAuth);
+    }
+  }, [isAuthLoading, isAuthenticated, redirectAfterAuth, router]);
 
   useEffect(() => {
     if (!googleClientId || !googleButtonRef.current) {
@@ -158,7 +173,7 @@ export default function AuthPage() {
                 title: "Welcome",
                 description: "Signed in with Google successfully.",
               });
-              router.push("/");
+              router.push(redirectAfterAuth);
             } else {
               toast({
                 title: "Google sign-in failed",
@@ -227,7 +242,7 @@ export default function AuthPage() {
           title: "Login Successful",
           description: "Welcome back!",
         });
-        router.push("/");
+        router.push(redirectAfterAuth);
       } else {
         toast({
           title: "Login Failed",
@@ -288,8 +303,7 @@ export default function AuthPage() {
           title: "Account Created",
           description: "Your account has been created successfully. Loading...",
         });
-        // Auto login is handled in context or we can redirect to login
-        router.push("/");
+        router.push(redirectAfterAuth);
       } else {
         toast({
           title: "Registration Failed",

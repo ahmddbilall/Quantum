@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_PORT: int = 5432
     SQLALCHEMY_DATABASE_URI: Optional[PostgresDsn] = None
+    SQLALCHEMY_ECHO: bool = False
 
     @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
     @classmethod
@@ -53,6 +54,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_CLIENT_IDS: List[str] = []
     EMBEDDING_MODEL_PATH: Optional[str] = None
+    EMBEDDING_WARMUP_ON_STARTUP: bool = True
 
     @field_validator("GOOGLE_CLIENT_IDS", mode="before")
     @classmethod

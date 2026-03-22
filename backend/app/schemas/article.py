@@ -10,6 +10,7 @@ class ArticleSummary(BaseModel):
     title: str
     summary: Optional[str] = None
     url: str
+    original_url: Optional[str] = None
     source: str
     category: Optional[str] = None
     published_at: Optional[datetime] = None

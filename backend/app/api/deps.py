@@ -1,4 +1,4 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
@@ -55,3 +55,32 @@ async def get_current_superuser(
             status_code=400, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+# Optional OAuth2 scheme that does NOT auto-error on missing tokens
+_optional_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"{config.settings.API_V1_STR}/auth/login",
+    auto_error=False,
+)
+
+async def get_optional_current_user(
+    db: AsyncSession = Depends(get_db),
+    token: Optional[str] = Depends(_optional_oauth2),
+) -> Optional[User]:
+    """Return the current user if a valid token is provided, else None.
+
+    Unlike ``get_current_user`` this dependency never raises – it simply
+    returns ``None`` for anonymous or invalid-token requests.
+    """
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(
+            token, config.settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
+        token_data = TokenPayload(**payload)
+    except (JWTError, ValidationError):
+        return None
+    user = await user_service.get_by_email(db, email=token_data.sub)
+    if not user or not user.is_active:
+        return None
+    return user

@@ -1,4 +1,11 @@
-import { Calendar, User, Share2, BookmarkPlus, Bookmark } from "lucide-react";
+import {
+  Calendar,
+  User,
+  Share2,
+  BookmarkPlus,
+  Bookmark,
+  ExternalLink,
+} from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +18,7 @@ interface ArticleHeaderProps {
   category: string;
   isBookmarked: boolean;
   onShare: () => void;
+  onOpenOriginalArticle?: () => void;
   onBookmark: () => void;
   additionalBadges?: React.ReactNode;
 }
@@ -23,6 +31,7 @@ export function ArticleHeader({
   category,
   isBookmarked,
   onShare,
+  onOpenOriginalArticle,
   onBookmark,
   additionalBadges,
 }: ArticleHeaderProps) {
@@ -52,6 +61,11 @@ export function ArticleHeader({
           <Button variant="ghost" size="sm" onClick={onShare}>
             <Share2 className="h-4 w-4" />
           </Button>
+          {onOpenOriginalArticle && (
+            <Button variant="ghost" size="sm" onClick={onOpenOriginalArticle}>
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={onBookmark}>
             {isBookmarked ? (
               <Bookmark className="h-4 w-4 fill-current" />

@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Menu, Search, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { buildAuthUrl } from "@/lib/auth-redirect";
 
 interface NavbarProps {
   showSearch?: boolean;
@@ -17,6 +18,13 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentPath = `${pathname || "/"}${
+    searchParams.toString() ? `?${searchParams.toString()}` : ""
+  }`;
+  const loginHref = buildAuthUrl(currentPath);
 
   const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && searchQuery.trim()) {
@@ -136,7 +144,7 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
                 variant="outline"
                 className="border-white text-white cursor-pointer hover:bg-white hover:text-black transition-all duration-200 bg-transparent"
               >
-                <Link href="/auth">Login</Link>
+                <Link href={loginHref}>Login</Link>
               </Button>
             )}
           </div>
@@ -214,7 +222,7 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
                   size="sm"
                   className="border-white text-white bg-transparent cursor-pointer"
                 >
-                  <Link href="/auth">Login</Link>
+                  <Link href={loginHref}>Login</Link>
                 </Button>
               )}
             </div>

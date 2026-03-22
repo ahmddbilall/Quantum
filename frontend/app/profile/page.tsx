@@ -16,8 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { buildAuthUrl, getCurrentPathWithSearch } from "@/lib/auth-redirect";
 import { authService } from "@/services/authService";
-import { newsService } from "@/services/newsService";
+import { newsService, apiCache } from "@/services/newsService";
 import { parseApiError } from "@/lib/error-parser";
 import { BackendUserProfile, NewsArticleSummary } from "@/types";
 import { useCryptoSearch, useStockSearch } from "@/components/market-finance";
@@ -131,6 +132,15 @@ interface BookmarkedArticle {
   readTime: string;
 }
 
+const MARKET_NEWS_SOURCES = new Set([
+  "newsbtc",
+  "cryptoslate",
+  "ambcrypto",
+  "blockonomi",
+  "decrypt",
+  "cnbc_crypto",
+]);
+
 export default function ProfilePage() {
   const { user, isLoading, refreshProfile } = useAuth();
   const router = useRouter();
@@ -175,6 +185,12 @@ export default function ProfilePage() {
   const [bookmarkedArticles, setBookmarkedArticles] = useState<
     BookmarkedArticle[]
   >([]);
+  const [pendingBookmarkRemovals, setPendingBookmarkRemovals] = useState<
+    Set<string>
+  >(new Set());
+
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableSources, setAvailableSources] = useState<string[]>([]);
 
   const mapBookmarkedArticle = (
     article: NewsArticleSummary,
@@ -392,7 +408,7 @@ export default function ProfilePage() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/auth");
+      router.push(buildAuthUrl(getCurrentPathWithSearch()));
     }
   }, [user, isLoading, router]);
 
@@ -403,12 +419,16 @@ export default function ProfilePage() {
       }
 
       try {
-        const [profile, bookmarks] = await Promise.all([
+        const [profile, bookmarks, categories, sources] = await Promise.all([
           authService.getProfile(),
           newsService.getBookmarks(),
+          newsService.getCategories(),
+          newsService.getSources(),
         ]);
         hydrateProfile(profile);
         setBookmarkedArticles(bookmarks.map(mapBookmarkedArticle));
+        setAvailableCategories(categories);
+        setAvailableSources(sources);
       } catch (error) {
         const parsed = parseApiError(
           error,
@@ -483,34 +503,6 @@ export default function ProfilePage() {
     };
   }, [hasUnsavedChanges]);
 
-  const availableCategories = [
-    "Technology",
-    "Business",
-    "Politics",
-    "Health",
-    "Sports",
-    "Science",
-    "Entertainment",
-    "World News",
-    "Climate",
-    "Cryptocurrency",
-    "AI & ML",
-  ];
-
-  const availableSources = [
-    "BBC",
-    "Reuters",
-    "CNN",
-    "The Guardian",
-    "Al Jazeera",
-    "Associated Press",
-    "NPR",
-    "Financial Times",
-    "Bloomberg",
-    "TechCrunch",
-    "Coindesk",
-  ];
-
   const handleProfileUpdate = async () => {
     try {
       setIsSaving(true);
@@ -553,6 +545,9 @@ export default function ProfilePage() {
       });
       hydrateProfile(updated);
       await refreshProfile();
+
+      apiCache.invalidateAll(); // Flush cached news feeds
+
       toast({
         title: "Preferences saved",
         description: "Your content preferences were updated.",
@@ -579,12 +574,16 @@ export default function ProfilePage() {
   };
 
   const handleSourceToggle = (source: string) => {
-    setContentPreferences((prev) => ({
-      ...prev,
-      sources: prev.sources.includes(source)
-        ? prev.sources.filter((s) => s !== source)
-        : [...prev.sources, source],
-    }));
+    setContentPreferences((prev) => {
+      const lowerSource = source.toLowerCase();
+      const exists = prev.sources.some((s) => s.toLowerCase() === lowerSource);
+      return {
+        ...prev,
+        sources: exists
+          ? prev.sources.filter((s) => s.toLowerCase() !== lowerSource)
+          : [...prev.sources, source],
+      };
+    });
   };
 
   const handleNotificationToggle = (
@@ -627,7 +626,12 @@ export default function ProfilePage() {
   };
 
   const removeBookmark = async (articleId: string) => {
+    if (pendingBookmarkRemovals.has(articleId)) {
+      return;
+    }
+
     try {
+      setPendingBookmarkRemovals((prev) => new Set(prev).add(articleId));
       await newsService.removeBookmark(articleId);
       setBookmarkedArticles((prev) =>
         prev.filter((article) => article.id !== articleId),
@@ -643,10 +647,16 @@ export default function ProfilePage() {
         description: parsed.message,
         variant: "destructive",
       });
+    } finally {
+      setPendingBookmarkRemovals((prev) => {
+        const next = new Set(prev);
+        next.delete(articleId);
+        return next;
+      });
     }
   };
 
-  const openArticle = (articleId: string) => {
+  const openArticle = (article: BookmarkedArticle) => {
     if (hasUnsavedChanges) {
       const shouldLeave = window.confirm(
         "You have some unsaved changes. Do you want to leave this page?",
@@ -657,7 +667,12 @@ export default function ProfilePage() {
       }
     }
 
-    router.push(`/news-feed/${articleId}`);
+    const normalizedSource = (article.source || "").trim().toLowerCase();
+    const detailRoute = MARKET_NEWS_SOURCES.has(normalizedSource)
+      ? `/market-finance/news/${article.id}`
+      : `/news-feed/${article.id}`;
+
+    router.push(detailRoute);
   };
 
   const formatDate = (dateString: string) => {
@@ -940,14 +955,20 @@ export default function ProfilePage() {
                             <Button
                               key={source}
                               variant={
-                                contentPreferences.sources.includes(source)
+                                contentPreferences.sources.some(
+                                  (s) =>
+                                    s.toLowerCase() === source.toLowerCase(),
+                                )
                                   ? "default"
                                   : "outline"
                               }
                               size="sm"
                               onClick={() => handleSourceToggle(source)}
                               className={`justify-start cursor-pointer ${
-                                contentPreferences.sources.includes(source)
+                                contentPreferences.sources.some(
+                                  (s) =>
+                                    s.toLowerCase() === source.toLowerCase(),
+                                )
                                   ? "bg-white text-black hover:bg-white/80"
                                   : "bg-transparent border-white text-white hover:bg-white hover:text-black"
                               }`}
@@ -1062,7 +1083,7 @@ export default function ProfilePage() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
+                        <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-2 dark-thin-scrollbar">
                           {bookmarkedArticles.length === 0 ? (
                             <div className="text-center py-8">
                               <Bookmark className="h-12 w-12 text-gray-500 mx-auto mb-4" />
@@ -1110,7 +1131,7 @@ export default function ProfilePage() {
                                     </div>
                                     <h3
                                       className="font-semibold text-white hover:text-blue-400 cursor-pointer transition-colors"
-                                      onClick={() => openArticle(article.id)}
+                                      onClick={() => openArticle(article)}
                                     >
                                       {article.title}
                                     </h3>
@@ -1121,7 +1142,7 @@ export default function ProfilePage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => openArticle(article.id)}
+                                        onClick={() => openArticle(article)}
                                         className="text-white hover:text-blue-300 hover:bg-blue-900/20 p-0"
                                       >
                                         <ExternalLink className="h-4 w-4 mr-1" />
@@ -1130,13 +1151,18 @@ export default function ProfilePage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
+                                        disabled={pendingBookmarkRemovals.has(
+                                          article.id,
+                                        )}
                                         onClick={() =>
                                           removeBookmark(article.id)
                                         }
                                         className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-0"
                                       >
                                         <BookmarkX className="h-4 w-4 mr-1" />
-                                        Remove
+                                        {pendingBookmarkRemovals.has(article.id)
+                                          ? "Removing..."
+                                          : "Remove"}
                                       </Button>
                                     </div>
                                   </div>
@@ -1505,6 +1531,7 @@ export default function ProfilePage() {
                                   notification.key as keyof ContentPreferences["notifications"],
                                 )
                               }
+                              className="data-[state=unchecked]:bg-zinc-700 data-[state=unchecked]:border-zinc-500 data-[state=checked]:bg-black "
                             />
                           </div>
                         ))}
@@ -1628,7 +1655,7 @@ export default function ProfilePage() {
             <Button
               variant="outline"
               onClick={() => setIsEditingProfile(false)}
-              className="border-gray-600 text-gray-300 hover:bg-zinc-800"
+              className="border-gray-600 text-gray-900 hover:bg-zinc-800 hover:text-gray-200"
             >
               Cancel
             </Button>

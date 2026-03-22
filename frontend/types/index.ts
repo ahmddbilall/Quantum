@@ -37,6 +37,7 @@ export interface NewsArticleSummary {
   title: string;
   summary?: string | null;
   url: string;
+  original_url?: string | null;
   source: string;
   category?: string | null;
   published_at?: string | null;
