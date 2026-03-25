@@ -659,7 +659,7 @@ class NewsService:
             await db.execute(select(Article).where(Article.url == url))
         ).scalars().first()
 
-        summary = (item.get("description") or "").strip() or None
+        summary = None
         content = (item.get("content") or "").strip() or summary
         source_name = ((item.get("source") or {}).get("name") or "Unknown").strip()
         published_at = self._parse_newsapi_datetime(item.get("publishedAt"))
@@ -688,7 +688,7 @@ class NewsService:
             if not changed:
                 return "skipped"
 
-            embedding = await EmbeddingService.encode_document(self._embedding_text(title, summary, content))
+            embedding = await EmbeddingService.encode_document(self._embedding_text(title, summary, content, tags))
             if embedding:
                 await self._upsert_embedding(db, existing.id, embedding)
                 return "updated_embedded"
@@ -714,7 +714,7 @@ class NewsService:
         await db.commit()
         await db.refresh(article)
 
-        embedding = await EmbeddingService.encode_document(self._embedding_text(title, summary, content))
+        embedding = await EmbeddingService.encode_document(self._embedding_text(title, summary, content, tags))
         if embedding:
             await self._upsert_embedding(db, article.id, embedding)
             return "inserted_embedded"
@@ -899,9 +899,10 @@ class NewsService:
         return score, label
 
     @staticmethod
-    def _embedding_text(title: str, summary: Optional[str], content: Optional[str]) -> str:
+    def _embedding_text(title: str, summary: Optional[str], content: Optional[str], tags: Optional[List[str]] = None) -> str:
         short_content = (content or "")[:800]
-        return f"Title: {title}\nSummary: {summary or ''}\nContent: {short_content}"
+        tags_str = ", ".join(tags) if tags else ""
+        return f"Title: {title}\nSummary: {summary or ''}\nTags: {tags_str}\nContent: {short_content}"
 
     @staticmethod
     def _to_summary(article: Article):

@@ -470,8 +470,8 @@ class CryptoScraper(BaseScraper):
             tags.extend(self.extract_tags_from_content(content))
             tags = list(set(tags))[:10]  # Remove duplicates and limit
             
-            # Summary - prefer newspaper summary, fallback to RSS
-            summary = article.summary if article.summary else rss_item.get("summary", "")
+            # Summary - set to None as per user request (AI pipeline to handle summaries)
+            summary = None
             
             # Enhanced metadata
             metadata = {
@@ -624,7 +624,7 @@ class CryptoScraper(BaseScraper):
                 'url': article.url,
                 'published_date': article.published_date,
                 'content': article.content,
-                'summary': article.summary or BaseScraper.generate_summary(article.content),
+                'summary': None,
                 'main_image_url': article.main_image_url,
                 'author': article.author,
                 'category': article.category,

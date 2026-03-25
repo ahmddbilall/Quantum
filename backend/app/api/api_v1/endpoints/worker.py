@@ -15,6 +15,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
+from app.services.sentiment_service import sentiment_service
 
 router = APIRouter(tags=["worker"])
 
@@ -233,5 +234,29 @@ async def trigger_immediate_scrape(
         "mode": run_mode,
         "source": source_name,
         "pid": process.pid,
+        "timestamp": now.isoformat(),
+    }
+
+
+@router.post("/trigger-sentiment")
+async def trigger_sentiment_job(
+    batch_size: int = Query(default=50, ge=1, le=500),
+    max_articles: Optional[int] = Query(default=None, ge=1, le=200000),
+    db: AsyncSession = Depends(deps.get_db),
+    _current_user=Depends(deps.get_current_superuser),
+) -> Dict[str, Any]:
+    """Run async sentiment scoring for articles missing sentiment fields."""
+    now = datetime.now(timezone.utc)
+    result = await sentiment_service.run_pending_sentiment_job(
+        db,
+        batch_size=batch_size,
+        max_articles=max_articles,
+    )
+
+    return {
+        "message": "Sentiment analysis job completed",
+        "batch_size": batch_size,
+        "max_articles": max_articles,
+        **result,
         "timestamp": now.isoformat(),
     }

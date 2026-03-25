@@ -1,18 +1,43 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.database import SessionLocal
 from app.api.api_v1.api import api_router
 from app.services.embedding_service import EmbeddingService
+from app.services.sentiment_service import sentiment_service
 
 
 logger = logging.getLogger(__name__)
 
 
+async def _run_scheduled_sentiment_job() -> None:
+    async with SessionLocal() as session:
+        try:
+            result = await sentiment_service.run_pending_sentiment_job(
+                session,
+                batch_size=settings.SENTIMENT_JOB_BATCH_SIZE,
+                max_articles=settings.SENTIMENT_JOB_MAX_ARTICLES,
+            )
+            logger.info(
+                "Scheduled sentiment job done processed=%s updated=%s failed=%s skipped=%s",
+                result.get("processed", 0),
+                result.get("updated", 0),
+                result.get("failed", 0),
+                result.get("skipped", 0),
+            )
+        except Exception:
+            logger.exception("Scheduled sentiment job failed")
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    scheduler = AsyncIOScheduler(timezone="UTC")
+
     if settings.EMBEDDING_WARMUP_ON_STARTUP:
         logger.info("Embedding warmup started")
         try:
@@ -20,7 +45,30 @@ async def lifespan(_app: FastAPI):
             logger.info("Embedding warmup completed")
         except Exception:
             logger.exception("Embedding warmup failed")
+
+    if settings.SENTIMENT_JOB_ENABLED:
+        # Kick off an immediate run on startup so sentiment labeling starts right away.
+        asyncio.create_task(_run_scheduled_sentiment_job())
+
+        scheduler.add_job(
+            _run_scheduled_sentiment_job,
+            trigger="interval",
+            minutes=settings.SENTIMENT_JOB_INTERVAL_MINUTES,
+            max_instances=1,
+            coalesce=True,
+            id="sentiment-analysis-job",
+            replace_existing=True,
+        )
+        scheduler.start()
+        logger.info(
+            "Sentiment scheduler started interval=%s minutes",
+            settings.SENTIMENT_JOB_INTERVAL_MINUTES,
+        )
+
     yield
+
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

@@ -76,15 +76,72 @@ class NewsScrapingScheduler:
 
     def _acquire_worker_lock(self) -> bool:
         """Acquire exclusive worker lock to prevent multiple instances."""
+        current_pid = os.getpid()
+
+        def _pid_is_running(pid: int) -> bool:
+            if pid <= 0:
+                return False
+            try:
+                os.kill(pid, 0)
+                return True
+            except ProcessLookupError:
+                return False
+            except PermissionError:
+                # Process exists but belongs to another user/session.
+                return True
+            except OSError:
+                return False
+
+        def _read_lock_pid() -> int:
+            try:
+                content = Path(WORKER_LOCK_FILE).read_text(encoding="utf-8").strip()
+                return int(content)
+            except Exception:
+                return -1
+
+        def _write_lock_pid(lock_fd: int) -> None:
+            os.write(lock_fd, f"{current_pid}\n".encode("utf-8"))
+
         try:
             lock_fd = os.open(WORKER_LOCK_FILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+            _write_lock_pid(lock_fd)
             os.close(lock_fd)
             self.worker_lock_acquired = True
-            logger.info("Worker lock acquired: %s", WORKER_LOCK_FILE)
+            logger.info("Worker lock acquired: %s (pid=%s)", WORKER_LOCK_FILE, current_pid)
             return True
         except FileExistsError:
-            logger.warning("Worker lock already exists: %s", WORKER_LOCK_FILE)
-            return False
+            existing_pid = _read_lock_pid()
+            if existing_pid > 0 and _pid_is_running(existing_pid):
+                logger.warning(
+                    "Worker lock already exists: %s (active pid=%s)",
+                    WORKER_LOCK_FILE,
+                    existing_pid,
+                )
+                return False
+
+            logger.warning(
+                "Removing stale worker lock: %s (stale pid=%s)",
+                WORKER_LOCK_FILE,
+                existing_pid,
+            )
+            try:
+                os.unlink(WORKER_LOCK_FILE)
+            except FileNotFoundError:
+                pass
+            except Exception as exc:
+                logger.warning("Failed to remove stale worker lock: %s", exc)
+                return False
+
+            try:
+                lock_fd = os.open(WORKER_LOCK_FILE, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+                _write_lock_pid(lock_fd)
+                os.close(lock_fd)
+                self.worker_lock_acquired = True
+                logger.info("Worker lock acquired after stale cleanup: %s (pid=%s)", WORKER_LOCK_FILE, current_pid)
+                return True
+            except Exception as exc:
+                logger.warning("Could not acquire worker lock after stale cleanup: %s", exc)
+                return False
         except Exception as exc:
             logger.warning("Could not acquire worker lock (%s). Continuing: %s", WORKER_LOCK_FILE, exc)
             return True

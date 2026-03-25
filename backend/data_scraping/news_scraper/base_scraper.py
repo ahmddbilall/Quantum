@@ -551,7 +551,7 @@ class BaseScraper(ABC):
                 'url': article.url,
                 'published_date': article.published_date,
                 'content': article.content,
-                'summary': article.summary or BaseScraper.generate_summary(article.content),
+                'summary': None,
                 'main_image_url': article.main_image_url,
                 'author': article.author,
                 'category': article.category,

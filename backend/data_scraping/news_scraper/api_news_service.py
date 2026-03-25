@@ -130,7 +130,7 @@ class APINewsService:
                     )
                     source_names.add(source_name)
 
-                    summary = (item.get("description") or "").strip() or None
+                    summary = None
                     
                     # Fetch and clean the full content
                     try:

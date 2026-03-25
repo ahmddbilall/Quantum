@@ -34,3 +34,8 @@ torch
 google-auth
 pydantic[email]
 python-multipart
+
+
+# sentiment
+scipy
+huggingface-hub[hf-transfer]

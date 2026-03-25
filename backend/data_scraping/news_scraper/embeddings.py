@@ -65,7 +65,7 @@ class BGEEmbeddingProcessor:
             logger.error(f"Failed to initialize BGE model: {e}")
             raise
     
-    def prepare_text_for_embedding(self, title: str, content: str, summary: str = None) -> str:
+    def prepare_text_for_embedding(self, title: str, content: str, summary: str = None, tags: List[str] = None) -> str:
         """Prepare text for embedding generation."""
         # For BGE model, we use a specific format for better performance
         parts = []
@@ -75,6 +75,10 @@ class BGEEmbeddingProcessor:
         
         if summary:
             parts.append(f"Summary: {summary}")
+            
+        if tags:
+            tags_str = ", ".join(tags)
+            parts.append(f"Tags: {tags_str}")
         
         if content:
             # Truncate content if too long (BGE has max length of 512 tokens)
@@ -180,9 +184,10 @@ class BGEEmbeddingProcessor:
             title = article.get('title', '')
             content = article.get('content', '')
             summary = article.get('summary', '')
+            tags = article.get('tags', [])
             
             # Prepare text for embedding
-            text = self.prepare_text_for_embedding(title, content, summary)
+            text = self.prepare_text_for_embedding(title, content, summary, tags)
             
             if not text.strip():
                 logger.warning(f"No text to embed for article {article_id}")
@@ -222,8 +227,9 @@ class BGEEmbeddingProcessor:
             title = article.get('title', '')
             content = article.get('content', '')
             summary = article.get('summary', '')
+            tags = article.get('tags', [])
             
-            text = self.prepare_text_for_embedding(title, content, summary)
+            text = self.prepare_text_for_embedding(title, content, summary, tags)
             if text.strip():
                 texts.append(text)
                 article_ids.append(article['id'])

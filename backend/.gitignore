@@ -1,14 +1,38 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
 env/
-env
-/env/
+.venv/
+venv/
 
-data_scraping/.env/
+# Environment files
 *.env
+.env
 
-data_scraping/.env
+# Local tooling and editor state
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Project-specific: model artifacts and local caches
+bge_model/bge-base-en-v1.5/
+app/sentiment/models/
+
+# Project-specific: scraper env/logs/cache
+data_scraping/.env/
 data_scraping/news_scraper/.env
+data_scraping/logs/
 data_scraping/news_scraper/__pycache__/
 
-.github/
+# Local generated/debug outputs
+output*.txt
 
-bge_model/bge-base-en-v1.5/
+# OS artifacts
+Thumbs.db
+.DS_Store

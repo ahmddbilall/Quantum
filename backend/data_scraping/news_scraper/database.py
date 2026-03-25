@@ -26,6 +26,9 @@ class DatabaseManager:
     async def initialize(self):
         """Initialize database connection pool and create tables."""
         try:
+            if self.pool is not None:
+                return
+
             if not self.connection_string:
                 raise RuntimeError(
                     "Database connection string is empty. "
@@ -119,8 +122,21 @@ class DatabaseManager:
         async with self.get_connection() as conn:
             await conn.execute(create_tables_sql)
 
-        await self.insert_default_sources()
+        await self.ensure_default_sources_if_empty()
         logger.info("Database tables ensured successfully")
+
+    async def ensure_default_sources_if_empty(self) -> int:
+        """Insert default sources only when `news_sources` has no rows."""
+        async with self.get_connection() as conn:
+            source_count = int(await conn.fetchval("SELECT COUNT(*) FROM news_sources") or 0)
+
+        if source_count > 0:
+            logger.info("Skipping default source insert; news_sources already has %s rows", source_count)
+            return 0
+
+        await self.insert_default_sources()
+        logger.info("Inserted default news sources into empty news_sources table")
+        return 1
 
     async def insert_default_sources(self):
         """Insert or update default news sources."""
@@ -500,7 +516,7 @@ class DatabaseManager:
             async with self.get_connection() as conn:
                 rows = await conn.fetch(
                     """
-                    SELECT a.id, a.title, a.content, a.summary
+                    SELECT a.id, a.title, a.content, a.summary, a.tags
                     FROM articles a
                     LEFT JOIN article_embeddings ae ON ae.article_id = a.id
                     WHERE ae.article_id IS NULL

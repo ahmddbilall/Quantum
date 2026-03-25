@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_IDS: List[str] = []
     EMBEDDING_MODEL_PATH: Optional[str] = None
     EMBEDDING_WARMUP_ON_STARTUP: bool = True
+    SENTIMENT_MODEL_DIR: Optional[str] = None
+    SENTIMENT_JOB_ENABLED: bool = True
+    SENTIMENT_JOB_INTERVAL_MINUTES: int = 10
+    SENTIMENT_JOB_BATCH_SIZE: int = 50
+    SENTIMENT_JOB_MAX_ARTICLES: Optional[int] = None
 
     @field_validator("GOOGLE_CLIENT_IDS", mode="before")
     @classmethod
