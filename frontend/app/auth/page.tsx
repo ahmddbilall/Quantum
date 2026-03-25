@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
@@ -94,7 +94,7 @@ const loadGoogleIdentityScript = async (): Promise<void> => {
   });
 };
 
-export default function AuthPage() {
+function AuthPageContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -723,6 +723,14 @@ export default function AuthPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <AuthPageContent />
+    </Suspense>
   );
 }
 // import Navbar from "@/components/Navbar";

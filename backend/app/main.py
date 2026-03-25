@@ -10,6 +10,7 @@ from app.core.database import SessionLocal
 from app.api.api_v1.api import api_router
 from app.services.embedding_service import EmbeddingService
 from app.services.sentiment_service import sentiment_service
+from app.services.summary_service import summary_service
 from apscheduler.triggers.cron import CronTrigger
 from app.services.rag.backfill import backfill_embeddings
 
@@ -33,6 +34,25 @@ async def _run_scheduled_sentiment_job() -> None:
             )
         except Exception:
             logger.exception("Scheduled sentiment job failed")
+
+
+async def _run_scheduled_summary_job() -> None:
+    async with SessionLocal() as session:
+        try:
+            result = await summary_service.run_pending_summary_job(
+                session,
+                batch_size=settings.SUMMARIZATION_JOB_BATCH_SIZE,
+                max_articles=settings.SUMMARIZATION_JOB_MAX_ARTICLES,
+            )
+            logger.info(
+                "Scheduled summary job done processed=%s updated=%s failed=%s skipped=%s",
+                result.get("processed", 0),
+                result.get("updated", 0),
+                result.get("failed", 0),
+                result.get("skipped", 0),
+            )
+        except Exception:
+            logger.exception("Scheduled summary job failed")
 
 
 @asynccontextmanager
@@ -64,6 +84,23 @@ async def lifespan(_app: FastAPI):
         logger.info(
             "Sentiment scheduler started interval=%s minutes",
             settings.SENTIMENT_JOB_INTERVAL_MINUTES,
+        )
+
+    if settings.SUMMARIZATION_JOB_ENABLED:
+        asyncio.create_task(_run_scheduled_summary_job())
+
+        scheduler.add_job(
+            _run_scheduled_summary_job,
+            trigger="interval",
+            minutes=settings.SUMMARIZATION_JOB_INTERVAL_MINUTES,
+            max_instances=1,
+            coalesce=True,
+            id="summary-generation-job",
+            replace_existing=True,
+        )
+        logger.info(
+            "Summary scheduler started interval=%s minutes",
+            settings.SUMMARIZATION_JOB_INTERVAL_MINUTES,
         )
 
     scheduler.add_job(

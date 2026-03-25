@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Menu, Search, X, User, LogOut } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +12,7 @@ interface NavbarProps {
   showSearch?: boolean;
 }
 
-const Navbar = ({ showSearch = false }: NavbarProps) => {
+const NavbarContent = ({ showSearch = false }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -232,5 +232,11 @@ const Navbar = ({ showSearch = false }: NavbarProps) => {
     </nav>
   );
 };
+
+const Navbar = (props: NavbarProps) => (
+  <Suspense fallback={<div className="bg-black border-b border-gray-800 h-16" />}>
+    <NavbarContent {...props} />
+  </Suspense>
+);
 
 export default Navbar;

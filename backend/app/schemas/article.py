@@ -44,6 +44,21 @@ class BookmarkActionResponse(BaseModel):
     article_id: UUID
 
 
+class SummaryFeedbackRequest(BaseModel):
+    rating: str = Field(pattern="^(helpful|not_helpful)$")
+    feedback_text: Optional[str] = None
+
+
+class SummaryFeedbackResponse(BaseModel):
+    id: UUID
+    article_id: UUID
+    user_id: UUID
+    rating: str
+    feedback_text: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class NewsSyncRequest(BaseModel):
     categories: Optional[List[str]] = None
     page_size: int = Field(default=30, ge=1, le=100)

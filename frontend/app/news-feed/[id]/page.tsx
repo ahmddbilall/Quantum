@@ -89,6 +89,9 @@ export default function NewsDetailPage() {
   const [isGenerating, setIsGenerating] = useState(true);
   const [showSummary, setShowSummary] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [summaryRating, setSummaryRating] = useState<
+    "helpful" | "not_helpful" | null
+  >(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [relatedArticles, setRelatedArticles] = useState<NewsArticleSummary[]>(
     [],
@@ -240,6 +243,32 @@ export default function NewsDetailPage() {
     }
   };
 
+  const handleSummaryFeedback = async (rating: "helpful" | "not_helpful") => {
+    if (!article) {
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setShowLoginDialog(true);
+      return;
+    }
+
+    try {
+      await newsService.submitSummaryFeedback(article.id, {
+        rating,
+      });
+      setSummaryRating(rating);
+    } catch (error) {
+      const parsed = parseApiError(error, "Could not save summary feedback.");
+      if (parsed.status === 401) {
+        setShowLoginDialog(true);
+        return;
+      }
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -292,6 +321,8 @@ export default function NewsDetailPage() {
             sentiment={sentiment}
             isGenerating={isGenerating}
             showSummary={showSummary}
+            initialRating={summaryRating}
+            onFeedback={handleSummaryFeedback}
           />
         </div>
 

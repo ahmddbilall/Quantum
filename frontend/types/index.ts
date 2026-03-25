@@ -68,6 +68,21 @@ export interface BookmarkActionResponse {
   article_id: string;
 }
 
+export interface SummaryFeedbackPayload {
+  rating: "helpful" | "not_helpful";
+  feedback_text?: string;
+}
+
+export interface SummaryFeedbackResponse {
+  id: string;
+  article_id: string;
+  user_id: string;
+  rating: "helpful" | "not_helpful";
+  feedback_text?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface RAGSourceCitation {
   article_id?: string | null;
   title: string;

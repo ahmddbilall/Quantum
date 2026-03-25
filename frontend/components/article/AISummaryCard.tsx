@@ -13,6 +13,8 @@ interface AISummaryCardProps {
   };
   isGenerating: boolean;
   showSummary: boolean;
+  initialRating?: "helpful" | "not_helpful" | null;
+  onFeedback?: (rating: "helpful" | "not_helpful") => Promise<void>;
 }
 
 export function AISummaryCard({
@@ -20,29 +22,45 @@ export function AISummaryCard({
   sentiment,
   isGenerating,
   showSummary,
+  initialRating = null,
+  onFeedback,
 }: AISummaryCardProps) {
   const { toast } = useToast();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [rating, setRating] = useState<"up" | "down" | null>(null);
+  const [rating, setRating] = useState<"helpful" | "not_helpful" | null>(
+    initialRating,
+  );
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
-  const handleRating = (type: "up" | "down") => {
-    if (rating === type) {
-      setRating(null);
-      toast({
-        title: "Rating removed",
-        description: "Your feedback has been removed",
-        duration: 2000,
-      });
-    } else {
+  const handleRating = async (type: "helpful" | "not_helpful") => {
+    if (isSubmittingFeedback) {
+      return;
+    }
+
+    try {
+      setIsSubmittingFeedback(true);
+      if (onFeedback) {
+        await onFeedback(type);
+      }
+
       setRating(type);
       toast({
         title: "Thank you for your feedback!",
         description:
-          type === "up"
+          type === "helpful"
             ? "Glad the summary was helpful"
-            : "We'll work on improving our summaries",
+            : "We will use this to improve future summaries",
         duration: 2000,
       });
+    } catch {
+      toast({
+        title: "Feedback not saved",
+        description: "Please try again.",
+        variant: "destructive",
+        duration: 2000,
+      });
+    } finally {
+      setIsSubmittingFeedback(false);
     }
   };
 
@@ -69,8 +87,8 @@ export function AISummaryCard({
                   sentiment.overall === "Positive"
                     ? "text-green-400"
                     : sentiment.overall === "Negative"
-                    ? "text-red-400"
-                    : "text-yellow-400"
+                      ? "text-red-400"
+                      : "text-yellow-400"
                 }`}
               >
                 {sentiment.overall} ({sentiment.confidence}%)
@@ -134,9 +152,10 @@ export function AISummaryCard({
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleRating("up")}
+                      onClick={() => void handleRating("helpful")}
+                      disabled={isSubmittingFeedback}
                       className={`p-2 rounded-lg transition-all duration-200 ${
-                        rating === "up"
+                        rating === "helpful"
                           ? "bg-green-500/20 text-green-400"
                           : "text-gray-400 hover:text-green-400 hover:bg-green-500/10"
                       }`}
@@ -145,9 +164,10 @@ export function AISummaryCard({
                       <ThumbsUp className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleRating("down")}
+                      onClick={() => void handleRating("not_helpful")}
+                      disabled={isSubmittingFeedback}
                       className={`p-2 rounded-lg transition-all duration-200 ${
-                        rating === "down"
+                        rating === "not_helpful"
                           ? "bg-red-500/20 text-red-400"
                           : "text-gray-400 hover:text-red-400 hover:bg-red-500/10"
                       }`}

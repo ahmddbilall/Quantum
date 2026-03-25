@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.services.sentiment_service import sentiment_service
+from app.services.summary_service import summary_service
 
 router = APIRouter(tags=["worker"])
 
@@ -255,6 +256,30 @@ async def trigger_sentiment_job(
 
     return {
         "message": "Sentiment analysis job completed",
+        "batch_size": batch_size,
+        "max_articles": max_articles,
+        **result,
+        "timestamp": now.isoformat(),
+    }
+
+
+@router.post("/trigger-summary")
+async def trigger_summary_job(
+    batch_size: int = Query(default=30, ge=1, le=500),
+    max_articles: Optional[int] = Query(default=None, ge=1, le=200000),
+    db: AsyncSession = Depends(deps.get_db),
+    _current_user=Depends(deps.get_current_superuser),
+) -> Dict[str, Any]:
+    """Run async summarization for articles missing summary fields."""
+    now = datetime.now(timezone.utc)
+    result = await summary_service.run_pending_summary_job(
+        db,
+        batch_size=batch_size,
+        max_articles=max_articles,
+    )
+
+    return {
+        "message": "Summary generation job completed",
         "batch_size": batch_size,
         "max_articles": max_articles,
         **result,

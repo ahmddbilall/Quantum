@@ -130,6 +130,21 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS ix_messages_chat_id ON messages (chat_id);
 CREATE INDEX IF NOT EXISTS ix_messages_created_at ON messages (created_at);
 
+-- Summary feedback
+CREATE TABLE IF NOT EXISTS summary_feedback (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    article_id UUID NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    rating VARCHAR(16) NOT NULL,
+    feedback_text TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (article_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_summary_feedback_article_id ON summary_feedback (article_id);
+CREATE INDEX IF NOT EXISTS ix_summary_feedback_user_id ON summary_feedback (user_id);
+
 -- Bookmarks
 CREATE TABLE IF NOT EXISTS bookmarks (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,

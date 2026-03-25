@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildAuthUrl } from "@/lib/auth-redirect";
@@ -17,7 +17,7 @@ function isProtectedPath(pathname: string): boolean {
   );
 }
 
-export default function AppRouteGuard({ children }: AppRouteGuardProps) {
+function RouteGuardEffect() {
   const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -40,9 +40,22 @@ export default function AppRouteGuard({ children }: AppRouteGuardProps) {
     router,
   ]);
 
-  if (protectedPath && (isLoading || !isAuthenticated)) {
-    return null;
-  }
+  return null;
+}
 
-  return <>{children}</>;
+export default function AppRouteGuard({ children }: AppRouteGuardProps) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const pathname = usePathname();
+  const protectedPath = isProtectedPath(pathname || "");
+
+  const hideChildren = protectedPath && (isLoading || !isAuthenticated);
+
+  return (
+    <>
+      <Suspense fallback={null}>
+        <RouteGuardEffect />
+      </Suspense>
+      {!hideChildren && children}
+    </>
+  );
 }

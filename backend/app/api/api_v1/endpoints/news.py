@@ -4,15 +4,19 @@ from uuid import UUID
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.models.user import User
+from app.models.interaction import SummaryFeedback
 from app.schemas.article import (
     ArticleDetail,
     ArticleSummary,
     BookmarkActionResponse,
     NewsFeedResponse,
+    SummaryFeedbackRequest,
+    SummaryFeedbackResponse,
     NewsSyncRequest,
     NewsSyncResponse,
 )
@@ -20,6 +24,25 @@ from app.services.news_service import MARKET_NEWS_SOURCES, news_service
 from app.services.recommendation_service import recommendation_service
 
 router = APIRouter()
+
+
+async def _ensure_summary_feedback_table(db: AsyncSession) -> None:
+    await db.execute(
+        text(
+            """
+            CREATE TABLE IF NOT EXISTS summary_feedback (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                article_id UUID NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                rating VARCHAR(16) NOT NULL,
+                feedback_text TEXT,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                UNIQUE (article_id, user_id)
+            )
+            """
+        )
+    )
 
 
 def _parse_sources(source: Optional[str]) -> Optional[List[str]]:
@@ -260,6 +283,55 @@ async def get_article_detail(
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     return _to_article_detail_payload(article)
+
+
+@router.post("/article/{article_id}/summary-feedback", response_model=SummaryFeedbackResponse)
+async def submit_summary_feedback(
+    article_id: UUID,
+    request: SummaryFeedbackRequest,
+    db: AsyncSession = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+) -> Any:
+    await _ensure_summary_feedback_table(db)
+
+    article = await news_service.get_article(db, article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    existing_feedback = (
+        await db.execute(
+            select(SummaryFeedback).where(
+                SummaryFeedback.article_id == article_id,
+                SummaryFeedback.user_id == current_user.id,
+            )
+        )
+    ).scalar_one_or_none()
+
+    if existing_feedback:
+        existing_feedback.rating = request.rating
+        existing_feedback.feedback_text = (request.feedback_text or "").strip() or None
+        feedback_row = existing_feedback
+    else:
+        feedback_row = SummaryFeedback(
+            article_id=article_id,
+            user_id=current_user.id,
+            rating=request.rating,
+            feedback_text=(request.feedback_text or "").strip() or None,
+        )
+        db.add(feedback_row)
+
+    await db.commit()
+    await db.refresh(feedback_row)
+
+    return SummaryFeedbackResponse(
+        id=feedback_row.id,
+        article_id=feedback_row.article_id,
+        user_id=feedback_row.user_id,
+        rating=feedback_row.rating,
+        feedback_text=feedback_row.feedback_text,
+        created_at=feedback_row.created_at,
+        updated_at=feedback_row.updated_at,
+    )
 
 
 # ── Recommendation Endpoints ──────────────────────────────────────────

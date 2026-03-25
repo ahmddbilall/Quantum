@@ -5,6 +5,8 @@ import {
   NewsArticleDetail,
   NewsArticleSummary,
   NewsFeedResponse,
+  SummaryFeedbackPayload,
+  SummaryFeedbackResponse,
 } from "@/types";
 
 export interface GetNewsFeedParams {
@@ -259,6 +261,21 @@ export const newsService = {
       return response.data;
     } catch (error) {
       throw toApiClientError(error, "Unable to remove bookmark.");
+    }
+  },
+
+  async submitSummaryFeedback(
+    articleId: string,
+    payload: SummaryFeedbackPayload,
+  ): Promise<SummaryFeedbackResponse> {
+    try {
+      const response = await api.post<SummaryFeedbackResponse>(
+        `/news/article/${articleId}/summary-feedback`,
+        payload,
+      );
+      return response.data;
+    } catch (error) {
+      throw toApiClientError(error, "Unable to submit summary feedback.");
     }
   },
 
