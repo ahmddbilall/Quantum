@@ -32,6 +32,7 @@ torch
 # torch via index-url in installation (see below)
 
 google-auth
+groq
 pydantic[email]
 python-multipart
 
@@ -39,3 +40,10 @@ python-multipart
 # sentiment
 scipy
 huggingface-hub[hf-transfer]
+
+# RAG
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-google-genai>=1.0.0
+google-genai
+tiktoken

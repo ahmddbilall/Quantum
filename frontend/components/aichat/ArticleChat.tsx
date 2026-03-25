@@ -6,6 +6,9 @@ import { ArticleChatProps, ChatMessage } from "./types";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessages } from "./ChatMessages";
 import { ChatInput } from "./ChatInput";
+import { ragService } from "@/services/ragService";
+import { parseApiError } from "@/lib/error-parser";
+import { useToast } from "@/hooks/use-toast";
 
 interface ArticleChatComponentProps extends ArticleChatProps {
   chatMessages: ChatMessage[];
@@ -20,6 +23,7 @@ export function ArticleChat({
   setChatMessages,
   onClose,
 }: ArticleChatComponentProps) {
+  const { toast } = useToast();
   const [currentMessage, setCurrentMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
@@ -37,28 +41,30 @@ export function ArticleChat({
     setCurrentMessage("");
     setIsTyping(true);
 
-    // TODO: Replace with actual RAG chatbot API call
-    // This is where you'll integrate your RAG backend
     try {
-      // Simulate API call - replace with actual RAG endpoint
-      const response = await generateAIResponse(
-        currentMessage,
+      const response = await ragService.query({
+        content: currentMessage,
         articleId,
-        articleTitle
-      );
+      });
 
-      setTimeout(() => {
-        const aiResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          type: "ai",
-          content: response,
-          timestamp: new Date(),
-        };
-        setChatMessages((prev) => [...prev, aiResponse]);
-        setIsTyping(false);
-      }, 1500);
+      const aiResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: "ai",
+        content:
+          response.content ||
+          `I could not find enough context in ${articleTitle}.`,
+        timestamp: new Date(),
+        sources: response.sources,
+      };
+      setChatMessages((prev) => [...prev, aiResponse]);
     } catch (error) {
-      console.error("Error generating AI response:", error);
+      const parsed = parseApiError(error, "Failed to get AI response.");
+      toast({
+        title: "AI chat failed",
+        description: parsed.message,
+        variant: "destructive",
+      });
+    } finally {
       setIsTyping(false);
     }
   };
@@ -75,33 +81,4 @@ export function ArticleChat({
       />
     </div>
   );
-}
-
-// Mock AI response generator - Replace with actual RAG API call
-async function generateAIResponse(
-  message: string,
-  articleId: string,
-  articleTitle: string
-): Promise<string> {
-  // TODO: Replace this with your actual RAG backend API
-  // Example API call structure:
-  // const response = await fetch('/api/chat', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ message, articleId, articleTitle })
-  // });
-  // return await response.json();
-
-  const responses = [
-    `Based on "${articleTitle}", I can provide you with detailed insights. ${
-      message.toLowerCase().includes("what")
-        ? "This article discusses important developments and their implications."
-        : "That's an interesting question about the article's content."
-    }`,
-    `Great question about the article! The key points relate to the main themes discussed. Would you like me to elaborate on any specific aspect?`,
-    `Regarding your question about "${articleTitle}", the article provides several important perspectives. What specific aspect would you like to explore further?`,
-    `That's a thoughtful question. The article touches on this topic in detail. Let me break it down for you based on the information provided.`,
-  ];
-
-  return responses[Math.floor(Math.random() * responses.length)];
 }

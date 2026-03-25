@@ -4,6 +4,12 @@ export interface Message {
   isBot: boolean;
   timestamp: string;
   typing?: boolean;
+  sources?: {
+    article_id?: string | null;
+    title: string;
+    source: string;
+    url: string;
+  }[];
 }
 
 export interface Chat {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Footer from "@/components/Footer";
@@ -19,8 +19,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { newsService } from "@/services/newsService";
+import { ragService } from "@/services/ragService";
 import { parseApiError } from "@/lib/error-parser";
-import { NewsArticleSummary } from "@/types";
+import { NewsArticleSummary, RAGSourceCitation } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
@@ -32,8 +33,67 @@ export default function SearchResultsPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [articles, setArticles] = useState<NewsArticleSummary[]>([]);
+  const [ragResponse, setRagResponse] = useState<string>("");
+  const [ragSources, setRagSources] = useState<RAGSourceCitation[]>([]);
   const [searchInput, setSearchInput] = useState(query);
   const [error, setError] = useState<string | null>(null);
+
+  const normalizeAiText = (raw: string) => {
+    const withoutMarkdownLinks = raw.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      "$1",
+    );
+    const withoutParenUrls = withoutMarkdownLinks.replace(
+      /\s*\(https?:\/\/[^\s)]+\)/g,
+      "",
+    );
+    const withoutBareUrls = withoutParenUrls.replace(/https?:\/\/\S+/g, "");
+    return withoutBareUrls.replace(/\s+/g, " ").trim();
+  };
+
+  const highlightReferenceCard = (citationNumber: number) => {
+    const target = document.getElementById(`search-ref-${citationNumber}`);
+    if (!target) {
+      return;
+    }
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.classList.add("ring-2", "ring-indigo-400");
+    window.setTimeout(() => {
+      target.classList.remove("ring-2", "ring-indigo-400");
+    }, 1200);
+  };
+
+  const renderWithCitationLinks = (text: string): ReactNode[] => {
+    const maxRef = citationLinks.length;
+    const chunks = text.split(/(\[\d+\])/g);
+
+    return chunks.map((chunk, index) => {
+      const match = chunk.match(/^\[(\d+)\]$/);
+      if (!match) {
+        return <span key={`ai-text-${index}`}>{chunk}</span>;
+      }
+
+      const citationNumber = Number(match[1]);
+      if (
+        Number.isNaN(citationNumber) ||
+        citationNumber < 1 ||
+        citationNumber > maxRef
+      ) {
+        return <span key={`ai-text-${index}`}>{chunk}</span>;
+      }
+
+      return (
+        <button
+          key={`ai-cite-${index}`}
+          type="button"
+          onClick={() => highlightReferenceCard(citationNumber)}
+          className="text-indigo-300 hover:text-indigo-200 underline underline-offset-2"
+        >
+          [{citationNumber}]
+        </button>
+      );
+    });
+  };
 
   useEffect(() => {
     const performSearch = async () => {
@@ -46,15 +106,27 @@ export default function SearchResultsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await newsService.getFeed({
-          page: 1,
-          limit: 24,
-          searchQuery: query,
-        });
-        setArticles(response.items);
+        const [feedResult, ragResult] = await Promise.all([
+          newsService.getFeed({
+            page: 1,
+            limit: 24,
+            searchQuery: query,
+          }),
+          ragService.query({ content: query }),
+        ]);
+
+        setArticles(feedResult.items);
+        setRagResponse(
+          ragResult.content
+            ? normalizeAiText(ragResult.content)
+            : "No AI response available.",
+        );
+        setRagSources(ragResult.sources || []);
       } catch (error) {
         const parsed = parseApiError(error, "Failed to fetch search results.");
         setError(parsed.message);
+        setRagResponse("");
+        setRagSources([]);
         toast({
           title: "Search failed",
           description: parsed.message,
@@ -77,6 +149,10 @@ export default function SearchResultsPage() {
       return `No strong matches were found for \"${query}\" in the current indexed news set.`;
     }
 
+    if (ragResponse.trim()) {
+      return ragResponse;
+    }
+
     const topSummaries = articles
       .slice(0, 3)
       .map((article) => article.summary)
@@ -87,11 +163,29 @@ export default function SearchResultsPage() {
       topSummaries ||
       `Found ${articles.length} relevant article(s) for \"${query}\". Open an article below for details.`
     );
-  }, [articles, query]);
+  }, [articles, query, ragResponse]);
 
   const sources = useMemo(() => {
+    if (ragSources.length > 0) {
+      return [...new Set(ragSources.map((source) => source.source))];
+    }
     return [...new Set(articles.map((article) => article.source))];
-  }, [articles]);
+  }, [articles, ragSources]);
+
+  const citationLinks = useMemo(() => {
+    return ragSources.map((source, index) => {
+      const href = source.article_id
+        ? `/news-feed/${source.article_id}`
+        : source.url;
+      const isExternal = !source.article_id;
+      return {
+        key: `${source.url}-${index}`,
+        label: source.title,
+        href,
+        isExternal,
+      };
+    });
+  }, [ragSources]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,9 +278,16 @@ export default function SearchResultsPage() {
                   </CardHeader>
                   <CardContent className="space-y-4 px-0">
                     <div className="rounded-lg p-6 px-0">
-                      <p className="text-gray-300 leading-relaxed">
-                        {aiResponse}
-                      </p>
+                      {aiResponse
+                        .split(/(?<=[.!?])\s+(?=[A-Z])/)
+                        .map((paragraph, index) => (
+                          <p
+                            key={`ai-paragraph-${index}`}
+                            className="text-gray-300 leading-relaxed mb-3 last:mb-0"
+                          >
+                            {renderWithCitationLinks(paragraph)}
+                          </p>
+                        ))}
                     </div>
 
                     <Separator className="bg-gray-700" />
@@ -208,6 +309,46 @@ export default function SearchResultsPage() {
                         ))}
                       </div>
                     </div>
+
+                    {citationLinks.length > 0 && (
+                      <>
+                        <Separator className="bg-gray-700" />
+                        <div>
+                          <p className="text-sm text-gray-400 mb-2">
+                            References:
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {citationLinks
+                              .slice(0, 6)
+                              .map((citation, index) => (
+                                <a
+                                  key={citation.key}
+                                  id={`search-ref-${index + 1}`}
+                                  href={citation.href}
+                                  target={
+                                    citation.isExternal ? "_blank" : undefined
+                                  }
+                                  rel={
+                                    citation.isExternal
+                                      ? "noopener noreferrer"
+                                      : undefined
+                                  }
+                                  className="block rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 hover:border-zinc-500 transition-colors"
+                                >
+                                  <p className="text-xs text-zinc-200 line-clamp-2 font-medium">
+                                    [{index + 1}] {citation.label}
+                                  </p>
+                                  <p className="text-[11px] text-zinc-400 mt-1">
+                                    {citation.isExternal
+                                      ? "Open source"
+                                      : "Open in Quantum"}
+                                  </p>
+                                </a>
+                              ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </div>
               </Card>

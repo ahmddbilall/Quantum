@@ -12,6 +12,9 @@ venv/
 *.env
 .env
 
+*.log
+.log
+
 # Local tooling and editor state
 .pytest_cache/
 .mypy_cache/

@@ -10,7 +10,8 @@ from app.core.database import SessionLocal
 from app.api.api_v1.api import api_router
 from app.services.embedding_service import EmbeddingService
 from app.services.sentiment_service import sentiment_service
-
+from apscheduler.triggers.cron import CronTrigger
+from app.services.rag.backfill import backfill_embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,17 @@ async def lifespan(_app: FastAPI):
             "Sentiment scheduler started interval=%s minutes",
             settings.SENTIMENT_JOB_INTERVAL_MINUTES,
         )
+
+    scheduler.add_job(
+        backfill_embeddings,
+        trigger=CronTrigger(minute="*/30"),
+        id="embedding_backfill_job",
+        replace_existing=True,
+        misfire_grace_time=120
+    )
+    if not scheduler.running:
+        scheduler.start()
+        logger.info("Scheduler started for embedding backfill job")
 
     yield
 

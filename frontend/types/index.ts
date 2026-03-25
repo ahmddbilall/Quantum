@@ -67,3 +67,45 @@ export interface BookmarkActionResponse {
   message: string;
   article_id: string;
 }
+
+export interface RAGSourceCitation {
+  article_id?: string | null;
+  title: string;
+  url: string;
+  source: string;
+}
+
+export interface RAGChatSummary {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RAGChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  created_at: string;
+  sources?: RAGSourceCitation[];
+}
+
+export interface RAGChatHistoryResponse {
+  chat_id: string;
+  messages: RAGChatMessage[];
+}
+
+export interface RAGChatMessageResponse {
+  message_id: string;
+  content: string;
+  role: "assistant";
+  model: string;
+  sources: RAGSourceCitation[];
+  created_at: string;
+}
+
+export interface RAGQueryResponse {
+  content: string;
+  model: string;
+  sources: RAGSourceCitation[];
+}

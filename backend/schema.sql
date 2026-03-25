@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS messages (
     chat_id UUID REFERENCES chats(id) ON DELETE CASCADE,
     role VARCHAR NOT NULL,
     content TEXT NOT NULL,
+    sources JSONB NOT NULL DEFAULT '[]'::JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -3,6 +3,11 @@ export interface ChatMessage {
   type: "user" | "ai";
   content: string;
   timestamp: Date;
+  sources?: {
+    title: string;
+    url: string;
+    article_id?: string | null;
+  }[];
 }
 
 export interface ArticleChatProps {
