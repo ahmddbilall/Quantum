@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import StarryBackground from "@/components/ui/starry-background";
@@ -18,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { buildAuthUrl, getCurrentPathWithSearch } from "@/lib/auth-redirect";
 import { authService } from "@/services/authService";
-import { newsService, apiCache } from "@/services/newsService";
+import { newsService, newsQueryKeys } from "@/services/newsService";
 import { parseApiError } from "@/lib/error-parser";
 import { BackendUserProfile, NewsArticleSummary } from "@/types";
 import { useCryptoSearch, useStockSearch } from "@/components/market-finance";
@@ -145,6 +146,7 @@ export default function ProfilePage() {
   const { user, isLoading, refreshProfile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [activeTab, setActiveTab] = useState("preferences");
   const [isSaving, setIsSaving] = useState(false);
@@ -546,7 +548,10 @@ export default function ProfilePage() {
       hydrateProfile(updated);
       await refreshProfile();
 
-      apiCache.invalidateAll(); // Flush cached news feeds
+      // Invalidate all news-related queries to refresh with new preferences
+      await queryClient.invalidateQueries({ queryKey: ["news-feed"] });
+      await queryClient.invalidateQueries({ queryKey: ["market-news"] });
+      await queryClient.invalidateQueries({ queryKey: ["recommendations"] });
 
       toast({
         title: "Preferences saved",
