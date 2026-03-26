@@ -61,4 +61,4 @@ class RAGQueryResponse(BaseModel):
     sources: List[SourceCitation]
 
 class UpdateSecondaryModelRequest(BaseModel):
-    secondary_model_url: str
+    llama_model_url: str

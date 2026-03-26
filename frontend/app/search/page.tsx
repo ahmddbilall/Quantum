@@ -18,9 +18,11 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import { newsService } from "@/services/newsService";
+import { useQuery } from "@tanstack/react-query";
+import { newsService, newsQueryKeys } from "@/services/newsService";
 import { ragService } from "@/services/ragService";
 import { parseApiError } from "@/lib/error-parser";
+import { getArticleDetailPathBySource } from "@/lib/article-routing";
 import { NewsArticleSummary, RAGSourceCitation } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -31,12 +33,38 @@ export default function SearchResultsPage() {
   const query = searchParams.get("q") || "";
   const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [articles, setArticles] = useState<NewsArticleSummary[]>([]);
-  const [ragResponse, setRagResponse] = useState<string>("");
-  const [ragSources, setRagSources] = useState<RAGSourceCitation[]>([]);
   const [searchInput, setSearchInput] = useState(query);
-  const [error, setError] = useState<string | null>(null);
+  const normalizedQuery = query.trim();
+
+  useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
+
+  const { data, error, isPending, isError } = useQuery({
+    queryKey: newsQueryKeys.search(normalizedQuery),
+    queryFn: async () => {
+      const [feedResult, ragResult] = await Promise.all([
+        newsService.getFeed({
+          page: 1,
+          limit: 24,
+          searchQuery: normalizedQuery,
+        }),
+        ragService.query({ content: normalizedQuery }),
+      ]);
+
+      return {
+        articles: feedResult.items,
+        ragResponse: ragResult.content
+          ? normalizeAiText(ragResult.content)
+          : "",
+        ragSources: ragResult.sources || [],
+      };
+    },
+    enabled: Boolean(normalizedQuery),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 20 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
 
   const normalizeAiText = (raw: string) => {
     const withoutMarkdownLinks = raw.replace(
@@ -96,49 +124,24 @@ export default function SearchResultsPage() {
   };
 
   useEffect(() => {
-    const performSearch = async () => {
-      if (!query.trim()) {
-        setArticles([]);
-        setError(null);
-        return;
-      }
+    if (!isError) {
+      return;
+    }
 
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [feedResult, ragResult] = await Promise.all([
-          newsService.getFeed({
-            page: 1,
-            limit: 24,
-            searchQuery: query,
-          }),
-          ragService.query({ content: query }),
-        ]);
+    const parsed = parseApiError(error, "Failed to fetch search results.");
+    toast({
+      title: "Search failed",
+      description: parsed.message,
+      variant: "destructive",
+    });
+  }, [error, isError, toast]);
 
-        setArticles(feedResult.items);
-        setRagResponse(
-          ragResult.content
-            ? normalizeAiText(ragResult.content)
-            : "No AI response available.",
-        );
-        setRagSources(ragResult.sources || []);
-      } catch (error) {
-        const parsed = parseApiError(error, "Failed to fetch search results.");
-        setError(parsed.message);
-        setRagResponse("");
-        setRagSources([]);
-        toast({
-          title: "Search failed",
-          description: parsed.message,
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void performSearch();
-  }, [query]);
+  const articles = data?.articles || [];
+  const ragResponse = data?.ragResponse || "";
+  const ragSources = data?.ragSources || [];
+  const uiError = isError
+    ? parseApiError(error, "Failed to fetch search results.").message
+    : null;
 
   const aiResponse = useMemo(() => {
     if (!query.trim()) {
@@ -174,9 +177,11 @@ export default function SearchResultsPage() {
 
   const citationLinks = useMemo(() => {
     return ragSources.map((source, index) => {
-      const href = source.article_id
-        ? `/news-feed/${source.article_id}`
-        : source.url;
+      const internalPath = getArticleDetailPathBySource(
+        source.article_id,
+        source.source,
+      );
+      const href = internalPath || source.url;
       const isExternal = !source.article_id;
       return {
         key: `${source.url}-${index}`,
@@ -190,12 +195,6 @@ export default function SearchResultsPage() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
-    }
-  };
-
-  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && searchInput.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchInput.trim())}`);
     }
   };
@@ -236,7 +235,6 @@ export default function SearchResultsPage() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={handleSearchKeyPress}
                 placeholder="Search for news, markets, or ask AI anything..."
                 className="flex-1 bg-transparent text-white placeholder-gray-400 px-4 py-2 focus:outline-none"
               />
@@ -250,15 +248,15 @@ export default function SearchResultsPage() {
           </form>
         </motion.div>
 
-        {isLoading ? (
+        {isPending ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Loader2 className="h-12 w-12 text-indigo-500 animate-spin mb-4" />
             <p className="text-gray-400">Searching indexed news...</p>
           </div>
-        ) : error ? (
+        ) : uiError ? (
           <div className="flex flex-col items-center justify-center py-16">
             <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-            <p className="text-red-400">{error}</p>
+            <p className="text-red-400">{uiError}</p>
           </div>
         ) : (
           <>

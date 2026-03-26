@@ -38,7 +38,9 @@ async def backfill_embeddings(batch_size: int = 100):
                     f"Tags: {', '.join(tags)}\nContent: {content}"
                 )
                 
-                embedding = EmbeddingService.encode_query(text_to_embed)
+                embedding = await EmbeddingService.encode_query(text_to_embed)
+                if embedding is None:
+                    continue
                 
                 await db.execute(sql_insert, {
                     "article_id": r.id,

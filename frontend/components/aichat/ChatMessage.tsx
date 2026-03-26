@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { getArticleDetailPathBySource } from "@/lib/article-routing";
 import { ChatMessage as ChatMessageType } from "./types";
 
 interface ChatMessageProps {
@@ -40,21 +41,26 @@ export function ChatMessage({ message }: ChatMessageProps) {
           message.sources &&
           message.sources.length > 0 && (
             <div className="mt-2 space-y-1">
-              {message.sources.slice(0, 3).map((source, index) => (
-                <a
-                  key={`${source.url}-${index}`}
-                  href={
-                    source.article_id
-                      ? `/news-feed/${source.article_id}`
-                      : source.url
-                  }
-                  target={source.article_id ? undefined : "_blank"}
-                  rel={source.article_id ? undefined : "noopener noreferrer"}
-                  className="block text-xs text-indigo-300 hover:text-indigo-200 underline-offset-2 hover:underline"
-                >
-                  {source.title}
-                </a>
-              ))}
+              {message.sources.slice(0, 3).map((source, index) => {
+                const internalPath = getArticleDetailPathBySource(
+                  source.article_id,
+                  source.source,
+                );
+                const href = internalPath || source.url;
+                const isExternal = !internalPath;
+
+                return (
+                  <a
+                    key={`${source.url}-${index}`}
+                    href={href}
+                    target={isExternal ? "_blank" : undefined}
+                    rel={isExternal ? "noopener noreferrer" : undefined}
+                    className="block text-xs text-indigo-300 hover:text-indigo-200 underline-offset-2 hover:underline"
+                  >
+                    {source.title}
+                  </a>
+                );
+              })}
             </div>
           )}
         <p className="text-xs opacity-70 mt-1">

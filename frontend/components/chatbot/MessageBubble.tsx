@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Bot, User } from "lucide-react";
 import Link from "next/link";
+import { getArticleDetailPathBySource } from "@/lib/article-routing";
 import { Message } from "./types";
 
 interface MessageBubbleProps {
@@ -113,9 +114,11 @@ export default function MessageBubble({
                 <p className="text-xs text-zinc-400 mb-2">References</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {message.sources.slice(0, 6).map((source, index) => {
-                    const to = source.article_id
-                      ? `/news-feed/${source.article_id}`
-                      : source.url;
+                    const to =
+                      getArticleDetailPathBySource(
+                        source.article_id,
+                        source.source,
+                      ) || source.url;
                     const isInternal = Boolean(source.article_id);
 
                     if (isInternal) {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import {
   Sparkles,
   User,
 } from "lucide-react";
-import { newsService } from "@/services/newsService";
+import { newsService, newsQueryKeys } from "@/services/newsService";
 import { NewsArticleSummary } from "@/types";
 import { parseApiError } from "@/lib/error-parser";
 import { useToast } from "@/hooks/use-toast";
@@ -30,16 +31,6 @@ export function NewsTab() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [articles, setArticles] = useState<NewsArticleSummary[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [recommendedArticles, setRecommendedArticles] = useState<
-    NewsArticleSummary[]
-  >([]);
-  const [isLoadingRecommended, setIsLoadingRecommended] = useState(false);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -49,71 +40,81 @@ export function NewsTab() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
-  useEffect(() => {
-    const loadRecommendations = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
+  const normalizedSearchQuery = debouncedSearchQuery.trim();
+  const effectiveSearchQuery =
+    normalizedSearchQuery.length >= MIN_SEARCH_QUERY_LENGTH
+      ? normalizedSearchQuery
+      : undefined;
 
-      setIsLoadingRecommended(true);
-      try {
-        const response = await newsService.getRecommendations({
+  const marketFilters = useMemo(
+    () => ({
+      limit: PAGE_LIMIT,
+      searchQuery: effectiveSearchQuery,
+    }),
+    [effectiveSearchQuery],
+  );
+
+  const {
+    data: marketData,
+    error: marketError,
+    isPending: isLoading,
+    isFetchingNextPage: isLoadingMore,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: newsQueryKeys.marketNews(marketFilters),
+    queryFn: ({ pageParam = 1 }) =>
+      newsService.getMarketNews({
+        ...marketFilters,
+        page: pageParam,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.has_more ? allPages.length + 1 : undefined,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
+
+  const { data: recommendationsData, isLoading: isLoadingRecommended } =
+    useQuery({
+      queryKey: newsQueryKeys.recommendations("market"),
+      queryFn: () =>
+        newsService.getRecommendations({
           limit: 14,
           feedContext: "market",
-        });
-        setRecommendedArticles(response.items || []);
-      } catch (err) {
-        console.error("Failed to load recommendations", err);
-      } finally {
-        setIsLoadingRecommended(false);
-      }
-    };
-    void loadRecommendations();
-  }, []);
-
-  const fetchArticles = async (targetPage: number, append: boolean) => {
-    try {
-      setError(null);
-      if (append) {
-        setIsLoadingMore(true);
-      } else {
-        setIsLoading(true);
-      }
-
-      const normalizedSearchQuery = debouncedSearchQuery.trim();
-      const effectiveSearchQuery =
-        normalizedSearchQuery.length >= MIN_SEARCH_QUERY_LENGTH
-          ? normalizedSearchQuery
-          : undefined;
-
-      const response = await newsService.getMarketNews({
-        page: targetPage,
-        limit: PAGE_LIMIT,
-        searchQuery: effectiveSearchQuery,
-        excludeArticleIds: append ? articles.map((a) => a.id) : undefined,
-      });
-
-      setArticles((prev) =>
-        append ? [...prev, ...response.items] : response.items,
-      );
-      setPage(targetPage);
-      setHasMore(response.has_more);
-    } catch (err) {
-      const parsed = parseApiError(err, "Failed to load market news.");
-      setError(parsed.message);
-      toast({
-        title: "Could not load news",
-        description: parsed.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    }
-  };
+        }),
+      staleTime: 2 * 60 * 1000,
+      gcTime: 15 * 60 * 1000,
+      refetchOnWindowFocus: true,
+    });
 
   useEffect(() => {
-    void fetchArticles(1, false);
-  }, [debouncedSearchQuery, toast]);
+    if (!marketError) {
+      return;
+    }
+    const parsed = parseApiError(marketError, "Failed to load market news.");
+    toast({
+      title: "Could not load news",
+      description: parsed.message,
+      variant: "destructive",
+    });
+  }, [marketError, toast]);
+
+  const articles = useMemo(() => {
+    const merged = (marketData?.pages || []).flatMap(
+      (page) => page.items || [],
+    );
+    const uniqueById = new Map(merged.map((item) => [item.id, item]));
+    return Array.from(uniqueById.values());
+  }, [marketData?.pages]);
+
+  const recommendedArticles: NewsArticleSummary[] =
+    recommendationsData?.items || [];
+  const hasMore = Boolean(hasNextPage);
+  const error = marketError
+    ? parseApiError(marketError, "Failed to load market news.").message
+    : null;
 
   const getSentimentStyle = (sentiment: string | undefined | null) => {
     const sentimentStr = (sentiment || "").toLowerCase();
@@ -372,7 +373,7 @@ export function NewsTab() {
           <Button
             variant="outline"
             disabled={isLoadingMore}
-            onClick={() => void fetchArticles(page + 1, true)}
+            onClick={() => void fetchNextPage()}
             className="border-white text-white hover:bg-white hover:text-black transition-all duration-300 bg-transparent group"
           >
             {isLoadingMore ? (

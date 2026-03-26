@@ -6,6 +6,7 @@ import "@/styles/globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AppRouteGuard from "@/components/auth/AppRouteGuard";
+import Providers from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,10 +37,12 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          <AppRouteGuard>{children}</AppRouteGuard>
-          <Toaster />
-        </AuthProvider>
+        <Providers>
+          <AuthProvider>
+            <AppRouteGuard>{children}</AppRouteGuard>
+            <Toaster />
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

@@ -401,5 +401,5 @@ async def update_config(
     if not admin_key or x_admin_key != admin_key:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    llm_router.update_secondary_url(request.secondary_model_url)
+    llm_router.update_secondary_url(request.llama_model_url)
     return {"status": "ok", "message": "Secondary model URL updated"}

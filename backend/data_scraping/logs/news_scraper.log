@@ -24626,3 +24626,692 @@ task: <Task pending name='Task-9317' coro=<SchedulerService.stop() running at D:
 2026-03-26 02:26:24,226 - news_scraper.scheduler - INFO - Received signal 2, initiating graceful shutdown
 2026-03-26 02:26:24,234 - asyncio - ERROR - Task was destroyed but it is pending!
 task: <Task pending name='Task-11543' coro=<SchedulerService.stop() running at D:\quantum\backend\data_Scraping\news_scraper\scheduler.py:467>>
+2026-03-27 00:48:11,141 - root - INFO - Logging system initialized
+2026-03-27 00:48:12,557 - news_scraper.database - INFO - Skipping default source insert; news_sources already has 14 rows
+2026-03-27 00:48:12,559 - news_scraper.database - INFO - Database tables ensured successfully
+2026-03-27 00:48:12,560 - news_scraper.database - INFO - Database initialized successfully
+2026-03-27 00:48:12,564 - news_scraper.database - INFO - Skipping default source insert; news_sources already has 14 rows
+2026-03-27 00:48:12,570 - news_scraper.manager - INFO - Initializing News Scraper System
+2026-03-27 00:48:12,571 - news_scraper.scheduler - INFO - Initializing news scraping scheduler
+2026-03-27 00:48:12,571 - news_scraper.api_news_service - INFO - API news ingestion service initialized
+2026-03-27 00:48:12,572 - news_scraper.embeddings - INFO - Initializing BGE model on device: cpu
+2026-03-27 00:48:12,573 - news_scraper.embeddings - INFO - Using CPU for embeddings
+2026-03-27 00:48:12,578 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: D:\Quantum\backend\bge_model\bge-base-en-v1.5
+2026-03-27 00:48:13,392 - news_scraper.embeddings - INFO - BGE model D:\Quantum\backend\bge_model\bge-base-en-v1.5 loaded successfully
+2026-03-27 00:48:13,393 - news_scraper.scheduler - INFO - Scheduler initialized successfully
+2026-03-27 00:48:13,395 - performance - INFO - Performance: {'operation': 'system_initialization', 'duration_seconds': 0.824, 'timestamp': '2026-03-27T00:48:13.394922'}
+2026-03-27 00:48:13,396 - news_scraper.manager - INFO - News Scraper System initialized successfully in 0.82 seconds
+2026-03-27 00:48:13,397 - news_scraper.manager - INFO - Starting continuous news scraping
+2026-03-27 00:48:13,401 - news_scraper.scheduler - INFO - Worker lock acquired: C:\Users\shame\AppData\Local\Temp\quantum_scraper_worker.lock (pid=16952)
+2026-03-27 00:48:13,405 - news_scraper.scheduler - INFO - Starting news scraping scheduler with independent parallel tasks
+2026-03-27 00:48:13,406 - news_scraper.scheduler - INFO - Scheduler started - running 4 parallel tasks:
+2026-03-27 00:48:13,408 - news_scraper.scheduler - INFO -   • Scraping loop: every 10 minutes
+2026-03-27 00:48:13,409 - news_scraper.scheduler - INFO -   • API news loop: every 15 minutes
+2026-03-27 00:48:13,410 - news_scraper.scheduler - INFO -   • Embedding loop: every 10 minutes
+2026-03-27 00:48:13,411 - news_scraper.scheduler - INFO -   • Cleanup loop: every 24 hours
+2026-03-27 00:48:13,412 - news_scraper.scheduler - INFO - All tasks started successfully and running in parallel
+2026-03-27 00:48:13,414 - news_scraper.manager - INFO - News scraping system is running continuously. Press Ctrl+C to stop.
+2026-03-27 00:48:13,415 - news_scraper.scheduler - INFO - Running initial scraping cycle on startup
+2026-03-27 00:48:13,422 - news_scraper.scheduler - INFO - Starting scraping cycle for all sources
+2026-03-27 00:48:13,424 - news_scraper.scheduler - INFO - Scraping source: aljazeera
+2026-03-27 00:48:13,488 - news_scraper.scheduler - INFO - Running initial API news ingestion cycle on startup
+2026-03-27 00:48:13,494 - news_scraper.scheduler - INFO - Starting API news ingestion cycle
+2026-03-27 00:48:16,163 - news_scraper.scheduler - INFO - Running initial embedding cycle on startup
+2026-03-27 00:48:16,164 - news_scraper.scheduler - INFO - Starting embedding processing cycle
+2026-03-27 00:48:16,165 - news_scraper.embeddings - INFO - Starting BGE embedding processing for unprocessed articles
+2026-03-27 00:48:16,167 - news_scraper.scheduler - INFO - Running initial cleanup cycle on startup
+2026-03-27 00:48:16,168 - news_scraper.scheduler - INFO - Starting data cleanup cycle
+2026-03-27 00:48:16,210 - news_scraper.scheduler - INFO - Data cleanup completed: deleted 0 old scraping runs
+2026-03-27 00:48:16,211 - news_scraper.scheduler - INFO - Next cleanup cycle in 24 hours
+2026-03-27 00:48:16,239 - news_scraper.base_scraper - INFO - Initialized aljazeera scraper with 52 existing URLs
+2026-03-27 00:48:16,240 - news_scraper.base_scraper - INFO - Starting scraping for aljazeera
+2026-03-27 00:48:16,246 - news_scraper.embeddings - INFO - No unprocessed articles found
+2026-03-27 00:48:16,247 - news_scraper.scheduler - INFO - Embedding processing completed: 0 processed, 0 failed
+2026-03-27 00:48:17,339 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?apiKey=1e31e9563626428ea141cb04a77eab96&q=world+OR+international+OR+global+affairs&language=en&sortBy=publishedAt&pageSize=40&from=2026-03-24&searchIn=title%2Cdescription&domains=reuters.com%2Capnews.com%2Cnytimes.com%2Cwashingtonpost.com%2Cwsj.com%2Cbloomberg.com%2Ccnn.com%2Cabcnews.go.com%2Ccbsnews.com%2Cnpr.org%2Ceuronews.com%2Cdw.com%2Cfrance24.com%2Cthehill.com%2Ctime.com&excludeDomains=bbc.com%2Caljazeera.com%2Ctheguardian.com%2Cnewsbtc.com%2Ccryptoslate.com%2Cambcrypto.com%2Cblockonomi.com%2Cdecrypt.co%2Ccnbc.com "HTTP/1.1 200 OK"
+2026-03-27 00:48:17,488 - news_scraper.base_scraper - WARNING - HTTP 404 for https://www.aljazeera.com/opinions/
+2026-03-27 00:48:18,880 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/us-pentagon-tightens-press-restrictions-despite-court-ruling/a-76498609 "HTTP/1.1 200 OK"
+2026-03-27 00:48:20,406 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?apiKey=1e31e9563626428ea141cb04a77eab96&q=war+OR+conflict+OR+military+OR+ceasefire+OR+invasion&language=en&sortBy=publishedAt&pageSize=40&from=2026-03-24&searchIn=title%2Cdescription&domains=reuters.com%2Capnews.com%2Cnytimes.com%2Cwashingtonpost.com%2Cwsj.com%2Cbloomberg.com%2Ccnn.com%2Cabcnews.go.com%2Ccbsnews.com%2Cnpr.org%2Ceuronews.com%2Cdw.com%2Cfrance24.com%2Cthehill.com%2Ctime.com&excludeDomains=bbc.com%2Caljazeera.com%2Ctheguardian.com%2Cnewsbtc.com%2Ccryptoslate.com%2Cambcrypto.com%2Cblockonomi.com%2Cdecrypt.co%2Ccnbc.com "HTTP/1.1 200 OK"
+2026-03-27 00:48:20,627 - news_scraper.base_scraper - WARNING - HTTP 404 for https://www.aljazeera.com/opinions/
+2026-03-27 00:48:21,563 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/25/nx-s1-5760830/iranian-disco-turkey-iran "HTTP/1.1 200 OK"
+2026-03-27 00:48:23,029 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/iran-war-tehran-sets-own-terms-to-end-war-rejects-us-plan/live-76515461 "HTTP/1.1 200 OK"
+2026-03-27 00:48:25,666 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/iran-war-boosts-strategic-significance-of-south-caucasus/a-76518386 "HTTP/1.1 200 OK"
+2026-03-27 00:48:26,774 - news_scraper.base_scraper - WARNING - HTTP 404 for https://www.aljazeera.com/opinions/
+2026-03-27 00:48:27,965 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/iraq-war-veteran-calls-out-trumps-contradictions-on-iran-war/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:30,587 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/news/iran-war-iranians-losing-hope-for-regime-change-now-hope-for-ceasefire/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:33,694 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/us-soldiers-husband-on-the-impact-of-her-death-in-iran-war/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:36,425 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/extended-interview-husband-of-us-soldier-killed-in-iran-war/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:38,929 - news_scraper.base_scraper - WARNING - HTTP 404 for https://www.aljazeera.com/opinions/
+2026-03-27 00:48:38,930 - news_scraper.base_scraper - ERROR - Failed to fetch https://www.aljazeera.com/opinions/ after 4 attempts
+2026-03-27 00:48:38,963 - httpx - INFO - HTTP Request: GET https://apnews.com/article/iran-us-israel-trump-lebanon-march-25-2026-be07c54139bcc70672bb33f0773ede6a "HTTP/1.1 200 OK"
+2026-03-27 00:48:45,217 - news_scraper.base_scraper - INFO - Found 20 article links for aljazeera
+2026-03-27 00:48:45,223 - news_scraper.base_scraper - INFO - Found 8 new articles to scrape
+2026-03-27 00:48:46,538 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/irans-military-mocks-trumps-claims-that-negotiations-are-underway/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:47,540 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/video/irans-military-mocks-trumps-claims-that-negotiations-are-underway/ because it failed intel cleaning (paywall/stub)
+2026-03-27 00:48:47,912 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/behind-trumps-claims-that-iran-is-ready-to-make-a-deal-to-end-war/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:52,120 - news_scraper.base_scraper - INFO - Saved article: Jury finds Meta, YouTube liable for social media addiction: What we know (inserted)
+2026-03-27 00:48:52,140 - news_scraper.base_scraper - INFO - Saved article: Cuban president says Raul Castro involved in US talks amid oil blockade (inserted)
+2026-03-27 00:48:52,151 - news_scraper.base_scraper - INFO - Saved article: Russian officials meet US counterparts as Moscow denies aiding Iran (inserted)
+2026-03-27 00:48:52,161 - news_scraper.base_scraper - INFO - Saved article: US seeks Hamas ‘political surrender’ in new Gaza plan (inserted)
+2026-03-27 00:48:52,192 - news_scraper.base_scraper - INFO - Saved article: US-Israel war on Iran: What’s happening on day 27 of attacks? (inserted)
+2026-03-27 00:48:53,021 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/video/behind-trumps-claims-that-iran-is-ready-to-make-a-deal-to-end-war/ because it failed intel cleaning (paywall/stub)
+2026-03-27 00:48:53,078 - news_scraper.base_scraper - INFO - Saved article: Iran to Lebanon: Four million people displaced by US-Israeli war (inserted)
+2026-03-27 00:48:53,081 - news_scraper.base_scraper - INFO - Saved article: Trump says Iran ‘begging’ for deal to end war as Tehran issues new demands (inserted)
+2026-03-27 00:48:53,085 - news_scraper.base_scraper - INFO - Saved article: Venezuela’s Maduro set to again appear in US court: How strong is the case? (inserted)
+2026-03-27 00:48:53,095 - news_scraper.base_scraper - INFO - Scraping completed for aljazeera: 8 scraped, 0 failed
+2026-03-27 00:48:53,100 - news_scraper.scheduler - INFO - Completed aljazeera: 8 scraped, 0 failed
+2026-03-27 00:48:54,537 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/nigeria-moves-to-broaden-security-alliances-amid-ongoing-insurgency-threats/a-76512959 "HTTP/1.1 200 OK"
+2026-03-27 00:48:55,115 - news_scraper.scheduler - INFO - Scraping source: bbc
+2026-03-27 00:48:55,173 - news_scraper.base_scraper - INFO - Initialized bbc scraper with 75 existing URLs
+2026-03-27 00:48:55,174 - news_scraper.base_scraper - INFO - Starting scraping for bbc
+2026-03-27 00:48:56,594 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/concerns-over-possible-insider-trading-surrounding-the-iran-war/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:58,396 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/united-ceo-says-get-the-deal-done-soon-as-lawmakers-negotiate-dhs-funding/ "HTTP/1.1 200 OK"
+2026-03-27 00:48:58,780 - news_scraper.base_scraper - INFO - Found 52 article links for bbc
+2026-03-27 00:48:58,781 - news_scraper.base_scraper - INFO - Found 36 new articles to scrape
+2026-03-27 00:48:59,560 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/latest-news-on-iran-war-as-regimes-military-mocks-trump-claim-of-negotiations/ "HTTP/1.1 200 OK"
+2026-03-27 00:49:00,066 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/video/latest-news-on-iran-war-as-regimes-military-mocks-trump-claim-of-negotiations/ because it failed intel cleaning (paywall/stub)
+2026-03-27 00:49:01,108 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/can-thailands-new-government-deliver-on-growth-promises/a-76526608 "HTTP/1.1 200 OK"
+2026-03-27 00:49:02,109 - news_scraper.base_scraper - INFO - Saved article: 'We are being choked': Philippines transport workers strike over fuel costs (inserted)
+2026-03-27 00:49:25,425 - news_scraper.base_scraper - INFO - Saved article: Ex-Taiwan presidential hopeful sentenced to 17 years for corruption (inserted)
+2026-03-27 00:49:25,426 - news_scraper.base_scraper - INFO - Saved article: Prepare for turbulence - how a prolonged Middle East conflict could reshape how we fly (inserted)
+2026-03-27 00:49:25,428 - news_scraper.base_scraper - INFO - Saved article: Don't panic - five ways to stop your kids' endless scrolling (inserted)
+2026-03-27 00:49:28,168 - news_scraper.base_scraper - INFO - Saved article: Air Canada CEO 'deeply saddened' his English-only message distracted from victims of crash (inserted)
+2026-03-27 00:49:37,489 - news_scraper.base_scraper - WARNING - Timeout fetching https://www.bbc.com/news/articles/cx2r4wxdw3no (attempt 1)
+2026-03-27 00:49:37,494 - news_scraper.base_scraper - WARNING - Timeout fetching https://www.bbc.com/news/articles/c05dpr1m71go (attempt 1)
+2026-03-27 00:49:38,225 - news_scraper.base_scraper - INFO - Saved article: Nurses help AI system learn how to understand Doric (inserted)
+2026-03-27 00:49:38,227 - news_scraper.base_scraper - INFO - Saved article: Israel says it has killed Iran's navy chief overseeing Strait of Hormuz blockade (inserted)
+2026-03-27 00:49:38,588 - news_scraper.base_scraper - INFO - Saved article: 'I have no recollection of anything' - Epstein survivor says she was drugged and raped (inserted)
+2026-03-27 00:49:38,632 - news_scraper.base_scraper - INFO - Saved article: Rocket stocks soar on report Musk's SpaceX to file for share sale (inserted)
+2026-03-27 00:49:38,649 - news_scraper.base_scraper - INFO - Saved article: A right-wing populist party made big poll gains - and it's shaking up Australian politics (inserted)
+2026-03-27 00:49:38,652 - news_scraper.base_scraper - INFO - Saved article: Spanish woman dies by euthanasia after long legal battle with father (inserted)
+2026-03-27 00:49:38,658 - news_scraper.base_scraper - INFO - Saved article: Trump's Iran strategy is to pursue two off-ramps at once (inserted)
+2026-03-27 00:49:38,674 - news_scraper.base_scraper - INFO - Saved article: India's fertiliser supplies under strain as war disrupts shipments (inserted)
+2026-03-27 00:49:38,723 - news_scraper.base_scraper - INFO - Saved article: Parents should monitor children '24/7' on Roblox, says developer (inserted)
+2026-03-27 00:49:38,747 - news_scraper.base_scraper - INFO - Saved article: Amazon confirms site closure after consultation (inserted)
+2026-03-27 00:49:38,748 - news_scraper.base_scraper - INFO - Saved article: New India bill to amend transgender rights sparks protests (inserted)
+2026-03-27 00:49:38,750 - news_scraper.base_scraper - INFO - Saved article: Australia's sunscreen regulator wants new rules after recent product scandal (inserted)
+2026-03-27 00:49:38,758 - news_scraper.base_scraper - INFO - Saved article: Rationing power and diluting petrol - how African countries are coping with effects of Iran war (inserted)
+2026-03-27 00:49:38,761 - news_scraper.base_scraper - INFO - Saved article: Orban's Hungarian government accused of mass voter intimidation ahead of election (inserted)
+2026-03-27 00:49:38,764 - news_scraper.base_scraper - INFO - Saved article: Chief constable stops speeding car on way to work (inserted)
+2026-03-27 00:49:38,766 - news_scraper.base_scraper - INFO - Saved article: King's Speech to take place days after key May elections (inserted)
+2026-03-27 00:49:38,777 - news_scraper.base_scraper - INFO - Saved article: US prosecutors argue Maduro 'plundered' Venezuelan wealth in court battle over legal fees (inserted)
+2026-03-27 00:49:38,780 - news_scraper.base_scraper - INFO - Saved article: Zimbabwe says 15 nationals killed after being lured to fight for Russia (inserted)
+2026-03-27 00:49:38,781 - news_scraper.base_scraper - INFO - Saved article: Former AFL player becomes first to come out as gay (inserted)
+2026-03-27 00:49:38,782 - news_scraper.base_scraper - INFO - Saved article: Rap legend Slick Rick on Mobo honour and shaping hip-hop: 'We took novels to the next level' (inserted)
+2026-03-27 00:49:38,784 - news_scraper.base_scraper - INFO - Saved article: Paul McCartney announces nostalgic new album, The Boys of Dungeon Lane (inserted)
+2026-03-27 00:49:38,787 - news_scraper.base_scraper - INFO - Saved article: Octopus boss: We've seen a 50% rise in solar panel sales since start of Iran war (inserted)
+2026-03-27 00:49:38,789 - news_scraper.base_scraper - INFO - Saved article: AI used to tackle rising tide of boat thefts (inserted)
+2026-03-27 00:49:38,790 - news_scraper.base_scraper - INFO - Saved article: Elon Musk's X advertising boycott lawsuit dismissed by US judge (inserted)
+2026-03-27 00:49:38,793 - news_scraper.base_scraper - INFO - Saved article: Peers defy government by pushing for UK social media ban for under-16s (inserted)
+2026-03-27 00:49:38,794 - news_scraper.base_scraper - INFO - Saved article: 'A game-changing moment for social media' - what next for big tech after landmark addiction verdict? (inserted)
+2026-03-27 00:49:38,795 - news_scraper.base_scraper - INFO - Saved article: UK forecast to see biggest hit to growth from Iran war out of major economies (inserted)
+2026-03-27 00:49:38,797 - news_scraper.base_scraper - INFO - Saved article: How will the UK respond to US court verdict on social media? (inserted)
+2026-03-27 00:49:38,798 - news_scraper.base_scraper - INFO - Saved article: Councillor who wanted Andrew plaque 'reinstated' backs removal (inserted)
+2026-03-27 00:49:41,600 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/husband-of-soldier-killed-in-iran-war-recalls-last-moments-with-her-we-thought-she-was-safe/ "HTTP/1.1 200 OK"
+2026-03-27 00:49:41,616 - news_scraper.base_scraper - INFO - Saved article: Zelensky visits Saudi Arabia after offering Ukraine's drone expertise (inserted)
+2026-03-27 00:49:44,604 - news_scraper.base_scraper - INFO - Saved article: Trump confirms May meeting with Xi Jinping as Iran war forces postponement (inserted)
+2026-03-27 00:49:44,614 - news_scraper.base_scraper - INFO - Scraping completed for bbc: 36 scraped, 0 failed
+2026-03-27 00:49:44,618 - news_scraper.scheduler - INFO - Completed bbc: 36 scraped, 0 failed
+2026-03-27 00:49:46,119 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/is-iran-cashing-in-millions-from-strait-of-hormuz-blockade/a-76503935 "HTTP/1.1 200 OK"
+2026-03-27 00:49:46,628 - news_scraper.scheduler - INFO - Scraping source: guardian
+2026-03-27 00:49:46,691 - news_scraper.base_scraper - INFO - Initialized guardian scraper with 5 existing URLs
+2026-03-27 00:49:46,693 - news_scraper.base_scraper - INFO - Starting scraping for guardian
+2026-03-27 00:49:47,232 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/live-updates/iran-war-trump-israel-tehran-mocks-us-warns-against-ground-invasion/ "HTTP/1.1 200 OK"
+2026-03-27 00:49:50,468 - news_scraper.base_scraper - INFO - Found 4 article links for guardian
+2026-03-27 00:49:50,469 - news_scraper.base_scraper - INFO - Found 3 new articles to scrape
+2026-03-27 00:49:52,546 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/live-updates/iran-war-trump-israel-tehran-mocks-us-warns-against-ground-invasion/ because it failed intel cleaning (paywall/stub)
+2026-03-27 00:49:53,487 - httpx - INFO - HTTP Request: GET https://apnews.com/article/poll-iran-trump-war-oil-gas-prices-2abd1ea4a81f3339cebadd5480fb863b "HTTP/1.1 200 OK"
+2026-03-27 00:49:55,122 - news_scraper.base_scraper - INFO - Saved article: Nigeria takes its place on world stage in quest to become regional superpower (inserted)
+2026-03-27 00:49:55,148 - news_scraper.base_scraper - INFO - Saved article: AI got the blame for the Iran school bombing. The truth is far more worrying (inserted)
+2026-03-27 00:49:55,158 - news_scraper.base_scraper - INFO - Scraping completed for guardian: 2 scraped, 0 failed
+2026-03-27 00:49:55,162 - news_scraper.scheduler - INFO - Completed guardian: 2 scraped, 0 failed
+2026-03-27 00:49:57,177 - news_scraper.scheduler - INFO - Scraping source: newsbtc
+2026-03-27 00:49:57,234 - news_scraper.base_scraper - INFO - Initialized newsbtc scraper with 173 existing URLs
+2026-03-27 00:49:57,241 - news_scraper.scrapers - INFO - Loaded 6 RSS feeds for crypto scraping
+2026-03-27 00:49:57,242 - news_scraper.base_scraper - INFO - Starting scraping for newsbtc
+2026-03-27 00:49:57,260 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.newsbtc.com/feed/
+2026-03-27 00:49:58,681 - news_scraper.scrapers - INFO - Processing feed: NewsBTC (10 entries)
+2026-03-27 00:49:58,686 - news_scraper.scrapers - INFO - Added 10 new articles from NewsBTC
+2026-03-27 00:49:58,689 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://cryptoslate.com/feed/
+2026-03-27 00:50:00,699 - news_scraper.scrapers - INFO - Processing feed: CryptoSlate (10 entries)
+2026-03-27 00:50:00,701 - news_scraper.scrapers - INFO - Added 10 new articles from CryptoSlate
+2026-03-27 00:50:00,702 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://ambcrypto.com/feed/
+2026-03-27 00:50:01,410 - news_scraper.scrapers - INFO - Processing feed: AMBCrypto (16 entries)
+2026-03-27 00:50:01,413 - news_scraper.scrapers - INFO - Added 10 new articles from AMBCrypto
+2026-03-27 00:50:01,414 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://blockonomi.com/feed/
+2026-03-27 00:50:02,555 - news_scraper.scrapers - INFO - Processing feed: Blockonomi (10 entries)
+2026-03-27 00:50:02,558 - news_scraper.scrapers - INFO - Added 10 new articles from Blockonomi
+2026-03-27 00:50:02,559 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://decrypt.co/feed
+2026-03-27 00:50:03,494 - news_scraper.scrapers - INFO - Processing feed: Decrypt (36 entries)
+2026-03-27 00:50:03,496 - news_scraper.scrapers - INFO - Added 10 new articles from Decrypt
+2026-03-27 00:50:03,497 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.cnbc.com/id/100003114/device/rss/rss.html
+2026-03-27 00:50:05,161 - news_scraper.scrapers - INFO - Processing feed: US Top News and Analysis (30 entries)
+2026-03-27 00:50:05,163 - news_scraper.scrapers - INFO - Added 10 new articles from US Top News and Analysis
+2026-03-27 00:50:05,164 - news_scraper.scrapers - INFO - Total RSS articles collected: 60
+2026-03-27 00:50:05,165 - news_scraper.base_scraper - INFO - Found 60 article links for newsbtc
+2026-03-27 00:50:05,166 - news_scraper.base_scraper - INFO - Found 60 new articles to scrape
+2026-03-27 00:50:05,167 - news_scraper.base_scraper - INFO - Limited to 50 articles for this session
+2026-03-27 00:54:21,030 - news_scraper.database - ERROR - Failed to get or create source 'newsbtc': 
+2026-03-27 00:54:21,031 - news_scraper.database - WARNING - Failed to get or create source: newsbtc
+2026-03-27 00:54:21,033 - news_scraper.database - ERROR - Failed to get or create source 'newsbtc': 
+2026-03-27 00:54:21,034 - news_scraper.database - WARNING - Failed to get or create source: newsbtc
+2026-03-27 00:54:21,043 - news_scraper.database - ERROR - Failed to get or create source 'newsbtc': 
+2026-03-27 00:54:21,044 - news_scraper.database - WARNING - Failed to get or create source: newsbtc
+2026-03-27 00:54:21,079 - news_scraper.scrapers - INFO - Saved article: How Cravin uses provably fair verification in mystery boxes (source_id: 5, action: inserted)
+2026-03-27 00:54:21,129 - news_scraper.scrapers - INFO - Saved article: Binance Just Declared War On Quiet Market Makers —3 Red Flags Every Trader Should Watch (source_id: 4, action: inserted)
+2026-03-27 00:54:21,143 - news_scraper.scrapers - INFO - Saved article: Playnance G Coin shifts from breakout launch to utility test (source_id: 5, action: inserted)
+2026-03-27 00:54:21,175 - news_scraper.scrapers - INFO - Saved article: MARA Holdings’ Bitcoin Sell-Off: 15,000 BTC Liquidated As Prices Crash Below $69,000 (source_id: 4, action: inserted)
+2026-03-27 00:54:21,191 - news_scraper.scrapers - INFO - Saved article: Bitcoin Recovery Lacks One Key Ingredient, Glassnode Warns (source_id: 4, action: inserted)
+2026-03-27 00:54:21,193 - news_scraper.scrapers - INFO - Saved article: Recession fears rise as Bitcoin chops at $70K – Is an H2 rally forming? (source_id: 6, action: inserted)
+2026-03-27 00:54:21,194 - news_scraper.scrapers - INFO - Saved article: MARA taps Bitcoin reserves to cut $1B in debt as corporate treasury strategies evolve (source_id: 6, action: inserted)
+2026-03-27 00:54:21,210 - news_scraper.scrapers - INFO - Saved article: Ethereum Foundation Holds Invite-Only Event For Institutions In New York City – What Is It About? (source_id: 4, action: inserted)
+2026-03-27 00:54:21,218 - news_scraper.scrapers - INFO - Saved article: The Bitcoin Price Bottom Is Close, But There Is Still A Crash Below $60,000 Left (source_id: 4, action: inserted)
+2026-03-27 00:54:21,231 - news_scraper.scrapers - INFO - Saved article: Bitcoin falling after Fed meetings is becoming systemic — and it’s not about the decision (source_id: 5, action: unchanged)
+2026-03-27 00:54:21,256 - news_scraper.scrapers - INFO - Saved article: A new US rule wiped $5B off Circle — but it may hurt Coinbase more (source_id: 5, action: inserted)
+2026-03-27 00:54:21,259 - news_scraper.scrapers - INFO - Saved article: Expert Analyst Says Bitcoin Expansion Is Over, It Won’t Rally Until This Is Over (source_id: 4, action: inserted)
+2026-03-27 00:54:21,261 - news_scraper.scrapers - INFO - Saved article: Morgan Stanley’s first bank-issued Bitcoin ETF is “imminent” – will sell BTC directly to clients (source_id: 5, action: inserted)
+2026-03-27 00:54:21,263 - news_scraper.scrapers - INFO - Saved article: Dogecoin Could Offer Best Risk-Reward Since October 2023, Analyst Says (source_id: 4, action: inserted)
+2026-03-27 00:54:21,271 - news_scraper.scrapers - INFO - Saved article: How Bittensor’s [TAO] AI-driven 140% surge could fuel altcoin rotation (source_id: 6, action: inserted)
+2026-03-27 00:54:21,276 - news_scraper.scrapers - INFO - Saved article: Bitcoin is down 43%, yet almost every other crypto has lost more (source_id: 5, action: updated)
+2026-03-27 00:54:21,279 - news_scraper.scrapers - INFO - Saved article: The $100 billion corporate Bitcoin surge is down to one buyer as other companies stop adding (source_id: 5, action: inserted)
+2026-03-27 00:54:21,281 - news_scraper.scrapers - INFO - Saved article: Over $6B: XAUT Futures Volume Rewrites Records On Binance (source_id: 4, action: inserted)
+2026-03-27 00:54:21,282 - news_scraper.scrapers - INFO - Saved article: PIPPIN crashes 33% in a day: What triggered the sell-off? (source_id: 6, action: inserted)
+2026-03-27 00:54:21,283 - news_scraper.scrapers - INFO - Saved article: FTC Issues Debanking Warnings to Visa (V), Mastercard (MA), PayPal (PYPL), and Stripe (source_id: 7, action: inserted)
+2026-03-27 00:54:21,290 - news_scraper.scrapers - INFO - Saved article: OKX Delays U.S. IPO, Cites Weak Crypto Listings (source_id: 7, action: inserted)
+2026-03-27 00:54:21,291 - news_scraper.scrapers - INFO - Saved article: Bitcoin braces for $14B Options expiry – Will BTC’s $75K ceiling crack? (source_id: 6, action: inserted)
+2026-03-27 00:54:21,298 - news_scraper.scrapers - INFO - Saved article: Best Crypto Presale Sees Traders Rushing to Reserve Pepeto Tokens Before Binance Listing as SHIB and PEPE Gain (source_id: 7, action: inserted)
+2026-03-27 00:54:21,305 - news_scraper.scrapers - INFO - Saved article: ETHMilan Returns for its 4th Edition on 21-22 May 2026 at the Museum of Science and Technology (source_id: 6, action: inserted)
+2026-03-27 00:54:21,306 - news_scraper.scrapers - INFO - Saved article: BlackRock Adds Chronicle to Verify Tokenized BUIDL (source_id: 7, action: inserted)
+2026-03-27 00:54:21,314 - news_scraper.scrapers - INFO - Saved article: Microsoft (MSFT) Stock Plunges 32% as AI Copilot Struggles Disappoint Wall Street (source_id: 7, action: inserted)
+2026-03-27 00:54:21,321 - news_scraper.scrapers - INFO - Saved article: Bhutan Moves $37M in Bitcoin to Exchanges, Holdings Down Two-Thirds From Peak (source_id: 8, action: inserted)
+2026-03-27 00:54:21,322 - news_scraper.scrapers - INFO - Saved article: Bitcoin holds $70K – But seller pressure still caps BTC’s upside (source_id: 6, action: inserted)
+2026-03-27 00:54:21,327 - news_scraper.scrapers - INFO - Saved article: What trends will shape the crypto landscape this year? (source_id: 6, action: inserted)
+2026-03-27 00:54:21,328 - news_scraper.scrapers - INFO - Saved article: Hong Kong expands police powers to access encrypted devices, raising privacy concerns for crypto users (source_id: 6, action: inserted)
+2026-03-27 00:54:21,331 - news_scraper.scrapers - INFO - Saved article: Stablecoin Giant Tether Expands Leading Gold-Backed Token to BNB Chain (source_id: 8, action: inserted)
+2026-03-27 00:54:21,332 - news_scraper.scrapers - INFO - Saved article: Brazil Passes Law to Use Seized Bitcoin, Crypto to Fund Public Security Measures (source_id: 8, action: inserted)
+2026-03-27 00:54:21,333 - news_scraper.scrapers - INFO - Saved article: Ethereum Accumulation Map Reveals Price Roadmap To $20,000 (source_id: 4, action: inserted)
+2026-03-27 00:54:21,334 - news_scraper.scrapers - INFO - Saved article: Tether Rolls Out XAUt on BNB Chain as Gold Enters Crypto (source_id: 7, action: inserted)
+2026-03-27 00:54:21,335 - news_scraper.scrapers - INFO - Saved article: Bitcoin Rangebound At $70K While Macro Cracks Deepen – Why Analyst Says It’s Too Early To Call A Bottom (source_id: 4, action: inserted)
+2026-03-27 00:54:21,335 - news_scraper.scrapers - INFO - Saved article: MARA Stock Pops on $1.1 Billion Bitcoin Sale as BTC Miner Buys Back Convertible Debt (source_id: 8, action: inserted)
+2026-03-27 00:54:21,338 - news_scraper.scrapers - INFO - Saved article: UK Sanctions Crypto Marketplace Xinbi in Crackdown on Southeast Asian Scam Centers (source_id: 8, action: inserted)
+2026-03-27 00:54:21,339 - news_scraper.scrapers - INFO - Saved article: Hackers sneak crypto wallet-stealing code into a popular AI tool that runs every time (source_id: 5, action: inserted)
+2026-03-27 00:54:21,342 - news_scraper.scrapers - INFO - Saved article: XRP Falls to 2-Week Low as Ripple Deploys AI to Boost Ledger Security (source_id: 8, action: inserted)
+2026-03-27 00:54:21,346 - news_scraper.scrapers - INFO - Saved article: What Is Bluesky? The Decentralized Social Media Rival to Elon Musk's X (source_id: 8, action: inserted)
+2026-03-27 00:54:21,347 - news_scraper.scrapers - INFO - Saved article: Retail Investors Growing Exposed to Bitcoin Giant Strategy’s STRC Over MSTR, Says CEO (source_id: 8, action: inserted)
+2026-03-27 00:54:21,348 - news_scraper.scrapers - INFO - Saved article: Is AGI Here? Not Even Close, New AI Benchmark Suggests (source_id: 8, action: inserted)
+2026-03-27 00:54:21,350 - news_scraper.scrapers - INFO - Saved article: Venture Firm Founder Offers Bounty to Help Recover $42 Million in Stolen Bitcoin, Crypto (source_id: 8, action: inserted)
+2026-03-27 00:54:21,351 - news_scraper.scrapers - INFO - Saved article: Vertiv (VRT) Stock Plunges 10% After Reaching Record Peak of $277.87 (source_id: 7, action: inserted)
+2026-03-27 00:54:21,352 - news_scraper.scrapers - INFO - Saved article: Snap (SNAP) Stock Plummets 12% After EU Launches Child Safety Investigation (source_id: 7, action: inserted)
+2026-03-27 00:54:21,353 - news_scraper.scrapers - INFO - Saved article: Bitcoin miners start funding pivot to AI with debt while selling BTC to stay liquid (source_id: 5, action: inserted)
+2026-03-27 00:54:21,353 - news_scraper.scrapers - INFO - Saved article: ‘In a few weeks’ – SEC’s tokenization exemption nears, but lawmakers worry (source_id: 6, action: inserted)
+2026-03-27 00:54:21,355 - news_scraper.scrapers - INFO - Saved article: Senate Housing Bill Adds Temporary CBDC Ban Clause (source_id: 7, action: inserted)
+2026-03-27 00:54:21,356 - news_scraper.scrapers - INFO - Saved article: Goldman Sachs-Backed Canton Links With LayerZero (source_id: 7, action: inserted)
+2026-03-27 00:54:21,357 - news_scraper.scrapers - INFO - Saved article: As quantum ‘Q-Day’ jumps to 2029, Ethereum faces a new fight over what to do with coins left in old wallets (source_id: 5, action: inserted)
+2026-03-27 00:54:21,362 - news_scraper.base_scraper - INFO - Scraping completed for newsbtc: 49 scraped, 0 failed
+2026-03-27 00:54:21,363 - news_scraper.scheduler - INFO - Completed newsbtc: 49 scraped, 0 failed
+2026-03-27 00:54:21,958 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/25/nx-s1-5760675/iran-war-military-deployment "HTTP/1.1 200 OK"
+2026-03-27 00:54:23,375 - news_scraper.scheduler - INFO - Scraping source: cryptoslate
+2026-03-27 00:54:23,411 - news_scraper.base_scraper - INFO - Initialized cryptoslate scraper with 15 existing URLs
+2026-03-27 00:54:23,416 - news_scraper.scrapers - INFO - Loaded 6 RSS feeds for crypto scraping
+2026-03-27 00:54:23,418 - news_scraper.base_scraper - INFO - Starting scraping for cryptoslate
+2026-03-27 00:54:23,439 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.newsbtc.com/feed/
+2026-03-27 00:54:24,607 - news_scraper.scrapers - INFO - Processing feed: NewsBTC (10 entries)
+2026-03-27 00:54:24,611 - news_scraper.scrapers - INFO - Added 10 new articles from NewsBTC
+2026-03-27 00:54:24,611 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://cryptoslate.com/feed/
+2026-03-27 00:54:26,339 - news_scraper.scrapers - INFO - Processing feed: CryptoSlate (10 entries)
+2026-03-27 00:54:26,343 - news_scraper.scrapers - INFO - Added 10 new articles from CryptoSlate
+2026-03-27 00:54:26,344 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://ambcrypto.com/feed/
+2026-03-27 00:54:26,880 - news_scraper.scrapers - INFO - Processing feed: AMBCrypto (16 entries)
+2026-03-27 00:54:26,883 - news_scraper.scrapers - INFO - Added 10 new articles from AMBCrypto
+2026-03-27 00:54:26,884 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://blockonomi.com/feed/
+2026-03-27 00:54:27,818 - news_scraper.scrapers - INFO - Processing feed: Blockonomi (10 entries)
+2026-03-27 00:54:27,823 - news_scraper.scrapers - INFO - Added 10 new articles from Blockonomi
+2026-03-27 00:54:27,824 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://decrypt.co/feed
+2026-03-27 00:54:28,432 - news_scraper.scrapers - INFO - Processing feed: Decrypt (36 entries)
+2026-03-27 00:54:28,436 - news_scraper.scrapers - INFO - Added 10 new articles from Decrypt
+2026-03-27 00:54:28,437 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.cnbc.com/id/100003114/device/rss/rss.html
+2026-03-27 00:54:29,800 - news_scraper.scrapers - INFO - Processing feed: US Top News and Analysis (30 entries)
+2026-03-27 00:54:29,803 - news_scraper.scrapers - INFO - Added 10 new articles from US Top News and Analysis
+2026-03-27 00:54:29,804 - news_scraper.scrapers - INFO - Total RSS articles collected: 60
+2026-03-27 00:54:29,805 - news_scraper.base_scraper - INFO - Found 60 article links for cryptoslate
+2026-03-27 00:54:29,806 - news_scraper.base_scraper - INFO - Found 60 new articles to scrape
+2026-03-27 00:54:29,807 - news_scraper.base_scraper - INFO - Limited to 50 articles for this session
+2026-03-27 01:00:08,665 - news_scraper.scrapers - ERROR - Error parsing crypto article https://blockonomi.com/vertiv-vrt-stock-plunges-10-after-reaching-record-peak-of-277-87/: Article `download()` failed with HTTPSConnectionPool(host='blockonomi.com', port=443): Read timed out. (read timeout=10) on URL https://blockonomi.com/vertiv-vrt-stock-plunges-10-after-reaching-record-peak-of-277-87/
+2026-03-27 01:00:08,788 - news_scraper.scrapers - ERROR - Error parsing crypto article https://blockonomi.com/senate-housing-bill-adds-temporary-cbdc-ban-clause/: Article `download()` failed with HTTPSConnectionPool(host='blockonomi.com', port=443): Max retries exceeded with url: /senate-housing-bill-adds-temporary-cbdc-ban-clause/ (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2704F50>: Failed to resolve 'blockonomi.com' ([Errno 11001] getaddrinfo failed)")) on URL https://blockonomi.com/senate-housing-bill-adds-temporary-cbdc-ban-clause/
+2026-03-27 01:00:08,829 - news_scraper.scrapers - ERROR - Error parsing crypto article https://blockonomi.com/snap-snap-stock-plummets-12-after-eu-launches-child-safety-investigation/: Article `download()` failed with HTTPSConnectionPool(host='blockonomi.com', port=443): Max retries exceeded with url: /snap-snap-stock-plummets-12-after-eu-launches-child-safety-investigation/ (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2705310>: Failed to resolve 'blockonomi.com' ([Errno 11001] getaddrinfo failed)")) on URL https://blockonomi.com/snap-snap-stock-plummets-12-after-eu-launches-child-safety-investigation/
+2026-03-27 01:00:08,856 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362482/venture-firm-founder-bounty-help-recover-42-million-stolen-bitcoin-crypto: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362482/venture-firm-founder-bounty-help-recover-42-million-stolen-bitcoin-crypto (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2705810>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362482/venture-firm-founder-bounty-help-recover-42-million-stolen-bitcoin-crypto
+2026-03-27 01:00:08,876 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362496/is-agi-here-not-even-close-ai-benchmark: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362496/is-agi-here-not-even-close-ai-benchmark (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2705D10>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362496/is-agi-here-not-even-close-ai-benchmark
+2026-03-27 01:00:08,903 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362495/xrp-2-week-low-ripple-deploys-ai-boost-ledger-security: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362495/xrp-2-week-low-ripple-deploys-ai-boost-ledger-security (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2706210>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362495/xrp-2-week-low-ripple-deploys-ai-boost-ledger-security
+2026-03-27 01:00:08,927 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362480/retail-investors-growing-exposed-bitcoin-strategy-strc-over-mstr: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362480/retail-investors-growing-exposed-bitcoin-strategy-strc-over-mstr (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2706710>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362480/retail-investors-growing-exposed-bitcoin-strategy-strc-over-mstr
+2026-03-27 01:00:09,274 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/resources/what-is-bluesky-twitter-x-decentralized-social-media-rival: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /resources/what-is-bluesky-twitter-x-decentralized-social-media-rival (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2706AD0>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/resources/what-is-bluesky-twitter-x-decentralized-social-media-rival
+2026-03-27 01:00:09,300 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362460/uk-sanctions-crypto-marketplace-xinbi-in-crackdown-on-southeast-asian-scam-centers: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362460/uk-sanctions-crypto-marketplace-xinbi-in-crackdown-on-southeast-asian-scam-centers (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2706490>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362460/uk-sanctions-crypto-marketplace-xinbi-in-crackdown-on-southeast-asian-scam-centers
+2026-03-27 01:00:09,319 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362453/brazil-passes-law-seized-bitcoin-crypto-fund-public-security: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362453/brazil-passes-law-seized-bitcoin-crypto-fund-public-security (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2705F90>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362453/brazil-passes-law-seized-bitcoin-crypto-fund-public-security
+2026-03-27 01:00:09,341 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362448/stablecoin-giant-expands-leading-gold-backed-token-bnb-chain: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362448/stablecoin-giant-expands-leading-gold-backed-token-bnb-chain (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2705A90>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362448/stablecoin-giant-expands-leading-gold-backed-token-bnb-chain
+2026-03-27 01:00:09,361 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362447/mara-stock-pops-1-1-billion-bitcoin-sale-miner-buys-convertible-debt: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362447/mara-stock-pops-1-1-billion-bitcoin-sale-miner-buys-convertible-debt (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB27056D0>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362447/mara-stock-pops-1-1-billion-bitcoin-sale-miner-buys-convertible-debt
+2026-03-27 01:00:09,388 - news_scraper.scrapers - ERROR - Error parsing crypto article https://decrypt.co/362438/bhutan-moves-37m-in-bitcoin-to-exchanges-holdings-down-two-thirds-from-peak: Article `download()` failed with HTTPSConnectionPool(host='decrypt.co', port=443): Max retries exceeded with url: /362438/bhutan-moves-37m-in-bitcoin-to-exchanges-holdings-down-two-thirds-from-peak (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000026FB2705090>: Failed to resolve 'decrypt.co' ([Errno 11001] getaddrinfo failed)")) on URL https://decrypt.co/362438/bhutan-moves-37m-in-bitcoin-to-exchanges-holdings-down-two-thirds-from-peak
+2026-03-27 01:00:09,407 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/25/nx-s1-5759721/how-trumps-iran-war-objectives-have-shifted-over-time "HTTP/1.1 200 OK"
+2026-03-27 01:00:09,453 - news_scraper.scheduler - INFO - Starting embedding processing cycle
+2026-03-27 01:00:09,454 - news_scraper.embeddings - INFO - Starting BGE embedding processing for unprocessed articles
+2026-03-27 01:00:10,018 - news_scraper.embeddings - INFO - Processing BGE embeddings for 110 articles
+2026-03-27 01:00:49,960 - news_scraper.scrapers - INFO - Saved article: Binance Just Declared War On Quiet Market Makers —3 Red Flags Every Trader Should Watch (source_id: 4, action: unchanged)
+2026-03-27 01:00:49,962 - news_scraper.scrapers - INFO - Saved article: Bitcoin Recovery Lacks One Key Ingredient, Glassnode Warns (source_id: 4, action: unchanged)
+2026-03-27 01:00:49,990 - news_scraper.scrapers - INFO - Saved article: Morgan Stanley’s first bank-issued Bitcoin ETF is “imminent” – will sell BTC directly to clients (source_id: 5, action: unchanged)
+2026-03-27 01:00:49,991 - news_scraper.scrapers - INFO - Saved article: As quantum ‘Q-Day’ jumps to 2029, Ethereum faces a new fight over what to do with coins left in old wallets (source_id: 5, action: unchanged)
+2026-03-27 01:00:49,997 - news_scraper.scrapers - INFO - Saved article: Bitcoin falling after Fed meetings is becoming systemic — and it’s not about the decision (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,011 - news_scraper.scrapers - INFO - Saved article: Goldman Sachs-Backed Canton Links With LayerZero (source_id: 7, action: unchanged)
+2026-03-27 01:00:50,017 - news_scraper.scrapers - INFO - Saved article: BlackRock Adds Chronicle to Verify Tokenized BUIDL (source_id: 7, action: unchanged)
+2026-03-27 01:00:50,023 - news_scraper.scrapers - INFO - Saved article: OKX Delays U.S. IPO, Cites Weak Crypto Listings (source_id: 7, action: unchanged)
+2026-03-27 01:00:50,031 - news_scraper.scrapers - INFO - Saved article: Hackers sneak crypto wallet-stealing code into a popular AI tool that runs every time (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,035 - news_scraper.scrapers - INFO - Saved article: ETHMilan Returns for its 4th Edition on 21-22 May 2026 at the Museum of Science and Technology (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,043 - news_scraper.scrapers - INFO - Saved article: A new US rule wiped $5B off Circle — but it may hurt Coinbase more (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,047 - news_scraper.scrapers - INFO - Saved article: What trends will shape the crypto landscape this year? (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,051 - news_scraper.scrapers - INFO - Saved article: Ethereum Foundation Holds Invite-Only Event For Institutions In New York City – What Is It About? (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,057 - news_scraper.scrapers - INFO - Saved article: Recession fears rise as Bitcoin chops at $70K – Is an H2 rally forming? (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,062 - news_scraper.scrapers - INFO - Saved article: Ethereum Accumulation Map Reveals Price Roadmap To $20,000 (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,074 - news_scraper.scrapers - INFO - Saved article: MARA taps Bitcoin reserves to cut $1B in debt as corporate treasury strategies evolve (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,076 - news_scraper.scrapers - INFO - Saved article: The Bitcoin Price Bottom Is Close, But There Is Still A Crash Below $60,000 Left (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,083 - news_scraper.scrapers - INFO - Saved article: Bitcoin Rangebound At $70K While Macro Cracks Deepen – Why Analyst Says It’s Too Early To Call A Bottom (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,084 - news_scraper.scrapers - INFO - Saved article: How Bittensor’s [TAO] AI-driven 140% surge could fuel altcoin rotation (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,089 - news_scraper.scrapers - INFO - Saved article: How Cravin uses provably fair verification in mystery boxes (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,090 - news_scraper.scrapers - INFO - Saved article: Dogecoin Could Offer Best Risk-Reward Since October 2023, Analyst Says (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,096 - news_scraper.scrapers - INFO - Saved article: Bitcoin is down 43%, yet almost every other crypto has lost more (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,097 - news_scraper.scrapers - INFO - Saved article: PIPPIN crashes 33% in a day: What triggered the sell-off? (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,107 - news_scraper.scrapers - INFO - Saved article: Bitcoin braces for $14B Options expiry – Will BTC’s $75K ceiling crack? (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,108 - news_scraper.scrapers - INFO - Saved article: Over $6B: XAUT Futures Volume Rewrites Records On Binance (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,115 - news_scraper.scrapers - INFO - Saved article: The $100 billion corporate Bitcoin surge is down to one buyer as other companies stop adding (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,118 - news_scraper.scrapers - INFO - Saved article: Playnance G Coin shifts from breakout launch to utility test (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,121 - news_scraper.scrapers - INFO - Saved article: ‘In a few weeks’ – SEC’s tokenization exemption nears, but lawmakers worry (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,122 - news_scraper.scrapers - INFO - Saved article: Expert Analyst Says Bitcoin Expansion Is Over, It Won’t Rally Until This Is Over (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,124 - news_scraper.scrapers - INFO - Saved article: Bitcoin miners start funding pivot to AI with debt while selling BTC to stay liquid (source_id: 5, action: unchanged)
+2026-03-27 01:00:50,125 - news_scraper.scrapers - INFO - Saved article: MARA Holdings’ Bitcoin Sell-Off: 15,000 BTC Liquidated As Prices Crash Below $69,000 (source_id: 4, action: unchanged)
+2026-03-27 01:00:50,126 - news_scraper.scrapers - INFO - Saved article: Tether Rolls Out XAUt on BNB Chain as Gold Enters Crypto (source_id: 7, action: unchanged)
+2026-03-27 01:00:50,129 - news_scraper.scrapers - INFO - Saved article: Best Crypto Presale Sees Traders Rushing to Reserve Pepeto Tokens Before Binance Listing as SHIB and PEPE Gain (source_id: 7, action: unchanged)
+2026-03-27 01:00:50,135 - news_scraper.scrapers - INFO - Saved article: Hong Kong expands police powers to access encrypted devices, raising privacy concerns for crypto users (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,138 - news_scraper.scrapers - INFO - Saved article: FTC Issues Debanking Warnings to Visa (V), Mastercard (MA), PayPal (PYPL), and Stripe (source_id: 7, action: unchanged)
+2026-03-27 01:00:50,144 - news_scraper.scrapers - INFO - Saved article: Bitcoin holds $70K – But seller pressure still caps BTC’s upside (source_id: 6, action: unchanged)
+2026-03-27 01:00:50,152 - news_scraper.scrapers - INFO - Saved article: Microsoft (MSFT) Stock Plunges 32% as AI Copilot Struggles Disappoint Wall Street (source_id: 7, action: unchanged)
+2026-03-27 01:00:50,162 - news_scraper.base_scraper - INFO - Scraping completed for cryptoslate: 0 scraped, 13 failed
+2026-03-27 01:00:50,164 - news_scraper.scheduler - INFO - Completed cryptoslate: 0 scraped, 13 failed
+2026-03-27 01:00:50,460 - news_scraper.embeddings - INFO - Processed batch 1: 8/8 successful
+2026-03-27 01:01:19,741 - news_scraper.scheduler - INFO - Scraping source: ambcrypto
+2026-03-27 01:01:19,820 - news_scraper.base_scraper - INFO - Initialized ambcrypto scraper with 27 existing URLs
+2026-03-27 01:01:19,837 - news_scraper.scrapers - INFO - Loaded 6 RSS feeds for crypto scraping
+2026-03-27 01:01:19,839 - news_scraper.base_scraper - INFO - Starting scraping for ambcrypto
+2026-03-27 01:01:19,870 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.newsbtc.com/feed/
+2026-03-27 01:01:22,870 - news_scraper.scrapers - INFO - Processing feed: NewsBTC (10 entries)
+2026-03-27 01:01:22,875 - news_scraper.scrapers - INFO - Added 10 new articles from NewsBTC
+2026-03-27 01:01:22,876 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://cryptoslate.com/feed/
+2026-03-27 01:01:25,348 - news_scraper.scrapers - INFO - Processing feed: CryptoSlate (10 entries)
+2026-03-27 01:01:25,354 - news_scraper.scrapers - INFO - Added 10 new articles from CryptoSlate
+2026-03-27 01:01:25,358 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://ambcrypto.com/feed/
+2026-03-27 01:01:26,177 - news_scraper.scrapers - INFO - Processing feed: AMBCrypto (16 entries)
+2026-03-27 01:01:26,184 - news_scraper.scrapers - INFO - Added 10 new articles from AMBCrypto
+2026-03-27 01:01:26,185 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://blockonomi.com/feed/
+2026-03-27 01:01:27,994 - news_scraper.scrapers - INFO - Processing feed: Blockonomi (10 entries)
+2026-03-27 01:01:28,000 - news_scraper.scrapers - INFO - Added 10 new articles from Blockonomi
+2026-03-27 01:01:28,002 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://decrypt.co/feed
+2026-03-27 01:01:29,715 - news_scraper.scrapers - INFO - Processing feed: Decrypt (36 entries)
+2026-03-27 01:01:29,723 - news_scraper.scrapers - INFO - Added 10 new articles from Decrypt
+2026-03-27 01:01:29,724 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.cnbc.com/id/100003114/device/rss/rss.html
+2026-03-27 01:01:31,421 - news_scraper.scrapers - INFO - Processing feed: US Top News and Analysis (30 entries)
+2026-03-27 01:01:31,425 - news_scraper.scrapers - INFO - Added 10 new articles from US Top News and Analysis
+2026-03-27 01:01:31,427 - news_scraper.scrapers - INFO - Total RSS articles collected: 60
+2026-03-27 01:01:31,428 - news_scraper.base_scraper - INFO - Found 60 article links for ambcrypto
+2026-03-27 01:01:31,429 - news_scraper.base_scraper - INFO - Found 60 new articles to scrape
+2026-03-27 01:01:31,430 - news_scraper.base_scraper - INFO - Limited to 50 articles for this session
+2026-03-27 01:08:38,251 - news_scraper.api_news_service - WARNING - Failed to fetch full content for https://www.dw.com/en/indians-flock-to-fuel-pumps-as-iran-war-drives-shortage-fears/live-76516044: 
+2026-03-27 01:08:38,299 - news_scraper.database - ERROR - Failed to get or create source 'ambcrypto': 
+2026-03-27 01:08:38,300 - news_scraper.database - WARNING - Failed to get or create source: ambcrypto
+2026-03-27 01:08:38,307 - news_scraper.database - ERROR - Failed to get or create source 'ambcrypto': 
+2026-03-27 01:08:38,309 - news_scraper.database - WARNING - Failed to get or create source: ambcrypto
+2026-03-27 01:08:38,466 - news_scraper.scrapers - INFO - Saved article: Expert Analyst Says Bitcoin Expansion Is Over, It Won’t Rally Until This Is Over (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,487 - news_scraper.scrapers - INFO - Saved article: Playnance G Coin shifts from breakout launch to utility test (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,489 - news_scraper.scrapers - INFO - Saved article: Dogecoin Could Offer Best Risk-Reward Since October 2023, Analyst Says (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,491 - news_scraper.scrapers - INFO - Saved article: How Cravin uses provably fair verification in mystery boxes (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,499 - news_scraper.scrapers - INFO - Saved article: Bitcoin Recovery Lacks One Key Ingredient, Glassnode Warns (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,507 - news_scraper.scrapers - INFO - Saved article: The $100 billion corporate Bitcoin surge is down to one buyer as other companies stop adding (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,526 - news_scraper.scrapers - INFO - Saved article: Binance Just Declared War On Quiet Market Makers —3 Red Flags Every Trader Should Watch (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,534 - news_scraper.scrapers - INFO - Saved article: Ethereum Accumulation Map Reveals Price Roadmap To $20,000 (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,541 - news_scraper.scrapers - INFO - Saved article: Bitcoin Rangebound At $70K While Macro Cracks Deepen – Why Analyst Says It’s Too Early To Call A Bottom (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,554 - news_scraper.scrapers - INFO - Saved article: Senate Housing Bill Adds Temporary CBDC Ban Clause (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,563 - news_scraper.scrapers - INFO - Saved article: PIPPIN crashes 33% in a day: What triggered the sell-off? (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,567 - news_scraper.scrapers - INFO - Saved article: Over $6B: XAUT Futures Volume Rewrites Records On Binance (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,569 - news_scraper.scrapers - INFO - Saved article: Hackers sneak crypto wallet-stealing code into a popular AI tool that runs every time (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,584 - news_scraper.scrapers - INFO - Saved article: How Bittensor’s [TAO] AI-driven 140% surge could fuel altcoin rotation (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,586 - news_scraper.scrapers - INFO - Saved article: Bitcoin miners start funding pivot to AI with debt while selling BTC to stay liquid (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,588 - news_scraper.scrapers - INFO - Saved article: A new US rule wiped $5B off Circle — but it may hurt Coinbase more (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,589 - news_scraper.scrapers - INFO - Saved article: Ethereum Foundation Holds Invite-Only Event For Institutions In New York City – What Is It About? (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,591 - news_scraper.scrapers - INFO - Saved article: MARA Holdings’ Bitcoin Sell-Off: 15,000 BTC Liquidated As Prices Crash Below $69,000 (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,593 - news_scraper.scrapers - INFO - Saved article: Bitcoin braces for $14B Options expiry – Will BTC’s $75K ceiling crack? (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,601 - news_scraper.scrapers - INFO - Saved article: Morgan Stanley’s first bank-issued Bitcoin ETF is “imminent” – will sell BTC directly to clients (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,602 - news_scraper.scrapers - INFO - Saved article: The Bitcoin Price Bottom Is Close, But There Is Still A Crash Below $60,000 Left (source_id: 4, action: unchanged)
+2026-03-27 01:08:38,604 - news_scraper.scrapers - INFO - Saved article: Tether Rolls Out XAUt on BNB Chain as Gold Enters Crypto (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,621 - news_scraper.scrapers - INFO - Saved article: Bitcoin falling after Fed meetings is becoming systemic — and it’s not about the decision (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,638 - news_scraper.scrapers - INFO - Saved article: BlackRock Adds Chronicle to Verify Tokenized BUIDL (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,639 - news_scraper.scrapers - INFO - Saved article: As quantum ‘Q-Day’ jumps to 2029, Ethereum faces a new fight over what to do with coins left in old wallets (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,640 - news_scraper.scrapers - INFO - Saved article: Hong Kong expands police powers to access encrypted devices, raising privacy concerns for crypto users (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,653 - news_scraper.scrapers - INFO - Saved article: Vertiv (VRT) Stock Plunges 10% After Reaching Record Peak of $277.87 (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,654 - news_scraper.scrapers - INFO - Saved article: Goldman Sachs-Backed Canton Links With LayerZero (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,665 - news_scraper.scrapers - INFO - Saved article: Recession fears rise as Bitcoin chops at $70K – Is an H2 rally forming? (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,667 - news_scraper.scrapers - INFO - Saved article: Bitcoin is down 43%, yet almost every other crypto has lost more (source_id: 5, action: unchanged)
+2026-03-27 01:08:38,669 - news_scraper.scrapers - INFO - Saved article: OKX Delays U.S. IPO, Cites Weak Crypto Listings (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,671 - news_scraper.scrapers - INFO - Saved article: What trends will shape the crypto landscape this year? (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,672 - news_scraper.scrapers - INFO - Saved article: Bitcoin holds $70K – But seller pressure still caps BTC’s upside (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,673 - news_scraper.scrapers - INFO - Saved article: Snap (SNAP) Stock Plummets 12% After EU Launches Child Safety Investigation (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,675 - news_scraper.scrapers - INFO - Saved article: Best Crypto Presale Sees Traders Rushing to Reserve Pepeto Tokens Before Binance Listing as SHIB and PEPE Gain (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,679 - news_scraper.scrapers - INFO - Saved article: Microsoft (MSFT) Stock Plunges 32% as AI Copilot Struggles Disappoint Wall Street (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,680 - news_scraper.scrapers - INFO - Saved article: Chainlink stalls: Can LINK reach $12 as whale wallets cross 25K? (source_id: 6, action: inserted)
+2026-03-27 01:08:38,681 - news_scraper.scrapers - INFO - Saved article: ‘In a few weeks’ – SEC’s tokenization exemption nears, but lawmakers worry (source_id: 6, action: updated)
+2026-03-27 01:08:38,686 - news_scraper.scrapers - INFO - Saved article: Wikipedia Bans AI-Generated Text in Articles Under New Editing Policy (source_id: 8, action: inserted)
+2026-03-27 01:08:38,687 - news_scraper.scrapers - INFO - Saved article: Stablecoin Giant Tether Expands Leading Gold-Backed Token to BNB Chain (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,688 - news_scraper.scrapers - INFO - Saved article: MARA Stock Pops on $1.1 Billion Bitcoin Sale as BTC Miner Buys Back Convertible Debt (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,691 - news_scraper.scrapers - INFO - Saved article: Brazil Passes Law to Use Seized Bitcoin, Crypto to Fund Public Security Measures (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,694 - news_scraper.scrapers - INFO - Saved article: Retail Investors Growing Exposed to Bitcoin Giant Strategy’s STRC Over MSTR, Says CEO (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,695 - news_scraper.scrapers - INFO - Saved article: What Is Bluesky? The Decentralized Social Media Rival to Elon Musk's X (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,695 - news_scraper.scrapers - INFO - Saved article: UK Sanctions Crypto Marketplace Xinbi in Crackdown on Southeast Asian Scam Centers (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,704 - news_scraper.scrapers - INFO - Saved article: Is AGI Here? Not Even Close, New AI Benchmark Suggests (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,705 - news_scraper.scrapers - INFO - Saved article: XRP Falls to 2-Week Low as Ripple Deploys AI to Boost Ledger Security (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,706 - news_scraper.scrapers - INFO - Saved article: MARA taps Bitcoin reserves to cut $1B in debt as corporate treasury strategies evolve (source_id: 6, action: unchanged)
+2026-03-27 01:08:38,707 - news_scraper.scrapers - INFO - Saved article: Venture Firm Founder Offers Bounty to Help Recover $42 Million in Stolen Bitcoin, Crypto (source_id: 8, action: unchanged)
+2026-03-27 01:08:38,709 - news_scraper.scrapers - INFO - Saved article: FTC Issues Debanking Warnings to Visa (V), Mastercard (MA), PayPal (PYPL), and Stripe (source_id: 7, action: unchanged)
+2026-03-27 01:08:38,722 - news_scraper.base_scraper - INFO - Scraping completed for ambcrypto: 3 scraped, 0 failed
+2026-03-27 01:08:38,725 - news_scraper.scheduler - INFO - Completed ambcrypto: 3 scraped, 0 failed
+2026-03-27 01:08:38,869 - news_scraper.embeddings - INFO - Processed batch 2: 8/8 successful
+2026-03-27 01:09:04,823 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/25/g-s1-115053/rubio-plans-travel-to-france-to-sell-iran-war-to-skeptical-g7-allies "HTTP/1.1 200 OK"
+2026-03-27 01:09:04,830 - news_scraper.scheduler - INFO - Scraping source: blockonomi
+2026-03-27 01:09:04,890 - news_scraper.base_scraper - INFO - Initialized blockonomi scraper with 23 existing URLs
+2026-03-27 01:09:04,909 - news_scraper.scrapers - INFO - Loaded 6 RSS feeds for crypto scraping
+2026-03-27 01:09:04,911 - news_scraper.base_scraper - INFO - Starting scraping for blockonomi
+2026-03-27 01:09:04,945 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.newsbtc.com/feed/
+2026-03-27 01:09:06,194 - news_scraper.scrapers - INFO - Processing feed: NewsBTC (10 entries)
+2026-03-27 01:09:06,200 - news_scraper.scrapers - INFO - Added 10 new articles from NewsBTC
+2026-03-27 01:09:06,202 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://cryptoslate.com/feed/
+2026-03-27 01:09:08,230 - news_scraper.scrapers - INFO - Processing feed: CryptoSlate (10 entries)
+2026-03-27 01:09:08,236 - news_scraper.scrapers - INFO - Added 9 new articles from CryptoSlate
+2026-03-27 01:09:08,237 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://ambcrypto.com/feed/
+2026-03-27 01:09:08,769 - news_scraper.scrapers - INFO - Processing feed: AMBCrypto (16 entries)
+2026-03-27 01:09:08,773 - news_scraper.scrapers - INFO - Added 10 new articles from AMBCrypto
+2026-03-27 01:09:08,774 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://blockonomi.com/feed/
+2026-03-27 01:09:09,393 - news_scraper.scrapers - INFO - Processing feed: Blockonomi (10 entries)
+2026-03-27 01:09:09,397 - news_scraper.scrapers - INFO - Added 10 new articles from Blockonomi
+2026-03-27 01:09:09,397 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://decrypt.co/feed
+2026-03-27 01:09:10,292 - news_scraper.scrapers - INFO - Processing feed: Decrypt (36 entries)
+2026-03-27 01:09:10,295 - news_scraper.scrapers - INFO - Added 10 new articles from Decrypt
+2026-03-27 01:09:10,296 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.cnbc.com/id/100003114/device/rss/rss.html
+2026-03-27 01:09:11,298 - news_scraper.scrapers - INFO - Processing feed: US Top News and Analysis (30 entries)
+2026-03-27 01:09:11,300 - news_scraper.scrapers - INFO - Added 10 new articles from US Top News and Analysis
+2026-03-27 01:09:11,301 - news_scraper.scrapers - INFO - Total RSS articles collected: 59
+2026-03-27 01:09:11,302 - news_scraper.base_scraper - INFO - Found 59 article links for blockonomi
+2026-03-27 01:09:11,303 - news_scraper.base_scraper - INFO - Found 59 new articles to scrape
+2026-03-27 01:09:11,304 - news_scraper.base_scraper - INFO - Limited to 50 articles for this session
+2026-03-27 01:09:55,389 - news_scraper.scrapers - ERROR - Error parsing crypto article https://www.newsbtc.com/breaking-news-ticker/binance-war-on-market-makers-3-red-flags-every-trader-should-watch/: Article `download()` failed with HTTPSConnectionPool(host='www.newsbtc.com', port=443): Max retries exceeded with url: /breaking-news-ticker/binance-war-on-market-makers-3-red-flags-every-trader-should-watch/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)'))) on URL https://www.newsbtc.com/breaking-news-ticker/binance-war-on-market-makers-3-red-flags-every-trader-should-watch/
+2026-03-27 01:10:00,933 - news_scraper.scrapers - ERROR - Error parsing crypto article https://www.newsbtc.com/news/ethereum/ethereum-roadmap-to-20000/: Article `download()` failed with HTTPSConnectionPool(host='www.newsbtc.com', port=443): Max retries exceeded with url: /news/ethereum/ethereum-roadmap-to-20000/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)'))) on URL https://www.newsbtc.com/news/ethereum/ethereum-roadmap-to-20000/
+2026-03-27 01:13:46,680 - news_scraper.database - ERROR - Failed to get or create source 'blockonomi': 
+2026-03-27 01:13:46,682 - news_scraper.database - WARNING - Failed to get or create source: blockonomi
+2026-03-27 01:13:46,731 - news_scraper.database - ERROR - Failed to get or create source 'blockonomi': 
+2026-03-27 01:13:46,734 - news_scraper.database - WARNING - Failed to get or create source: blockonomi
+2026-03-27 01:13:46,820 - news_scraper.scrapers - INFO - Saved article: Over $6B: XAUT Futures Volume Rewrites Records On Binance (source_id: 4, action: unchanged)
+2026-03-27 01:13:46,821 - news_scraper.scrapers - INFO - Saved article: Ethereum Foundation Holds Invite-Only Event For Institutions In New York City – What Is It About? (source_id: 4, action: unchanged)
+2026-03-27 01:13:46,826 - news_scraper.scrapers - INFO - Saved article: As quantum ‘Q-Day’ jumps to 2029, Ethereum faces a new fight over what to do with coins left in old wallets (source_id: 5, action: unchanged)
+2026-03-27 01:13:46,830 - news_scraper.scrapers - INFO - Saved article: How Cravin uses provably fair verification in mystery boxes (source_id: 5, action: unchanged)
+2026-03-27 01:13:46,838 - news_scraper.scrapers - INFO - Saved article: Expert Analyst Says Bitcoin Expansion Is Over, It Won’t Rally Until This Is Over (source_id: 4, action: unchanged)
+2026-03-27 01:13:46,842 - news_scraper.scrapers - INFO - Saved article: Morgan Stanley’s first bank-issued Bitcoin ETF is “imminent” – will sell BTC directly to clients (source_id: 5, action: unchanged)
+2026-03-27 01:13:46,844 - news_scraper.scrapers - INFO - Saved article: Bitcoin Recovery Lacks One Key Ingredient, Glassnode Warns (source_id: 4, action: unchanged)
+2026-03-27 01:13:46,845 - news_scraper.scrapers - INFO - Saved article: A new US rule wiped $5B off Circle — but it may hurt Coinbase more (source_id: 5, action: unchanged)
+2026-03-27 01:13:46,846 - news_scraper.scrapers - INFO - Saved article: MARA Holdings’ Bitcoin Sell-Off: 15,000 BTC Liquidated As Prices Crash Below $69,000 (source_id: 4, action: unchanged)
+2026-03-27 01:13:46,847 - news_scraper.scrapers - INFO - Saved article: Hackers sneak crypto wallet-stealing code into a popular AI tool that runs every time (source_id: 5, action: unchanged)
+2026-03-27 01:13:46,865 - news_scraper.scrapers - INFO - Saved article: Bitcoin miners start funding pivot to AI with debt while selling BTC to stay liquid (source_id: 5, action: unchanged)
+2026-03-27 01:13:46,898 - news_scraper.scrapers - INFO - Saved article: The Bitcoin Price Bottom Is Close, But There Is Still A Crash Below $60,000 Left (source_id: 4, action: unchanged)
+2026-03-27 01:13:46,919 - news_scraper.scrapers - INFO - Saved article: MARA taps Bitcoin reserves to cut $1B in debt as corporate treasury strategies evolve (source_id: 6, action: unchanged)
+2026-03-27 01:13:46,934 - news_scraper.scrapers - INFO - Saved article: XRP Falls to 2-Week Low as Ripple Deploys AI to Boost Ledger Security (source_id: 8, action: unchanged)
+2026-03-27 01:13:46,938 - news_scraper.scrapers - INFO - Saved article: Retail Investors Growing Exposed to Bitcoin Giant Strategy’s STRC Over MSTR, Says CEO (source_id: 8, action: unchanged)
+2026-03-27 01:13:46,940 - news_scraper.scrapers - INFO - Saved article: What Is Bluesky? The Decentralized Social Media Rival to Elon Musk's X (source_id: 8, action: unchanged)
+2026-03-27 01:13:46,947 - news_scraper.scrapers - INFO - Saved article: What trends will shape the crypto landscape this year? (source_id: 6, action: unchanged)
+2026-03-27 01:13:46,948 - news_scraper.scrapers - INFO - Saved article: Bitcoin braces for $14B Options expiry – Will BTC’s $75K ceiling crack? (source_id: 6, action: unchanged)
+2026-03-27 01:13:46,950 - news_scraper.scrapers - INFO - Saved article: UK Sanctions Crypto Marketplace Xinbi in Crackdown on Southeast Asian Scam Centers (source_id: 8, action: unchanged)
+2026-03-27 01:13:46,997 - news_scraper.scrapers - INFO - Saved article: Chainlink stalls: Can LINK reach $12 as whale wallets cross 25K? (source_id: 6, action: unchanged)
+2026-03-27 01:13:47,025 - news_scraper.scrapers - INFO - Saved article: PIPPIN crashes 33% in a day: What triggered the sell-off? (source_id: 6, action: unchanged)
+2026-03-27 01:13:47,026 - news_scraper.scrapers - INFO - Saved article: How Bittensor’s [TAO] AI-driven 140% surge could fuel altcoin rotation (source_id: 6, action: unchanged)
+2026-03-27 01:13:47,031 - news_scraper.scrapers - INFO - Saved article: Best Crypto Presale Sees Traders Rushing to Reserve Pepeto Tokens Before Binance Listing as SHIB and PEPE Gain (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,044 - news_scraper.scrapers - INFO - Saved article: Wikipedia Bans AI-Generated Text in Articles Under New Editing Policy (source_id: 8, action: unchanged)
+2026-03-27 01:13:47,047 - news_scraper.scrapers - INFO - Saved article: Recession fears rise as Bitcoin chops at $70K – Is an H2 rally forming? (source_id: 6, action: unchanged)
+2026-03-27 01:13:47,048 - news_scraper.scrapers - INFO - Saved article: MARA Stock Pops on $1.1 Billion Bitcoin Sale as BTC Miner Buys Back Convertible Debt (source_id: 8, action: unchanged)
+2026-03-27 01:13:47,050 - news_scraper.scrapers - INFO - Saved article: OKX Delays U.S. IPO, Cites Weak Crypto Listings (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,051 - news_scraper.scrapers - INFO - Saved article: Goldman Sachs-Backed Canton Links With LayerZero (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,073 - news_scraper.scrapers - INFO - Saved article: Dogecoin Could Offer Best Risk-Reward Since October 2023, Analyst Says (source_id: 4, action: unchanged)
+2026-03-27 01:13:47,074 - news_scraper.scrapers - INFO - Saved article: The $100 billion corporate Bitcoin surge is down to one buyer as other companies stop adding (source_id: 5, action: unchanged)
+2026-03-27 01:13:47,076 - news_scraper.scrapers - INFO - Saved article: BlackRock Adds Chronicle to Verify Tokenized BUIDL (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,078 - news_scraper.scrapers - INFO - Saved article: Playnance G Coin shifts from breakout launch to utility test (source_id: 5, action: unchanged)
+2026-03-27 01:13:47,085 - news_scraper.scrapers - INFO - Saved article: Bitcoin is down 43%, yet almost every other crypto has lost more (source_id: 5, action: unchanged)
+2026-03-27 01:13:47,087 - news_scraper.scrapers - INFO - Saved article: Tether Rolls Out XAUt on BNB Chain as Gold Enters Crypto (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,109 - news_scraper.scrapers - INFO - Saved article: Bitcoin holds $70K – But seller pressure still caps BTC’s upside (source_id: 6, action: unchanged)
+2026-03-27 01:13:47,115 - news_scraper.scrapers - INFO - Saved article: Is AGI Here? Not Even Close, New AI Benchmark Suggests (source_id: 8, action: unchanged)
+2026-03-27 01:13:47,119 - news_scraper.scrapers - INFO - Saved article: Bitcoin Rangebound At $70K While Macro Cracks Deepen – Why Analyst Says It’s Too Early To Call A Bottom (source_id: 4, action: unchanged)
+2026-03-27 01:13:47,136 - news_scraper.scrapers - INFO - Saved article: ‘In a few weeks’ – SEC’s tokenization exemption nears, but lawmakers worry (source_id: 6, action: unchanged)
+2026-03-27 01:13:47,141 - news_scraper.scrapers - INFO - Saved article: Best Crypto to Invest in for 2026 as SEC Classifies 16 Commodities While Pepeto Offers a Rare 220x Before Listing (source_id: 7, action: inserted)
+2026-03-27 01:13:47,145 - news_scraper.scrapers - INFO - Saved article: Hong Kong expands police powers to access encrypted devices, raising privacy concerns for crypto users (source_id: 6, action: unchanged)
+2026-03-27 01:13:47,150 - news_scraper.scrapers - INFO - Saved article: Brazil Passes Law to Use Seized Bitcoin, Crypto to Fund Public Security Measures (source_id: 8, action: unchanged)
+2026-03-27 01:13:47,152 - news_scraper.scrapers - INFO - Saved article: Vertiv (VRT) Stock Plunges 10% After Reaching Record Peak of $277.87 (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,154 - news_scraper.scrapers - INFO - Saved article: Trump says Iran let 10 oil ships through Strait of Hormuz as 'present' to U.S. (source_id: 9, action: inserted)
+2026-03-27 01:13:47,162 - news_scraper.scrapers - INFO - Saved article: Venture Firm Founder Offers Bounty to Help Recover $42 Million in Stolen Bitcoin, Crypto (source_id: 8, action: unchanged)
+2026-03-27 01:13:47,196 - news_scraper.scrapers - INFO - Saved article: Stablecoin Giant Tether Expands Leading Gold-Backed Token to BNB Chain (source_id: 8, action: unchanged)
+2026-03-27 01:13:47,217 - news_scraper.scrapers - INFO - Saved article: FTC Issues Debanking Warnings to Visa (V), Mastercard (MA), PayPal (PYPL), and Stripe (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,233 - news_scraper.scrapers - INFO - Saved article: Microsoft (MSFT) Stock Plunges 32% as AI Copilot Struggles Disappoint Wall Street (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,242 - news_scraper.scrapers - INFO - Saved article: Senate Housing Bill Adds Temporary CBDC Ban Clause (source_id: 7, action: unchanged)
+2026-03-27 01:13:47,273 - news_scraper.base_scraper - INFO - Scraping completed for blockonomi: 2 scraped, 2 failed
+2026-03-27 01:13:47,288 - news_scraper.scheduler - INFO - Completed blockonomi: 2 scraped, 2 failed
+2026-03-27 01:13:47,540 - news_scraper.embeddings - INFO - Processed batch 3: 8/8 successful
+2026-03-27 01:14:22,841 - news_scraper.scheduler - INFO - Scraping source: decrypt
+2026-03-27 01:14:22,873 - news_scraper.api_news_service - WARNING - Failed to fetch full content for https://www.dw.com/en/iran-war-us-reportedly-offers-15-point-plan-to-end-war/live-76515461: 
+2026-03-27 01:14:22,905 - news_scraper.base_scraper - INFO - Initialized decrypt scraper with 12 existing URLs
+2026-03-27 01:14:22,922 - news_scraper.scrapers - INFO - Loaded 6 RSS feeds for crypto scraping
+2026-03-27 01:14:22,924 - news_scraper.base_scraper - INFO - Starting scraping for decrypt
+2026-03-27 01:14:22,953 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.newsbtc.com/feed/
+2026-03-27 01:14:24,598 - news_scraper.scrapers - INFO - Processing feed: NewsBTC (10 entries)
+2026-03-27 01:14:24,601 - news_scraper.scrapers - INFO - Added 10 new articles from NewsBTC
+2026-03-27 01:14:24,602 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://cryptoslate.com/feed/
+2026-03-27 01:14:31,346 - news_scraper.scrapers - WARNING - No entries found in RSS feed: https://cryptoslate.com/feed/
+2026-03-27 01:14:31,350 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://ambcrypto.com/feed/
+2026-03-27 01:14:34,204 - news_scraper.scrapers - INFO - Processing feed: AMBCrypto (16 entries)
+2026-03-27 01:14:34,216 - news_scraper.scrapers - INFO - Added 10 new articles from AMBCrypto
+2026-03-27 01:14:34,217 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://blockonomi.com/feed/
+2026-03-27 01:14:35,688 - news_scraper.scrapers - INFO - Processing feed: Blockonomi (10 entries)
+2026-03-27 01:14:35,700 - news_scraper.scrapers - INFO - Added 10 new articles from Blockonomi
+2026-03-27 01:14:35,701 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://decrypt.co/feed
+2026-03-27 01:14:36,705 - news_scraper.scrapers - INFO - Processing feed: Decrypt (36 entries)
+2026-03-27 01:14:36,711 - news_scraper.scrapers - INFO - Added 10 new articles from Decrypt
+2026-03-27 01:14:36,714 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.cnbc.com/id/100003114/device/rss/rss.html
+2026-03-27 01:14:37,944 - news_scraper.scrapers - INFO - Processing feed: US Top News and Analysis (30 entries)
+2026-03-27 01:14:37,949 - news_scraper.scrapers - INFO - Added 10 new articles from US Top News and Analysis
+2026-03-27 01:14:37,950 - news_scraper.scrapers - INFO - Total RSS articles collected: 50
+2026-03-27 01:14:37,951 - news_scraper.base_scraper - INFO - Found 50 article links for decrypt
+2026-03-27 01:14:37,952 - news_scraper.base_scraper - INFO - Found 50 new articles to scrape
+2026-03-27 01:14:47,781 - news_scraper.scrapers - ERROR - Error parsing crypto article https://www.newsbtc.com/news/bitcoin/bitcoin-expansion-is-over/: Article `download()` failed with HTTPSConnectionPool(host='www.newsbtc.com', port=443): Max retries exceeded with url: /news/bitcoin/bitcoin-expansion-is-over/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)'))) on URL https://www.newsbtc.com/news/bitcoin/bitcoin-expansion-is-over/
+2026-03-27 01:19:31,001 - news_scraper.api_news_service - WARNING - Failed to fetch full content for https://www.dw.com/en/iran-war-tehran-says-us-is-negotiating-with-itself/live-76515461: 
+2026-03-27 01:19:31,071 - news_scraper.database - ERROR - Failed to get or create source 'decrypt': 
+2026-03-27 01:19:31,073 - news_scraper.database - WARNING - Failed to get or create source: decrypt
+2026-03-27 01:19:31,075 - news_scraper.database - ERROR - Failed to get or create source 'decrypt': 
+2026-03-27 01:19:31,076 - news_scraper.database - WARNING - Failed to get or create source: decrypt
+2026-03-27 01:19:31,102 - news_scraper.database - ERROR - Failed to get or create source 'decrypt': 
+2026-03-27 01:19:31,103 - news_scraper.database - WARNING - Failed to get or create source: decrypt
+2026-03-27 01:19:31,139 - news_scraper.database - ERROR - Failed to get or create source 'decrypt': 
+2026-03-27 01:19:31,141 - news_scraper.database - WARNING - Failed to get or create source: decrypt
+2026-03-27 01:19:31,267 - news_scraper.scrapers - INFO - Saved article: Wikipedia Bans AI-Generated Text in Articles Under New Editing Policy (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,290 - news_scraper.scrapers - INFO - Saved article: Over $6B: XAUT Futures Volume Rewrites Records On Binance (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,346 - news_scraper.scrapers - INFO - Saved article: Is AGI Here? Not Even Close, New AI Benchmark Suggests (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,400 - news_scraper.scrapers - INFO - Saved article: Stablecoin Giant Tether Expands Leading Gold-Backed Token to BNB Chain (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,455 - news_scraper.scrapers - INFO - Saved article: Bitcoin braces for $14B Options expiry – Will BTC’s $75K ceiling crack? (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,616 - news_scraper.scrapers - INFO - Saved article: Bitcoin holds $70K – But seller pressure still caps BTC’s upside (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,618 - news_scraper.scrapers - INFO - Saved article: XRP Falls to 2-Week Low as Ripple Deploys AI to Boost Ledger Security (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,620 - news_scraper.scrapers - INFO - Saved article: Venture Firm Founder Offers Bounty to Help Recover $42 Million in Stolen Bitcoin, Crypto (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,622 - news_scraper.scrapers - INFO - Saved article: Retail Investors Growing Exposed to Bitcoin Giant Strategy’s STRC Over MSTR, Says CEO (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,636 - news_scraper.scrapers - INFO - Saved article: Bitcoin Recovery Lacks One Key Ingredient, Glassnode Warns (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,638 - news_scraper.scrapers - INFO - Saved article: How Bittensor’s [TAO] AI-driven 140% surge could fuel altcoin rotation (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,645 - news_scraper.scrapers - INFO - Saved article: Recession fears rise as Bitcoin chops at $70K – Is an H2 rally forming? (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,650 - news_scraper.scrapers - INFO - Saved article: Brazil Passes Law to Use Seized Bitcoin, Crypto to Fund Public Security Measures (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,654 - news_scraper.scrapers - INFO - Saved article: Hong Kong expands police powers to access encrypted devices, raising privacy concerns for crypto users (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,661 - news_scraper.scrapers - INFO - Saved article: UK Sanctions Crypto Marketplace Xinbi in Crackdown on Southeast Asian Scam Centers (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,672 - news_scraper.scrapers - INFO - Saved article: Goldman Sachs-Backed Canton Links With LayerZero (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,673 - news_scraper.scrapers - INFO - Saved article: Microsoft (MSFT) Stock Plunges 32% as AI Copilot Struggles Disappoint Wall Street (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,675 - news_scraper.scrapers - INFO - Saved article: Tether Rolls Out XAUt on BNB Chain as Gold Enters Crypto (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,679 - news_scraper.scrapers - INFO - Saved article: FTC Issues Debanking Warnings to Visa (V), Mastercard (MA), PayPal (PYPL), and Stripe (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,685 - news_scraper.scrapers - INFO - Saved article: Vertiv (VRT) Stock Plunges 10% After Reaching Record Peak of $277.87 (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,686 - news_scraper.scrapers - INFO - Saved article: MARA taps Bitcoin reserves to cut $1B in debt as corporate treasury strategies evolve (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,700 - news_scraper.scrapers - INFO - Saved article: The Bitcoin Price Bottom Is Close, But There Is Still A Crash Below $60,000 Left (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,741 - news_scraper.scrapers - INFO - Saved article: Chainlink stalls: Can LINK reach $12 as whale wallets cross 25K? (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,809 - news_scraper.scrapers - INFO - Saved article: BlackRock Adds Chronicle to Verify Tokenized BUIDL (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,812 - news_scraper.scrapers - INFO - Saved article: Best Crypto Presale Sees Traders Rushing to Reserve Pepeto Tokens Before Binance Listing as SHIB and PEPE Gain (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,814 - news_scraper.scrapers - INFO - Saved article: Ethereum Foundation Holds Invite-Only Event For Institutions In New York City – What Is It About? (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,816 - news_scraper.scrapers - INFO - Saved article: Trump says Iran let 10 oil ships through Strait of Hormuz as a 'present' to U.S. (source_id: 9, action: updated)
+2026-03-27 01:19:31,821 - news_scraper.scrapers - INFO - Saved article: OKX Delays U.S. IPO, Cites Weak Crypto Listings (source_id: 7, action: unchanged)
+2026-03-27 01:19:31,823 - news_scraper.scrapers - INFO - Saved article: Binance Just Declared War On Quiet Market Makers —3 Red Flags Every Trader Should Watch (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,836 - news_scraper.scrapers - INFO - Saved article: MARA Stock Pops on $1.1 Billion Bitcoin Sale as BTC Miner Buys Back Convertible Debt (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,838 - news_scraper.scrapers - INFO - Saved article: What trends will shape the crypto landscape this year? (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,842 - news_scraper.scrapers - INFO - Saved article: PIPPIN crashes 33% in a day: What triggered the sell-off? (source_id: 6, action: unchanged)
+2026-03-27 01:19:31,858 - news_scraper.scrapers - INFO - Saved article: Ethereum Accumulation Map Reveals Price Roadmap To $20,000 (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,868 - news_scraper.scrapers - INFO - Saved article: Dogecoin Could Offer Best Risk-Reward Since October 2023, Analyst Says (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,907 - news_scraper.scrapers - INFO - Saved article: ‘In a few weeks’ – SEC’s tokenization exemption nears, but lawmakers worry (source_id: 6, action: updated)
+2026-03-27 01:19:31,934 - news_scraper.scrapers - INFO - Saved article: Trump to Congress: End DHS shutdown or face 'very drastic measures' (source_id: 9, action: inserted)
+2026-03-27 01:19:31,970 - news_scraper.scrapers - INFO - Saved article: Meta boosts investment in West Texas AI data center by over sixfold to $10 billion (source_id: 9, action: inserted)
+2026-03-27 01:19:31,980 - news_scraper.scrapers - INFO - Saved article: Bitcoin Rangebound At $70K While Macro Cracks Deepen – Why Analyst Says It’s Too Early To Call A Bottom (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,984 - news_scraper.scrapers - INFO - Saved article: What Is Bluesky? The Decentralized Social Media Rival to Elon Musk's X (source_id: 8, action: unchanged)
+2026-03-27 01:19:31,986 - news_scraper.scrapers - INFO - Saved article: MARA Holdings’ Bitcoin Sell-Off: 15,000 BTC Liquidated As Prices Crash Below $69,000 (source_id: 4, action: unchanged)
+2026-03-27 01:19:31,989 - news_scraper.scrapers - INFO - Saved article: Senate Housing Bill Adds Temporary CBDC Ban Clause (source_id: 7, action: unchanged)
+2026-03-27 01:19:32,000 - news_scraper.scrapers - INFO - Saved article: Best Crypto to Invest in for 2026 as SEC Classifies 16 Commodities While Pepeto Offers a Rare 220x Before Listing (source_id: 7, action: unchanged)
+2026-03-27 01:19:32,280 - news_scraper.scrapers - INFO - Saved article: Iran war will spare no major economy, says OECD — but the UK is more vulnerable than others (source_id: 9, action: inserted)
+2026-03-27 01:19:32,282 - news_scraper.scrapers - INFO - Saved article: MLB faces a historic shift as potential lockout, media rights and other league changes loom (source_id: 9, action: inserted)
+2026-03-27 01:19:32,284 - news_scraper.scrapers - INFO - Saved article: Trump wants to squeeze Iran into peace talks with more troops — but it may backfire, analysts say (source_id: 9, action: inserted)
+2026-03-27 01:19:32,293 - news_scraper.scrapers - INFO - Saved article: What comes next? Three attack scenarios as U.S. sends thousands more troops to Middle East (source_id: 9, action: inserted)
+2026-03-27 01:19:32,304 - news_scraper.scrapers - INFO - Saved article: Major outgoing CEOs are citing AI as a factor in their decisions to step down (source_id: 9, action: inserted)
+2026-03-27 01:19:32,333 - news_scraper.scrapers - INFO - Saved article: Federal Reserve urges judge to deny bid to revive Jerome Powell probe subpoenas (source_id: 9, action: inserted)
+2026-03-27 01:19:32,344 - news_scraper.scrapers - INFO - Saved article: Meta's stock drops almost 8% as 2 court defeats add to Zuckerberg's recent woes (source_id: 9, action: inserted)
+2026-03-27 01:19:32,365 - news_scraper.base_scraper - INFO - Scraping completed for decrypt: 11 scraped, 1 failed
+2026-03-27 01:19:32,366 - news_scraper.scheduler - INFO - Completed decrypt: 11 scraped, 1 failed
+2026-03-27 01:19:32,549 - httpx - INFO - HTTP Request: GET https://apnews.com/article/stock-markets-trump-iran-oil-826e691e2fd93a63ac8ec8ed98924a17 "HTTP/1.1 200 OK"
+2026-03-27 01:19:32,745 - news_scraper.embeddings - INFO - Processed batch 4: 8/8 successful
+2026-03-27 01:19:56,486 - news_scraper.scheduler - INFO - Scraping source: cnbc_crypto
+2026-03-27 01:19:56,622 - news_scraper.base_scraper - INFO - Initialized cnbc_crypto scraper with 7 existing URLs
+2026-03-27 01:19:56,642 - news_scraper.scrapers - INFO - Loaded 6 RSS feeds for crypto scraping
+2026-03-27 01:19:56,643 - news_scraper.base_scraper - INFO - Starting scraping for cnbc_crypto
+2026-03-27 01:19:56,674 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.newsbtc.com/feed/
+2026-03-27 01:19:58,274 - news_scraper.scrapers - INFO - Processing feed: NewsBTC (10 entries)
+2026-03-27 01:19:58,280 - news_scraper.scrapers - INFO - Added 10 new articles from NewsBTC
+2026-03-27 01:19:58,281 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://cryptoslate.com/feed/
+2026-03-27 01:20:00,270 - news_scraper.scrapers - INFO - Processing feed: CryptoSlate (10 entries)
+2026-03-27 01:20:00,284 - news_scraper.scrapers - INFO - Added 10 new articles from CryptoSlate
+2026-03-27 01:20:00,288 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://ambcrypto.com/feed/
+2026-03-27 01:20:00,946 - news_scraper.scrapers - INFO - Processing feed: AMBCrypto (16 entries)
+2026-03-27 01:20:00,953 - news_scraper.scrapers - INFO - Added 10 new articles from AMBCrypto
+2026-03-27 01:20:00,955 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://blockonomi.com/feed/
+2026-03-27 01:20:01,783 - news_scraper.scrapers - INFO - Processing feed: Blockonomi (10 entries)
+2026-03-27 01:20:01,786 - news_scraper.scrapers - INFO - Added 10 new articles from Blockonomi
+2026-03-27 01:20:01,787 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://decrypt.co/feed
+2026-03-27 01:20:03,456 - news_scraper.scrapers - INFO - Processing feed: Decrypt (36 entries)
+2026-03-27 01:20:03,464 - news_scraper.scrapers - INFO - Added 10 new articles from Decrypt
+2026-03-27 01:20:03,465 - news_scraper.scrapers - INFO - Fetching articles from RSS feed: https://www.cnbc.com/id/100003114/device/rss/rss.html
+2026-03-27 01:20:05,308 - news_scraper.scrapers - INFO - Processing feed: US Top News and Analysis (30 entries)
+2026-03-27 01:20:05,313 - news_scraper.scrapers - INFO - Added 10 new articles from US Top News and Analysis
+2026-03-27 01:20:05,314 - news_scraper.scrapers - INFO - Total RSS articles collected: 60
+2026-03-27 01:20:05,317 - news_scraper.base_scraper - INFO - Found 60 article links for cnbc_crypto
+2026-03-27 01:20:05,320 - news_scraper.base_scraper - INFO - Found 60 new articles to scrape
+2026-03-27 01:20:05,324 - news_scraper.base_scraper - INFO - Limited to 50 articles for this session
+2026-03-27 01:20:11,224 - news_scraper.scrapers - ERROR - Error parsing crypto article https://www.newsbtc.com/news/ethereum/ethereum-foundation-event/: Article `download()` failed with HTTPSConnectionPool(host='www.newsbtc.com', port=443): Max retries exceeded with url: /news/ethereum/ethereum-foundation-event/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)'))) on URL https://www.newsbtc.com/news/ethereum/ethereum-foundation-event/
+2026-03-27 01:20:17,474 - news_scraper.scrapers - ERROR - Error parsing crypto article https://www.newsbtc.com/news/bitcoin/bitcoin-expansion-is-over/: Article `download()` failed with HTTPSConnectionPool(host='www.newsbtc.com', port=443): Max retries exceeded with url: /news/bitcoin/bitcoin-expansion-is-over/ (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)'))) on URL https://www.newsbtc.com/news/bitcoin/bitcoin-expansion-is-over/
+2026-03-27 01:20:22,823 - news_scraper.scrapers - ERROR - Error parsing crypto article https://www.newsbtc.com/bitcoin-news/mara-bitcoin-sell-off-15000-btc-liquidated-as-prices-crash-below-69000/: Article `download()` failed with ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')) on URL https://www.newsbtc.com/bitcoin-news/mara-bitcoin-sell-off-15000-btc-liquidated-as-prices-crash-below-69000/
+2026-03-27 01:24:45,116 - news_scraper.database - ERROR - Failed to get or create source 'cnbc_crypto': 
+2026-03-27 01:24:45,118 - news_scraper.database - WARNING - Failed to get or create source: cnbc_crypto
+2026-03-27 01:24:45,291 - news_scraper.scrapers - INFO - Saved article: The Bitcoin Price Bottom Is Close, But There Is Still A Crash Below $60,000 Left (source_id: 4, action: unchanged)
+2026-03-27 01:24:45,292 - news_scraper.scrapers - INFO - Saved article: Hong Kong expands police powers to access encrypted devices, raising privacy concerns for crypto users (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,296 - news_scraper.scrapers - INFO - Saved article: Ethereum Accumulation Map Reveals Price Roadmap To $20,000 (source_id: 4, action: unchanged)
+2026-03-27 01:24:45,313 - news_scraper.scrapers - INFO - Saved article: Bitcoin Recovery Lacks One Key Ingredient, Glassnode Warns (source_id: 4, action: unchanged)
+2026-03-27 01:24:45,337 - news_scraper.scrapers - INFO - Saved article: Brazil Passes Law to Use Seized Bitcoin, Crypto to Fund Public Security Measures (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,339 - news_scraper.scrapers - INFO - Saved article: Stablecoin Giant Tether Expands Leading Gold-Backed Token to BNB Chain (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,344 - news_scraper.scrapers - INFO - Saved article: MARA Stock Pops on $1.1 Billion Bitcoin Sale as BTC Miner Buys Back Convertible Debt (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,360 - news_scraper.scrapers - INFO - Saved article: Binance Just Declared War On Quiet Market Makers —3 Red Flags Every Trader Should Watch (source_id: 4, action: unchanged)
+2026-03-27 01:24:45,371 - news_scraper.scrapers - INFO - Saved article: Morgan Stanley’s first bank-issued Bitcoin ETF is “imminent” – will sell BTC directly to clients (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,384 - news_scraper.scrapers - INFO - Saved article: Bitcoin falling after Fed meetings is becoming systemic — and it’s not about the decision (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,389 - news_scraper.scrapers - INFO - Saved article: As quantum ‘Q-Day’ jumps to 2029, Ethereum faces a new fight over what to do with coins left in old wallets (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,393 - news_scraper.scrapers - INFO - Saved article: Recession fears rise as Bitcoin chops at $70K – Is an H2 rally forming? (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,401 - news_scraper.scrapers - INFO - Saved article: Tether Rolls Out XAUt on BNB Chain as Gold Enters Crypto (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,404 - news_scraper.scrapers - INFO - Saved article: OKX Delays U.S. IPO, Cites Weak Crypto Listings (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,410 - news_scraper.scrapers - INFO - Saved article: Bitcoin holds $70K – But seller pressure still caps BTC’s upside (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,412 - news_scraper.scrapers - INFO - Saved article: Best Crypto to Invest in for 2026 as SEC Classifies 16 Commodities While Pepeto Offers a Rare 220x Before Listing (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,424 - news_scraper.scrapers - INFO - Saved article: MARA taps Bitcoin reserves to cut $1B in debt as corporate treasury strategies evolve (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,438 - news_scraper.scrapers - INFO - Saved article: Bitcoin Rangebound At $70K While Macro Cracks Deepen – Why Analyst Says It’s Too Early To Call A Bottom (source_id: 4, action: unchanged)
+2026-03-27 01:24:45,442 - news_scraper.scrapers - INFO - Saved article: PIPPIN crashes 33% in a day: What triggered the sell-off? (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,445 - news_scraper.scrapers - INFO - Saved article: Chainlink stalls: Can LINK reach $12 as whale wallets cross 25K? (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,452 - news_scraper.scrapers - INFO - Saved article: Venture Firm Founder Offers Bounty to Help Recover $42 Million in Stolen Bitcoin, Crypto (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,469 - news_scraper.scrapers - INFO - Saved article: What trends will shape the crypto landscape this year? (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,474 - news_scraper.scrapers - INFO - Saved article: How Bittensor’s [TAO] AI-driven 140% surge could fuel altcoin rotation (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,485 - news_scraper.scrapers - INFO - Saved article: How Cravin uses provably fair verification in mystery boxes (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,488 - news_scraper.scrapers - INFO - Saved article: What Is Bluesky? The Decentralized Social Media Rival to Elon Musk's X (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,495 - news_scraper.scrapers - INFO - Saved article: Bitcoin miners start funding pivot to AI with debt while selling BTC to stay liquid (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,506 - news_scraper.scrapers - INFO - Saved article: Over $6B: XAUT Futures Volume Rewrites Records On Binance (source_id: 4, action: unchanged)
+2026-03-27 01:24:45,519 - news_scraper.scrapers - INFO - Saved article: Bitcoin braces for $14B Options expiry – Will BTC’s $75K ceiling crack? (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,542 - news_scraper.scrapers - INFO - Saved article: Goldman Sachs-Backed Canton Links With LayerZero (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,547 - news_scraper.scrapers - INFO - Saved article: ‘In a few weeks’ – SEC’s tokenization exemption nears, but lawmakers worry (source_id: 6, action: unchanged)
+2026-03-27 01:24:45,550 - news_scraper.scrapers - INFO - Saved article: Playnance G Coin shifts from breakout launch to utility test (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,557 - news_scraper.scrapers - INFO - Saved article: Bitcoin is down 43%, yet almost every other crypto has lost more (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,566 - news_scraper.scrapers - INFO - Saved article: Wikipedia Bans AI-Generated Text in Articles Under New Editing Policy (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,570 - news_scraper.scrapers - INFO - Saved article: FTC Issues Debanking Warnings to Visa (V), Mastercard (MA), PayPal (PYPL), and Stripe (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,572 - news_scraper.scrapers - INFO - Saved article: A new US rule wiped $5B off Circle — but it may hurt Coinbase more (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,573 - news_scraper.scrapers - INFO - Saved article: The $100 billion corporate Bitcoin surge is down to one buyer as other companies stop adding (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,576 - news_scraper.scrapers - INFO - Saved article: Microsoft (MSFT) Stock Plunges 32% as AI Copilot Struggles Disappoint Wall Street (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,577 - news_scraper.scrapers - INFO - Saved article: Dogecoin Could Offer Best Risk-Reward Since October 2023, Analyst Says (source_id: 4, action: unchanged)
+2026-03-27 01:24:45,578 - news_scraper.scrapers - INFO - Saved article: Vertiv (VRT) Stock Plunges 10% After Reaching Record Peak of $277.87 (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,580 - news_scraper.scrapers - INFO - Saved article: Senate Housing Bill Adds Temporary CBDC Ban Clause (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,581 - news_scraper.scrapers - INFO - Saved article: Retail Investors Growing Exposed to Bitcoin Giant Strategy’s STRC Over MSTR, Says CEO (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,583 - news_scraper.scrapers - INFO - Saved article: BlackRock Adds Chronicle to Verify Tokenized BUIDL (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,585 - news_scraper.scrapers - INFO - Saved article: XRP Falls to 2-Week Low as Ripple Deploys AI to Boost Ledger Security (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,586 - news_scraper.scrapers - INFO - Saved article: Best Crypto Presale Sees Traders Rushing to Reserve Pepeto Tokens Before Binance Listing as SHIB and PEPE Gain (source_id: 7, action: unchanged)
+2026-03-27 01:24:45,588 - news_scraper.scrapers - INFO - Saved article: Hackers sneak crypto wallet-stealing code into a popular AI tool that runs every time (source_id: 5, action: unchanged)
+2026-03-27 01:24:45,597 - news_scraper.scrapers - INFO - Saved article: Is AGI Here? Not Even Close, New AI Benchmark Suggests (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,602 - news_scraper.scrapers - INFO - Saved article: UK Sanctions Crypto Marketplace Xinbi in Crackdown on Southeast Asian Scam Centers (source_id: 8, action: unchanged)
+2026-03-27 01:24:45,621 - news_scraper.base_scraper - INFO - Scraping completed for cnbc_crypto: 0 scraped, 3 failed
+2026-03-27 01:24:45,622 - news_scraper.scheduler - INFO - Completed cnbc_crypto: 0 scraped, 3 failed
+2026-03-27 01:24:45,685 - news_scraper.embeddings - INFO - Processed batch 5: 8/8 successful
+2026-03-27 01:25:10,105 - news_scraper.scheduler - INFO - Scraping cycle completed: 111 scraped, 19 failed
+2026-03-27 01:25:10,108 - news_scraper.scheduler - INFO - Next scraping cycle in 10 minutes
+2026-03-27 01:25:10,376 - news_scraper.embeddings - INFO - Processed batch 6: 8/8 successful
+2026-03-27 01:25:32,775 - news_scraper.embeddings - INFO - Processed batch 7: 8/8 successful
+2026-03-27 01:25:48,047 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/slain-soldiers-husband-describes-agony-of-telling-their-kids-she-died/ "HTTP/1.1 200 OK"
+2026-03-27 01:25:48,251 - news_scraper.embeddings - INFO - Processed batch 8: 8/8 successful
+2026-03-27 01:26:02,593 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/video/slain-soldiers-husband-describes-agony-of-telling-their-kids-she-died/ because it failed intel cleaning (paywall/stub)
+2026-03-27 01:26:02,765 - news_scraper.embeddings - INFO - Processed batch 9: 8/8 successful
+2026-03-27 01:26:17,170 - news_scraper.embeddings - INFO - Processed batch 10: 8/8 successful
+2026-03-27 01:26:34,255 - news_scraper.embeddings - INFO - Processed batch 11: 8/8 successful
+2026-03-27 01:26:46,644 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/trump-says-iran-gave-us-a-very-big-present-related-to-oil-and-gas/ "HTTP/1.1 200 OK"
+2026-03-27 01:26:46,814 - news_scraper.embeddings - INFO - Processed batch 12: 8/8 successful
+2026-03-27 01:27:00,533 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/video/trump-says-iran-gave-us-a-very-big-present-related-to-oil-and-gas/ because it failed intel cleaning (paywall/stub)
+2026-03-27 01:27:00,709 - news_scraper.embeddings - INFO - Processed batch 13: 8/8 successful
+2026-03-27 01:27:11,513 - news_scraper.embeddings - INFO - Processed batch 14: 6/6 successful
+2026-03-27 01:27:11,514 - news_scraper.embeddings - INFO - BGE embedding processing completed: {'processed': 110, 'failed': 0, 'total': 110}
+2026-03-27 01:27:11,517 - news_scraper.scheduler - INFO - Embedding processing completed: 110 processed, 0 failed
+2026-03-27 01:27:12,136 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/danish-pms-left-wing-bloc-wins-vote-but-with-no-majority/a-76498223 "HTTP/1.1 200 OK"
+2026-03-27 01:27:14,004 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/cybersecurity-expert-risks-concerns-amid-war/ "HTTP/1.1 200 OK"
+2026-03-27 01:27:15,092 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/video/cybersecurity-expert-risks-concerns-amid-war/ because it failed intel cleaning (paywall/stub)
+2026-03-27 01:27:15,382 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/news/u-s-deploy-82nd-airborne-iran-middle-east/ "HTTP/1.1 200 OK"
+2026-03-27 01:27:17,827 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5757447/gas-prices-doordash-drivers-uber-food-delivery "HTTP/1.1 200 OK"
+2026-03-27 01:27:18,687 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5757447/food-delivery-drivers-are-being-squeezed-by-higher-gas-prices "HTTP/1.1 301 Moved Permanently"
+2026-03-27 01:27:19,106 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5757447/gas-prices-doordash-drivers-uber-food-delivery "HTTP/1.1 200 OK"
+2026-03-27 01:27:20,458 - httpx - INFO - HTTP Request: GET https://www.cbsnews.com/video/watch-trump-takes-questions-on-iran-war-possible-bill-to-end-partial-government-shutdown/ "HTTP/1.1 200 OK"
+2026-03-27 01:27:20,967 - news_scraper.api_news_service - INFO - Skipping https://www.cbsnews.com/video/watch-trump-takes-questions-on-iran-war-possible-bill-to-end-partial-government-shutdown/ because it failed intel cleaning (paywall/stub)
+2026-03-27 01:27:21,812 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?apiKey=1e31e9563626428ea141cb04a77eab96&q=geopolitics+OR+diplomacy+OR+sanctions+OR+foreign+policy&language=en&sortBy=publishedAt&pageSize=40&from=2026-03-24&searchIn=title%2Cdescription&domains=reuters.com%2Capnews.com%2Cnytimes.com%2Cwashingtonpost.com%2Cwsj.com%2Cbloomberg.com%2Ccnn.com%2Cabcnews.go.com%2Ccbsnews.com%2Cnpr.org%2Ceuronews.com%2Cdw.com%2Cfrance24.com%2Cthehill.com%2Ctime.com&excludeDomains=bbc.com%2Caljazeera.com%2Ctheguardian.com%2Cnewsbtc.com%2Ccryptoslate.com%2Cambcrypto.com%2Cblockonomi.com%2Cdecrypt.co%2Ccnbc.com "HTTP/1.1 200 OK"
+2026-03-27 01:27:22,652 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/25/nx-s1-5760853/bryan-stevenson-says-facing-our-racist-past-is-a-path-not-punishment "HTTP/1.1 200 OK"
+2026-03-27 01:27:23,933 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/germanys-left-party-rocked-by-antisemitism-allegations/a-76526513 "HTTP/1.1 200 OK"
+2026-03-27 01:27:25,971 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/25/nx-s1-5759756/alt-latino-songs-she-loves-sofia-rei-and-the-magic-of-the-human-voice "HTTP/1.1 200 OK"
+2026-03-27 01:27:27,695 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/25/nx-s1-5759733/the-morbid-lifelessness-of-modern-beauty "HTTP/1.1 200 OK"
+2026-03-27 01:27:29,028 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5759260/will-president-trump-act-on-his-threat-to-take-cuba "HTTP/1.1 200 OK"
+2026-03-27 01:27:30,192 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5759198/the-evolution-of-the-american-housing-crisis "HTTP/1.1 200 OK"
+2026-03-27 01:27:31,504 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/india-news-three-indian-cities-among-top-four-most-polluted-says-report/live-76497643 "HTTP/1.1 200 OK"
+2026-03-27 01:27:33,138 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/germany-laments-trumps-avoidable-unnecessary-iran-war/a-76501370 "HTTP/1.1 200 OK"
+2026-03-27 01:27:34,060 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/germany-news-3-in-4-fear-wave-of-refugees-from-iran-war/live-76502219 "HTTP/1.1 301 Moved Permanently"
+2026-03-27 01:27:34,498 - httpx - INFO - HTTP Request: GET https://www.dw.com/en/germany-news-3-in-4-fear-rise-in-refugees-from-iran-war/live-76502219 "HTTP/1.1 200 OK"
+2026-03-27 01:27:38,199 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5758040/devo "HTTP/1.1 200 OK"
+2026-03-27 01:27:39,468 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5751175/many-women-dont-want-kids-and-for-good-reason "HTTP/1.1 200 OK"
+2026-03-27 01:27:41,111 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5758145/what-it-takes-to-heal "HTTP/1.1 200 OK"
+2026-03-27 01:27:42,271 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5758076/all-songs-considered-bon-iver-tori-amos "HTTP/1.1 200 OK"
+2026-03-27 01:27:43,540 - httpx - INFO - HTTP Request: GET https://www.npr.org/2026/03/24/nx-s1-5747150/2624-how-to-know-if-you-have-a-cracked-head "HTTP/1.1 200 OK"
+2026-03-27 01:27:44,490 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?apiKey=1e31e9563626428ea141cb04a77eab96&q=economy+OR+inflation+OR+recession+OR+central+bank&language=en&sortBy=publishedAt&pageSize=40&from=2026-03-24&searchIn=title%2Cdescription&domains=reuters.com%2Capnews.com%2Cnytimes.com%2Cwashingtonpost.com%2Cwsj.com%2Cbloomberg.com%2Ccnn.com%2Cabcnews.go.com%2Ccbsnews.com%2Cnpr.org%2Ceuronews.com%2Cdw.com%2Cfrance24.com%2Cthehill.com%2Ctime.com&excludeDomains=bbc.com%2Caljazeera.com%2Ctheguardian.com%2Cnewsbtc.com%2Ccryptoslate.com%2Cambcrypto.com%2Cblockonomi.com%2Cdecrypt.co%2Ccnbc.com "HTTP/1.1 200 OK"
+2026-03-27 01:27:44,875 - httpx - INFO - HTTP Request: GET https://newsapi.org/v2/everything?apiKey=1e31e9563626428ea141cb04a77eab96&q=technology+OR+AI+regulation+OR+cyber+security+policy&language=en&sortBy=publishedAt&pageSize=40&from=2026-03-24&searchIn=title%2Cdescription&domains=reuters.com%2Capnews.com%2Cnytimes.com%2Cwashingtonpost.com%2Cwsj.com%2Cbloomberg.com%2Ccnn.com%2Cabcnews.go.com%2Ccbsnews.com%2Cnpr.org%2Ceuronews.com%2Cdw.com%2Cfrance24.com%2Cthehill.com%2Ctime.com&excludeDomains=bbc.com%2Caljazeera.com%2Ctheguardian.com%2Cnewsbtc.com%2Ccryptoslate.com%2Cambcrypto.com%2Cblockonomi.com%2Cdecrypt.co%2Ccnbc.com "HTTP/1.1 200 OK"
+2026-03-27 01:27:44,879 - news_scraper.scheduler - INFO - API news ingestion completed: 27 upserted, 11 failed, 51 fetched
+2026-03-27 01:27:44,880 - news_scraper.scheduler - INFO - Next API news cycle in 15 minutes

@@ -65,10 +65,12 @@ class Settings(BaseSettings):
     SUMMARIZATION_JOB_INTERVAL_MINUTES: int = 10
     SUMMARIZATION_JOB_BATCH_SIZE: int = 30
     SUMMARIZATION_JOB_MAX_ARTICLES: Optional[int] = None
+    SUMMARIZATION_PRIMARY_API_KEYS: List[str] = []
+    SUMMARIZATION_COMBINED_INTERVAL_SECONDS: int = 60
     SUMMARIZATION_PRIMARY_MIN_INTERVAL_SECONDS: int = 45
 
     # RAG / LLM routing
-    SECONDARY_MODEL_URL: Optional[str] = None
+    LLAMA_MODEL_URL: Optional[str] = None
     PRIMARY_MODEL_API_KEY: Optional[str] = None
     PRIMARY_MODEL_NAME: str = "models/gemini-2.0-flash"
     RAG_TOP_K: int = 5
@@ -79,6 +81,24 @@ class Settings(BaseSettings):
     @field_validator("GOOGLE_CLIENT_IDS", mode="before")
     @classmethod
     def assemble_google_client_ids(cls, v: Union[str, List[str]]) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [item.strip() for item in v.split(",") if item.strip()]
+        if isinstance(v, str) and v.startswith("["):
+            import json
+
+            try:
+                raw = json.loads(v)
+                if isinstance(raw, list):
+                    return [str(item).strip() for item in raw if str(item).strip()]
+            except json.JSONDecodeError:
+                return []
+        if isinstance(v, list):
+            return [str(item).strip() for item in v if str(item).strip()]
+        return []
+
+    @field_validator("SUMMARIZATION_PRIMARY_API_KEYS", mode="before")
+    @classmethod
+    def assemble_summary_primary_api_keys(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str) and not v.startswith("["):
             return [item.strip() for item in v.split(",") if item.strip()]
         if isinstance(v, str) and v.startswith("["):

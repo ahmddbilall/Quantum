@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   Search,
   Filter,
@@ -38,7 +39,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { newsService } from "@/services/newsService";
+import { newsService, newsQueryKeys } from "@/services/newsService";
 import { parseApiError } from "@/lib/error-parser";
 import { NewsArticleSummary } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -135,7 +136,6 @@ export default function NewsFeedPage() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const [articles, setArticles] = useState<NewsArticleSummary[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -143,18 +143,6 @@ export default function NewsFeedPage() {
   const [sortBy, setSortBy] = useState("shuffled");
   const [showFilters, setShowFilters] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [allSources, setAllSources] = useState<string[]>([]);
-  const [allCategories, setAllCategories] = useState<string[]>(["all"]);
-  const [recommendedArticles, setRecommendedArticles] = useState<
-    NewsArticleSummary[]
-  >([]);
-  const [isLoadingRecommended, setIsLoadingRecommended] = useState(false);
 
   const selectedSourcesKey = selectedSources.join("|");
 
@@ -166,114 +154,110 @@ export default function NewsFeedPage() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
+  const normalizedSearchQuery = debouncedSearchQuery.trim();
+  const effectiveSearchQuery =
+    normalizedSearchQuery.length >= MIN_SEARCH_QUERY_LENGTH
+      ? normalizedSearchQuery
+      : undefined;
+
+  const feedFilters = useMemo(
+    () => ({
+      limit: DEFAULT_LIMIT,
+      category: selectedCategory,
+      sources: selectedSources.length > 0 ? selectedSources : undefined,
+      searchQuery: effectiveSearchQuery,
+      startDate: dateRange?.from ? dateRange.from.toISOString() : undefined,
+      endDate: dateRange?.to ? dateRange.to.toISOString() : undefined,
+    }),
+    [
+      selectedCategory,
+      selectedSources,
+      effectiveSearchQuery,
+      dateRange?.from,
+      dateRange?.to,
+    ],
+  );
+
+  const {
+    data: feedData,
+    error: feedError,
+    isPending: isLoading,
+    isFetchingNextPage: isLoadingMore,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: newsQueryKeys.feed(feedFilters),
+    queryFn: ({ pageParam = 1 }) =>
+      newsService.getNewsFeed({
+        ...feedFilters,
+        page: pageParam,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.has_more ? allPages.length + 1 : undefined,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: sourcesData = [] } = useQuery({
+    queryKey: newsQueryKeys.newsFeedSources,
+    queryFn: () => newsService.getNewsFeedSources(),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: categoriesData = ["all"] } = useQuery({
+    queryKey: newsQueryKeys.newsFeedCategories,
+    queryFn: async () => {
+      const result = await newsService.getNewsFeedCategories();
+      return result.length > 0 ? result : ["all"];
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: recommendedData, isLoading: isLoadingRecommended } = useQuery({
+    queryKey: newsQueryKeys.recommendations("general"),
+    queryFn: () =>
+      newsService.getRecommendations({
+        limit: 16,
+        feedContext: "general",
+      }),
+    enabled: Boolean(user),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   useEffect(() => {
-    const loadRecommendations = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      setIsLoadingRecommended(true);
-      try {
-        const response = await newsService.getRecommendations({
-          limit: 16,
-          feedContext: "general",
-        });
-        setRecommendedArticles(response.items || []);
-      } catch (err) {
-        console.error("Failed to load recommendations", err);
-      } finally {
-        setIsLoadingRecommended(false);
-      }
-    };
-    void loadRecommendations();
-  }, []);
-
-  useEffect(() => {
-    const loadSources = async () => {
-      try {
-        const response = await newsService.getNewsFeedSources();
-        setAllSources(response);
-      } catch {
-        setAllSources([]);
-      }
-    };
-
-    void loadSources();
-  }, []);
-
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const response = await newsService.getNewsFeedCategories();
-        setAllCategories(response.length > 0 ? response : ["all"]);
-      } catch {
-        setAllCategories(["all"]);
-      }
-    };
-
-    void loadCategories();
-  }, []);
-
-  const fetchFeed = async (targetPage: number, append: boolean) => {
-    try {
-      setError(null);
-      if (append) {
-        setIsLoadingMore(true);
-      } else {
-        setIsLoading(true);
-      }
-
-      const normalizedSearchQuery = debouncedSearchQuery.trim();
-      const effectiveSearchQuery =
-        normalizedSearchQuery.length >= MIN_SEARCH_QUERY_LENGTH
-          ? normalizedSearchQuery
-          : undefined;
-
-      const response = await newsService.getNewsFeed({
-        page: targetPage,
-        limit: DEFAULT_LIMIT,
-        category: selectedCategory,
-        sources: selectedSources.length > 0 ? selectedSources : undefined,
-        searchQuery: effectiveSearchQuery,
-        startDate: dateRange?.from ? dateRange.from.toISOString() : undefined,
-        endDate: dateRange?.to ? dateRange.to.toISOString() : undefined,
-        excludeArticleIds: append ? articles.map((a) => a.id) : undefined,
-      });
-
-      setArticles((prev) => {
-        if (!append) {
-          return response.items;
-        }
-
-        const merged = [...prev, ...response.items];
-        const uniqueById = new Map(merged.map((item) => [item.id, item]));
-        return Array.from(uniqueById.values());
-      });
-      setPage(targetPage);
-      setTotal(response.total);
-      setHasMore(response.has_more);
-    } catch (error) {
-      const parsed = parseApiError(error, "Failed to load news feed.");
-      setError(parsed.message);
-      toast({
-        title: "Could not load news",
-        description: parsed.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
+    if (!feedError) {
+      return;
     }
-  };
+    const parsed = parseApiError(feedError, "Failed to load news feed.");
+    toast({
+      title: "Could not load news",
+      description: parsed.message,
+      variant: "destructive",
+    });
+  }, [feedError, toast]);
 
-  useEffect(() => {
-    void fetchFeed(1, false);
-  }, [
-    selectedCategory,
-    selectedSourcesKey,
-    debouncedSearchQuery,
-    dateRange?.from,
-    dateRange?.to,
-  ]);
+  const articles = useMemo(() => {
+    const merged = (feedData?.pages || []).flatMap((page) => page.items || []);
+    const uniqueById = new Map(merged.map((item) => [item.id, item]));
+    return Array.from(uniqueById.values());
+  }, [feedData?.pages]);
+
+  const total = feedData?.pages?.[0]?.total ?? articles.length;
+  const hasMore = Boolean(hasNextPage);
+  const error = feedError
+    ? parseApiError(feedError, "Failed to load news feed.").message
+    : null;
+  const allSources = sourcesData;
+  const allCategories = categoriesData;
+  const recommendedArticles = recommendedData?.items || [];
 
   const sortedArticles = useMemo(() => {
     const copy = [...articles];
@@ -696,7 +680,7 @@ export default function NewsFeedPage() {
               <div className="text-center mb-8">
                 <Button
                   variant="outline"
-                  onClick={() => void fetchFeed(page + 1, true)}
+                  onClick={() => void fetchNextPage()}
                   disabled={isLoadingMore}
                   className="border-white text-white hover:bg-white hover:text-black transition-all duration-300 bg-transparent group"
                 >

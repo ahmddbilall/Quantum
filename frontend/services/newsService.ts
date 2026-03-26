@@ -21,29 +21,28 @@ export interface GetNewsFeedParams {
   excludeArticleIds?: string[];
 }
 
-class CacheService {
-  private cache = new Map<string, { data: any; expiry: number }>();
-
-  get<T>(key: string): T | null {
-    const item = this.cache.get(key);
-    if (!item) return null;
-    if (Date.now() > item.expiry) {
-      this.cache.delete(key);
-      return null;
-    }
-    return item.data as T;
-  }
-
-  set(key: string, data: any, ttlMin = 5) {
-    this.cache.set(key, { data, expiry: Date.now() + ttlMin * 60 * 1000 });
-  }
-
-  invalidateAll() {
-    this.cache.clear();
-  }
-}
-
-export const apiCache = new CacheService();
+export const newsQueryKeys = {
+  feed: (params: GetNewsFeedParams = {}) => {
+    return [
+      "news-feed",
+      "feed",
+      params.category || "all",
+      params.sources?.join(",") || "",
+      params.searchQuery || "",
+      params.startDate || "",
+      params.endDate || "",
+    ] as const;
+  },
+  search: (query: string) => ["search", "news", query] as const,
+  marketNews: (params: GetNewsFeedParams = {}) => {
+    return ["market-news", params.searchQuery || ""] as const;
+  },
+  newsFeedSources: ["news-feed", "sources"] as const,
+  newsFeedCategories: ["news-feed", "categories"] as const,
+  marketNewsSources: ["market-news", "sources"] as const,
+  recommendations: (context: string) => ["recommendations", context] as const,
+  bookmarks: ["bookmarks"] as const,
+};
 
 export const newsService = {
   async getFeed(params: GetNewsFeedParams = {}): Promise<NewsFeedResponse> {
@@ -114,15 +113,10 @@ export const newsService = {
         queryParams.exclude_article_ids = params.excludeArticleIds.join(",");
       }
 
-      const cacheKey = "news-feed:" + JSON.stringify(queryParams);
-      const cached = apiCache.get<NewsFeedResponse>(cacheKey);
-      if (cached) return cached;
-
       const response = await api.get<NewsFeedResponse>("/news/news-feed", {
         params: queryParams,
       });
 
-      apiCache.set(cacheKey, response.data, 5);
       return response.data;
     } catch (error) {
       throw toApiClientError(error, "Unable to load news feed.");
@@ -162,15 +156,9 @@ export const newsService = {
         queryParams.exclude_article_ids = params.excludeArticleIds.join(",");
       }
 
-      const cacheKey = "market-news:" + JSON.stringify(queryParams);
-      const cached = apiCache.get<NewsFeedResponse>(cacheKey);
-      if (cached) return cached;
-
       const response = await api.get<NewsFeedResponse>("/news/market-news", {
         params: queryParams,
       });
-
-      apiCache.set(cacheKey, response.data, 5);
       return response.data;
     } catch (error) {
       throw toApiClientError(error, "Unable to load market news.");
@@ -308,16 +296,10 @@ export const newsService = {
         queryParams.feed_context = params.feedContext;
       }
 
-      const cacheKey = "recs:" + JSON.stringify(queryParams);
-      const cached = apiCache.get<NewsFeedResponse>(cacheKey);
-      if (cached) return cached;
-
       const response = await api.get<NewsFeedResponse>(
         "/news/recommendations",
         { params: queryParams },
       );
-
-      apiCache.set(cacheKey, response.data, 5);
       return response.data;
     } catch (error) {
       throw toApiClientError(error, "Unable to load recommendations.");

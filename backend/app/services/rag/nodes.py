@@ -138,8 +138,7 @@ async def generate_answer(state: GraphState) -> dict:
         ])
 
         system_msg = (
-            "You are Llama, a helpful news analyst AI. Your name is "
-            "Llama 3.1. Answer the user's question using ONLY the "
+            "You are a helpful news analyst AI. Answer the user's question using ONLY the "
             "provided news articles below. Use short clear paragraphs. "
             "When you make a claim from an article, cite ONLY with "
             "square-bracket numbers like [1], [2], [3]. Do not write "
@@ -151,8 +150,7 @@ async def generate_answer(state: GraphState) -> dict:
             "Provide a slightly fuller response by default: around 6 to 9 "
             "sentences total in 2 to 3 short paragraphs, unless the user "
             "explicitly asks for a brief answer. "
-            "Do not invent facts. If asked your name or what model "
-            "you are, always say Llama 3.1."
+            "Do not invent facts."
         )
 
         messages_for_llm = [{"role": "system", "content": system_msg}]

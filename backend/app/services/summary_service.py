@@ -7,6 +7,7 @@ import time
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
+from groq import AsyncGroq
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,24 +22,91 @@ class SummaryService:
     def __init__(self) -> None:
         self._logger = logging.getLogger(__name__)
         self._job_lock = asyncio.Lock()
-        self._model_rate_lock = asyncio.Lock()
-        self._last_model_call_monotonic: Optional[float] = None
+        self._key_rate_lock = asyncio.Lock()
+        self._last_key_call_monotonic: Dict[str, float] = {}
+        self._last_combined_call_monotonic: Optional[float] = None
+        self._primary_clients: Dict[str, AsyncGroq] = {}
 
-    async def _wait_for_model_window(self) -> None:
-        min_interval = max(0, int(settings.SUMMARIZATION_PRIMARY_MIN_INTERVAL_SECONDS))
+    def _summary_primary_keys(self) -> list[str]:
+        return [key for key in settings.SUMMARIZATION_PRIMARY_API_KEYS if key and key.strip()]
 
-        async with self._model_rate_lock:
-            if min_interval > 0 and self._last_model_call_monotonic is not None:
-                elapsed = time.monotonic() - self._last_model_call_monotonic
+    @staticmethod
+    def _format_messages(messages: list[dict]) -> list[dict]:
+        formatted = []
+        for message in messages:
+            role = message.get("role")
+            if role not in {"system", "user", "assistant"}:
+                role = "user"
+            formatted.append({"role": role, "content": message.get("content", "")})
+        return formatted
+
+    def _get_primary_client(self, api_key: str) -> AsyncGroq:
+        client = self._primary_clients.get(api_key)
+        if client is not None:
+            return client
+
+        created = AsyncGroq(api_key=api_key)
+        self._primary_clients[api_key] = created
+        return created
+
+    async def _call_primary_with_api_key(
+        self,
+        *,
+        api_key: str,
+        messages: list[dict],
+        temperature: float,
+    ) -> str:
+        client = self._get_primary_client(api_key)
+        response = await client.chat.completions.create(
+            model=settings.PRIMARY_MODEL_NAME or "llama-3.1-8b-instant",
+            messages=self._format_messages(messages),
+            temperature=temperature,
+            max_completion_tokens=1024,
+            top_p=1,
+            stream=False,
+        )
+        if not response.choices:
+            return ""
+        return response.choices[0].message.content or ""
+
+    @staticmethod
+    def _combined_interval_seconds() -> int:
+        return max(0, int(settings.SUMMARIZATION_COMBINED_INTERVAL_SECONDS))
+
+    @staticmethod
+    def _per_key_interval_seconds() -> int:
+        return max(0, int(settings.SUMMARIZATION_PRIMARY_MIN_INTERVAL_SECONDS))
+
+    def _combined_ready(self) -> bool:
+        if self._last_combined_call_monotonic is None:
+            return True
+        elapsed = time.monotonic() - self._last_combined_call_monotonic
+        return elapsed >= self._combined_interval_seconds()
+
+    def _seconds_until_combined(self) -> float:
+        if self._last_combined_call_monotonic is None:
+            return 0.0
+        elapsed = time.monotonic() - self._last_combined_call_monotonic
+        return max(0.0, self._combined_interval_seconds() - elapsed)
+
+    async def _wait_for_key_cooldown(self, api_key: str) -> None:
+        min_interval = self._per_key_interval_seconds()
+        if min_interval <= 0:
+            return
+
+        async with self._key_rate_lock:
+            last_call = self._last_key_call_monotonic.get(api_key)
+            if last_call is not None:
+                elapsed = time.monotonic() - last_call
                 wait_seconds = max(0.0, min_interval - elapsed)
                 if wait_seconds > 0:
                     self._logger.info(
-                        "Summary model rate limit sleep_seconds=%.2f",
+                        "Summary key cooldown sleep_seconds=%.2f",
                         wait_seconds,
                     )
                     await asyncio.sleep(wait_seconds)
-            # Timestamp is set right before launching both model calls together.
-            self._last_model_call_monotonic = time.monotonic()
+
+            self._last_key_call_monotonic[api_key] = time.monotonic()
 
     @staticmethod
     def _clean_summary(raw: str) -> str:
@@ -95,43 +163,84 @@ class SummaryService:
             {"role": "user", "content": user_prompt},
         ]
 
-    async def _generate_summaries(self, article: Article) -> tuple[str, str]:
+    async def _generate_combined_summaries(
+        self,
+        *,
+        article: Article,
+        primary_api_key: str,
+    ) -> tuple[str, str]:
         messages = self._build_prompt(article)
 
-        await self._wait_for_model_window()
+        await self._wait_for_key_cooldown(primary_api_key)
+        self._last_combined_call_monotonic = time.monotonic()
 
         primary_task = asyncio.create_task(
-            llm_router.call_primary(messages, temperature=0.2)
+            self._call_primary_with_api_key(
+                api_key=primary_api_key,
+                messages=messages,
+                temperature=0.2,
+            )
         )
-        secondary_task = asyncio.create_task(llm_router.call_secondary(messages, temperature=0.2))
-        primary_result, secondary_result = await asyncio.gather(
-            primary_task,
-            secondary_task,
-            return_exceptions=True,
+        summary_prompt_text = "\n\n".join(message.get("content", "") for message in messages if message.get("content"))
+        secondary_task = asyncio.create_task(
+            llm_router.call_secondary_summary(summary_prompt_text, temperature=0.2)
         )
+
+        def _discard_secondary_result(task: asyncio.Task) -> None:
+            try:
+                _ = task.result()
+                self._logger.info(
+                    "Secondary summary result discarded article_id=%s",
+                    article.id,
+                )
+            except Exception as exc:
+                self._logger.info(
+                    "Secondary summary discard failed article_id=%s error=%r",
+                    article.id,
+                    exc,
+                )
 
         primary_text = ""
-        secondary_text = ""
-
-        if isinstance(primary_result, Exception):
+        try:
+            primary_result = await primary_task
+            primary_text = self._clean_summary(primary_result or "")
+        except Exception as exc:
             self._logger.warning(
                 "Primary summarization failed article_id=%s error=%r",
                 article.id,
-                primary_result,
+                exc,
             )
-        else:
-            primary_text = self._clean_summary(primary_result or "")
 
-        if isinstance(secondary_result, Exception):
+        if primary_text:
+            secondary_task.add_done_callback(_discard_secondary_result)
+            return primary_text, ""
+
+        secondary_text = ""
+        try:
+            secondary_result = await secondary_task
+            secondary_text = self._clean_summary(secondary_result or "")
+        except Exception as exc:
             self._logger.info(
                 "Secondary summarization unavailable article_id=%s error=%r",
                 article.id,
-                secondary_result,
+                exc,
             )
-        else:
-            secondary_text = self._clean_summary(secondary_result or "")
 
         return primary_text, secondary_text
+
+    async def _generate_primary_only_summary(
+        self,
+        *,
+        article: Article,
+        primary_api_key: str,
+    ) -> str:
+        await self._wait_for_key_cooldown(primary_api_key)
+        output = await self._call_primary_with_api_key(
+            api_key=primary_api_key,
+            messages=self._build_prompt(article),
+            temperature=0.2,
+        )
+        return self._clean_summary(output)
 
     async def run_pending_summary_job(
         self,
@@ -152,6 +261,19 @@ class SummaryService:
         processed = 0
         updated = 0
         failed = 0
+
+        primary_keys = self._summary_primary_keys()
+        if not primary_keys:
+            self._logger.warning("Summary job skipped: SUMMARIZATION_PRIMARY_API_KEYS is empty")
+            return {
+                "processed": 0,
+                "updated": 0,
+                "failed": 0,
+                "skipped": 1,
+            }
+
+        combined_key = primary_keys[0]
+        silent_primary_keys = primary_keys[1:]
 
         async with self._job_lock:
             while True:
@@ -178,35 +300,84 @@ class SummaryService:
                 if not articles:
                     break
 
-                for article in articles:
+                cursor = 0
+                dispatched = 0
+
+                if cursor < len(articles) and self._combined_ready():
+                    article = articles[cursor]
+                    cursor += 1
+                    dispatched += 1
                     processed += 1
                     try:
-                        primary_summary, secondary_summary = await self._generate_summaries(article)
+                        primary_summary, secondary_summary = await self._generate_combined_summaries(
+                            article=article,
+                            primary_api_key=combined_key,
+                        )
+
+                        if not primary_summary:
+                            failed += 1
+                        else:
+                            article.summary = primary_summary
+                            ingestion_meta = dict(article.ingestion_meta or {})
+                            ingestion_meta["summary_generation"] = {
+                                "mode": "combined",
+                                "primary_model": settings.PRIMARY_MODEL_NAME,
+                                "primary_generated_at": datetime.now(timezone.utc).isoformat(),
+                                "secondary_model_called": True,
+                                "secondary_generated": bool(secondary_summary),
+                            }
+                            article.ingestion_meta = ingestion_meta
+                            db.add(article)
+                            updated += 1
+                    except Exception:
+                        self._logger.exception(
+                            "Summary combined generation failed for article_id=%s source=%s",
+                            article.id,
+                            article.source,
+                        )
+                        failed += 1
+
+                for key in silent_primary_keys:
+                    if cursor >= len(articles):
+                        break
+
+                    article = articles[cursor]
+                    cursor += 1
+                    dispatched += 1
+                    processed += 1
+                    try:
+                        primary_summary = await self._generate_primary_only_summary(
+                            article=article,
+                            primary_api_key=key,
+                        )
 
                         if not primary_summary:
                             failed += 1
                             continue
 
                         article.summary = primary_summary
-
                         ingestion_meta = dict(article.ingestion_meta or {})
                         ingestion_meta["summary_generation"] = {
+                            "mode": "primary_only",
                             "primary_model": settings.PRIMARY_MODEL_NAME,
                             "primary_generated_at": datetime.now(timezone.utc).isoformat(),
-                            "secondary_model_called": bool(settings.SECONDARY_MODEL_URL),
-                            "secondary_generated": bool(secondary_summary),
+                            "secondary_model_called": False,
+                            "secondary_generated": False,
                         }
                         article.ingestion_meta = ingestion_meta
-
                         db.add(article)
                         updated += 1
                     except Exception:
                         self._logger.exception(
-                            "Summary generation failed for article_id=%s source=%s",
+                            "Summary primary-only generation failed for article_id=%s source=%s",
                             article.id,
                             article.source,
                         )
                         failed += 1
+
+                if dispatched == 0:
+                    await asyncio.sleep(self._seconds_until_combined())
+                    continue
 
                 await db.commit()
 

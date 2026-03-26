@@ -291,7 +291,7 @@ export default function FinanceNewsDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <BackButton
           onClick={() => router.back()}
-          label="Back to Market Finance"
+          label="Back "
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
