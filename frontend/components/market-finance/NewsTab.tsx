@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,18 +76,18 @@ export function NewsTab() {
     refetchOnWindowFocus: true,
   });
 
-  const { data: recommendationsData, isLoading: isLoadingRecommended } =
-    useQuery({
-      queryKey: newsQueryKeys.recommendations("market"),
-      queryFn: () =>
-        newsService.getRecommendations({
-          limit: 14,
-          feedContext: "market",
-        }),
-      staleTime: 2 * 60 * 1000,
-      gcTime: 15 * 60 * 1000,
-      refetchOnWindowFocus: true,
-    });
+  // Recommendation API call disabled because recommended cards are commented out on this page.
+  // const { data: recommendationsData } = useQuery({
+  //   queryKey: newsQueryKeys.recommendations("market"),
+  //   queryFn: () =>
+  //     newsService.getRecommendations({
+  //       limit: 3,
+  //       feedContext: "market",
+  //     }),
+  //   staleTime: 2 * 60 * 1000,
+  //   gcTime: 15 * 60 * 1000,
+  //   refetchOnWindowFocus: true,
+  // });
 
   useEffect(() => {
     if (!marketError) {
@@ -109,8 +109,7 @@ export function NewsTab() {
     return Array.from(uniqueById.values());
   }, [marketData?.pages]);
 
-  const recommendedArticles: NewsArticleSummary[] =
-    recommendationsData?.items || [];
+  const recommendedArticles: NewsArticleSummary[] = [];
   const hasMore = Boolean(hasNextPage);
   const error = marketError
     ? parseApiError(marketError, "Failed to load market news.").message
@@ -154,7 +153,7 @@ export function NewsTab() {
 
   return (
     <div className="space-y-6">
-      {recommendedArticles.length > 0 && !searchQuery && (
+      {/* {recommendedArticles.length > 0 && !searchQuery && (
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-6 text-purple-400">
             <Sparkles className="h-5 w-5" />
@@ -169,28 +168,30 @@ export function NewsTab() {
                 onClick={() =>
                   router.push(`/market-finance/news/${article.id}`)
                 }
-                className="group relative bg-purple-950/20 border border-purple-900/40 hover:border-purple-500/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col sm:flex-row h-full rounded-xl"
+                className="group relative bg-purple-950/20 border border-purple-900/40 hover:border-purple-500/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-row h-full min-h-[220px] rounded-xl py-0 gap-0"
               >
                 {article.image_url && (
-                  <div className="w-full sm:w-1/3 aspect-video sm:aspect-auto sm:h-full bg-gray-800 relative overflow-hidden shrink-0">
+                  <div className="w-[38%] min-w-[130px] h-full self-stretch bg-gray-900 relative overflow-hidden shrink-0 border-r border-purple-900/40">
                     <img
                       src={article.image_url}
                       alt={article.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
-                    <div className="absolute top-3 left-3 flex gap-2 sm:hidden">
+                    <div className="absolute top-3 left-3 flex gap-2">
                       <Badge className="bg-purple-600/80 text-white border-0 hover:bg-purple-700 backdrop-blur-sm shadow-sm font-semibold tracking-wide">
                         FOR YOU
                       </Badge>
                     </div>
                   </div>
                 )}
-                <div className="flex-1 p-5 flex flex-col justify-between">
+                <div className="flex-1 px-5 py-0 flex flex-col justify-between min-w-0">
                   <div>
-                    <div className="hidden sm:flex items-center gap-2 mb-3">
-                      <Badge className="bg-purple-600/80 text-white border-0 hover:bg-purple-700 backdrop-blur-sm shadow-sm font-semibold tracking-wide">
-                        FOR YOU
-                      </Badge>
+                    <div className="flex items-center gap-2 mb-3">
+                      {!article.image_url && (
+                        <Badge className="bg-purple-600/80 text-white border-0 hover:bg-purple-700 backdrop-blur-sm shadow-sm font-semibold tracking-wide">
+                          FOR YOU
+                        </Badge>
+                      )}
                       {article.category && (
                         <Badge className="bg-white/10 text-white border-0 hover:bg-white/20">
                           {article.category}
@@ -224,7 +225,7 @@ export function NewsTab() {
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Main Latest News */}
       {(recommendedArticles.length > 0 || searchQuery) && (
